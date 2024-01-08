@@ -1,0 +1,16 @@
+@import '../../assets/styles/custom_variables';
+
+.page-link {
+  background-color: white !important;
+  color: #202841  !important;
+  margin:0 5px;
+  &:hover {
+    background-color: lighten($secondary, 3) !important;
+    color: var(--bs-white) !important;
+  }
+
+}
+.page-link-active{
+  background-color: $secondary !important;
+  color: var(--bs-white) !important;
+}

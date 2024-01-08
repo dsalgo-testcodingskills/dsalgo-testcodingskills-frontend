@@ -1,0 +1,38 @@
+.home{
+  width: 100%;
+  height:calc(100vh - 85px) !important;
+  
+  background: rgba(143,218,232,0.25);
+    display: flex;
+  justify-content: space-between;
+  padding:30px 7rem;
+ align-items: center;
+
+ &__right{
+   font-size:17px;
+   flex:1;
+ }
+ 
+}
+
+.vidyard-player-container {
+  width: 100% !important;
+  max-width: 500px !important;
+}
+
+.button_disabled{
+  opacity: 0.4 !important;
+}
+
+.row{
+  text-align: left !important;
+}
+
+.videoWrap{
+  flex:1;
+  padding:12px;
+  border-radius: 12px;
+  background-color: white !important;
+ 
+  
+ }

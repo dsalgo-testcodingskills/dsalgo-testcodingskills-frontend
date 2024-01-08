@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
+
+body {
+  background: #f2f3f8 !important;
+}
+
+.dashboard-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.total-tests {
+  display: flex;
+  align-items: flex-end;
+  margin-right: 110px;
+  color: red;
+}
+
+.testStatus {
+  background-color: white;
+  padding: 25px;
+  margin: 30px 110px;
+  margin-top: 20px;
+  &__row {
+    display: flex;
+    justify-content: space-around;
+  }
+  &__row > *:not(:last-child) {
+    margin-right: 20px;
+  }
+  &__empty {
+    margin: 30px 120px;
+    background-color: rgb(255, 255, 255);
+    height: 570px;
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 500;
+    line-height: 25px;
+    text-align: center;
+    &-btn {
+      align-self: flex-end;
+      margin-right: 20px;
+      margin-top: 20px;
+    }
+
+    &-img {
+      margin-bottom: 50px;
+    }
+
+    &-description h1 {
+      font-size: 21px;
+    }
+
+    &-description p {
+      font-weight: 400;
+      font-size: 14px;
+    }
+  }
+}
+
+.tableHeading {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #808593 !important;
+
+  align-items: center;
+}
+
+.actionIcon {
+  text-decoration: none;
+  border: none;
+  background: rgb(36, 197, 218, 0.1);
+  mix-blend-mode: normal;
+
+  border-radius: 4px;
+  color: #24c5da;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+}
+
+tbody td {
+  text-align: 'center';
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 14px;
+
+  color: #212121;
+}
+
+tbody th {
+  display: flex;
+  align-items: center;
+}
+
+.head {
+  font-weight: 400;
+  font-size: 14px;
+
+  color: #808593;
+
+  margin-top: 20px;
+  margin-left: 120px;
+}
+
+.css-b62m3t-container {
+  cursor: pointer !important;
+}
+
+.css-1s2u09g-control {
+  cursor: pointer !important;
+}
+
+.css-1pahdxg-control:hover {
+  border-color: #24c5da !important;
+  box-shadow: 0 0 0 1px #24c5da !important ;
+}
+.css-1pahdxg-control {
+  border-color: #24c5da !important;
+  box-shadow: 0 0 0 1px #24c5da !important ;
+}
+
+.css-1n7v3ny-option {
+  background-color: rgba(143, 218, 232, 0.25) !important;
+}
+
+.css-9gakcf-option {
+  background-color: #24c5da !important;
+}

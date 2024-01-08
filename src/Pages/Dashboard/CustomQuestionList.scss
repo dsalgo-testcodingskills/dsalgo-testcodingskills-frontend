@@ -1,0 +1,21 @@
+.customQuestionList {
+  margin: 20px 120px;
+  background-color: white;
+  padding: 30px;
+}
+
+tbody td {
+  text-align: 'center';
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 14px;
+
+  color: #212121;
+}
+
+tbody th {
+  display: flex;
+  align-items: center;
+}

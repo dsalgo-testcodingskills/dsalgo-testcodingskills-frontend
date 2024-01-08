@@ -1,0 +1,112 @@
+* {
+  box-sizing: border-box;
+}
+
+.dialog-box {
+  text-align: center;
+  padding: 20px;
+  p {
+    font-size: 13px;
+  }
+  h1 {
+    color: #e14003;
+    color: #e14003;
+    border: 2px solid red;
+    width: 58px;
+    border-radius: 50%;
+    margin: 0px 40%;
+    margin-bottom: 10px;
+  }
+  .cancelBtn {
+    background: #e14003;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    margin-top: 10px;
+    float: right;
+  }
+
+  .gobackBtn {
+    background: rgba(128, 128, 128, 0.397);
+    color: black;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    margin-left: 10px;
+    margin-top: 10px;
+  }
+}
+
+.myPlans {
+  &__content {
+    background-color: white;
+    padding: 25px;
+    margin: 30px 110px;
+    margin-top: 20px;
+  }
+
+  &__active {
+    label {
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 20px;
+
+      color: #979798;
+    }
+
+    span {
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 20px;
+
+      color: #212121;
+    }
+  }
+}
+
+.price {
+  list-style-type: none;
+  border: 1px solid #eee;
+  margin: 0;
+  padding: 0;
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+}
+
+.price:hover {
+  box-shadow: 0 8px 12px 0 rgba(0, 0, 0, 0.2);
+}
+
+.price .header {
+  background-color: #111;
+  color: white;
+  font-size: 25px;
+}
+
+.price li {
+  border-bottom: 1px solid #eee;
+  padding: 10px;
+  text-align: center;
+}
+
+.price .grey {
+  background-color: #eee;
+  font-size: 20px;
+}
+
+.button {
+  background-color: #47d5d7;
+  border: none;
+  color: white;
+  padding: 10px 25px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+@media only screen and (max-width: 600px) {
+  .columns {
+    width: 100%;
+  }
+}

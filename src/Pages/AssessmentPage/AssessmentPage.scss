@@ -1,0 +1,153 @@
+@import '../../assets/styles/custom_variables';
+
+
+.assessmentPage{
+  margin:30px 120px;
+&__card{
+  background-color: white;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.0001);
+border-radius: 4px;
+}
+  &__left{
+    padding:30px;
+  }
+
+  &__time{
+    font-weight: 500;
+font-size: 16px;
+line-height: 20px;
+
+
+
+color: #EF8031;
+  }
+
+  &__hidden{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  &__hidden--btn{
+  background:   rgba(36, 197, 218, 0.25);
+    color: #24C5DA;
+    mix-blend-mode: normal;
+   
+    border-radius: 4px;
+    padding:5px 10px;
+
+  }
+
+  &__pass--badge{
+    background-color: rgba(0, 217, 122, 0.25);
+    color: #0bb169;
+    mix-blend-mode: normal;
+   
+    border-radius: 4px;
+    padding:5px 10px;
+  }
+  &__fail--badge{
+    background-color: rgba(255, 0, 0, 0.25);
+    color: red;
+    mix-blend-mode: normal;
+    
+    border-radius: 4px;
+    padding:5px 10px;
+  }
+}
+
+.disable-copy {
+  user-select: none;
+}
+
+.status-text {
+  width: 85%;
+}
+
+.status-badge {
+  width: 15%;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.status-badge-fail {
+  background-color: $danger;
+}
+
+.status-badge-success {
+  background-color: #24C5DA;
+}
+
+.testcase-output {
+  height: 7rem;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  resize: none;
+}
+
+test-output_error {
+  overflow-x: 'hidden';
+  overflow-y: 'visible';
+}
+
+btn-margin {
+  margin-left: 2%;
+}
+
+test-case-style {
+  border-left: 1px solid lightgray;
+}
+
+btn-margin_runTestCases {
+  margin-right: 5px;
+}
+
+btn-margin_view {
+  max-height: 38px;
+}
+
+.mh-20 {
+  max-height: 20px;
+}
+
+.testcase-output::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  background-color: $white;
+}
+
+.testcase-output::-webkit-scrollbar {
+  width: 10px;
+  background-color: $white;
+}
+
+.testcase-output::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  background-color: $secondary;
+}
+
+.question-page {
+  width: 100%;
+  height: 100vh;
+  padding: 5rem;
+}
+
+.img-container {
+  img {
+    height: 100px;
+    width: auto;
+  }
+  .no-img {
+    min-height: 100px;
+    max-width: 133.34px;
+    background-color: #f2f2f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+

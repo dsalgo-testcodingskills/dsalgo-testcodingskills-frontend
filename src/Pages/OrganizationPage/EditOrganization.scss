@@ -1,0 +1,234 @@
+.editOrganization {
+  margin: 0 120px;
+  background-color: white;
+  padding: 30px;
+  margin-top: 20px;
+}
+.form-title {
+  font-family: Poppins;
+  font-weight: bold;
+  font-size: 17px;
+  line-height: 25px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.upload-img-sec {
+  display: flex;
+  align-items: center;
+  margin: 21px 0 23px;
+
+  .profile-img {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
+  .name-container {
+    margin-left: 22px;
+
+    .name {
+      font-weight: 500;
+      font-size: 20px;
+      line-height: 23px;
+      color: #ffffff;
+    }
+
+    .upload-profile {
+      margin-top: 120px;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 19px;
+
+      margin-left: -10px;
+      color: #808593;
+    }
+  }
+}
+
+.editForm {
+  .inputText-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 48%);
+    grid-column-gap: 4%;
+    margin-bottom: 30px;
+  }
+
+  .inputText {
+    position: relative;
+    padding-top: 25px;
+
+    &._mb {
+      margin-bottom: 20px;
+    }
+
+    .button {
+      width: 100%;
+      max-width: 317px;
+      background: var(--red-gradient-btn);
+      border-radius: 45px;
+      font-family: Roboto;
+      font-size: 16px;
+      line-height: 19px;
+      text-align: center;
+      color: #ffffff;
+      padding: 20px 0px;
+      height: auto;
+      margin-top: 0;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 2px solid #ebedf2;
+      box-sizing: border-box;
+      border-radius: 5px;
+      padding: 16px 23px 16px 17px;
+      font-family: Roboto;
+      font-size: 16px;
+      line-height: 19px;
+      resize: none;
+
+      &:active,
+      &:focus {
+        outline: none;
+        box-shadow: none;
+      }
+    }
+
+    .gender-wrapper {
+      display: flex;
+      align-items: center;
+
+      .gender-block {
+        cursor: pointer;
+        background: #ffffff;
+        border: 2px solid #dce3f4;
+        box-sizing: border-box;
+        border-radius: 45px;
+        margin-right: 10px;
+        font-family: Roboto;
+        font-size: 16px;
+        line-height: 19px;
+        color: #000000;
+        padding: 16px 21px;
+        min-width: 133px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .icon {
+          margin-right: 11px;
+
+          svg {
+            #cls-fill-path {
+              fill: #000;
+            }
+          }
+        }
+
+        &:last-child {
+          margin-right: 0;
+        }
+
+        &:hover,
+        &._active {
+          border: 2px solid #f05a28;
+
+          .icon {
+            svg {
+              #cls-fill-path {
+                fill: #f05a28;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .input-placeholder {
+      position: absolute;
+      top: 0px;
+      left: 0;
+      font-family: Poppins;
+      font-size: 12px;
+      line-height: 18px;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+  }
+
+  &__name {
+    margin-top: 30px;
+    color: #808593;
+  }
+}
+
+.profile-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removeIcon {
+  display: none;
+}
+
+.form-label-custom {
+  color: var(--text-white-lighter);
+  opacity: 0.9;
+  font-size: 12px;
+  line-height: 14px;
+  margin-bottom: 5px;
+}
+
+.form-input-custom {
+  background-color: var(--main-violet-light);
+  height: 70px;
+  border: none;
+  outline: none;
+  padding-left: 10px;
+  padding-right: 10px;
+  color: #ffffff;
+
+  &::-webkit-input-placeholder {
+    color: var(--text-white-lighter);
+    opacity: 0.4;
+  }
+
+  &:-ms-input-placeholder {
+    color: var(--text-white-lighter);
+    opacity: 0.4;
+  }
+
+  &::placeholder {
+    color: var(--text-white-lighter);
+    opacity: 0.4;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.Orgnizaion__User span {
+  color: #808593;
+}
+
+.editLogo {
+  margin-top: 115px;
+  margin-left: -60px;
+}
+
+.editLogo--round {
+  background-color: white;
+  padding: 8px 14px;
+  border-radius: 50%;
+  border: 1px solid #ebedf2;
+  cursor: pointer;
+}
+
+.editLogo img {
+  cursor: pointer;
+}

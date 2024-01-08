@@ -1,0 +1,84 @@
+.plans {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px 0px;
+  &__plan {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+    background: #ffffff;
+    border: 1px solid #ebedf2;
+    border-radius: 4px;
+    max-width: 250px;
+
+    &-p {
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 20px;
+
+      color: #979798;
+    }
+
+    h2 {
+      font-weight: 700;
+      font-size: 24px;
+      line-height: 20px;
+
+      text-align: center;
+
+      color: #000000;
+    }
+
+    &-mon {
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 20px;
+
+      text-align: center;
+
+      color: #000000;
+    }
+
+    h6 {
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 20px;
+
+      color: #000000;
+
+      span {
+        font-weight: 400;
+        font-size: 9px;
+        line-height: 20px;
+
+        color: #979798;
+      }
+    }
+
+    &-disable {
+      background: #ffffff;
+      border: 1px solid #ebedf2;
+      border-radius: 3px;
+      padding: 14px 40px;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 20px;
+
+      color: #979798;
+    }
+
+    &-exp {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17px;
+
+      color: #ff1010;
+    }
+  }
+
+  &__plan > *:not(:last-child) {
+    margin-bottom: 12px;
+  }
+}

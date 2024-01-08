@@ -1,0 +1,158 @@
+@import '../../assets/styles/custom_variables';
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
+
+.navbar {
+  background-color: $primary;
+  height: 85px !important;
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.200776);
+}
+
+.card-active {
+  border-bottom: 3px solid #24c6da;
+  color: #24c6da !important;
+}
+
+.nav__link {
+  font-size: 20px;
+  font-weight: 400;
+  margin-left: 10px !important;
+}
+
+.nav__link--icon {
+  font-size: 20px;
+  font-weight: 400;
+  margin-right: 10px;
+}
+
+.login-options {
+  position: fixed;
+  top: 85px;
+
+  background: #ffffff;
+  border-radius: 10px;
+  width: 250px;
+  z-index: 30;
+  filter: drop-shadow(0px 4px 14px rgba(0, 0, 0, 0.35));
+
+  .login-option-block {
+    display: flex;
+    padding: 22px;
+    align-items: center;
+    border-bottom: 0.5px solid rgba(151, 151, 151, 0.4);
+
+    cursor: pointer;
+
+    &:hover {
+      background: #e2e8f0;
+      border-radius: 5px;
+    }
+
+    &--icon {
+      text-align: center;
+      min-width: 29px;
+
+      svg {
+        margin: 0 auto;
+      }
+    }
+
+    &--text {
+      font-size: 16px;
+      line-height: 19px;
+      color: #000000;
+      margin-left: 18px;
+    }
+  }
+}
+
+.btn__1 {
+  border: 1px solid #24c5da;
+  background-color: white;
+  color: #24c5da;
+  transition: all 0.4s;
+  padding: 13px 23px;
+}
+
+.btn__1:hover {
+  color: white !important;
+  background: #24c5da !important;
+}
+
+.btn__2 {
+  padding: 14px 24px;
+
+  margin-left: 20px;
+}
+
+.nav__dropdown {
+  cursor: pointer;
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 17px;
+}
+
+.nav__dropdown span {
+  display: flex;
+  justify-content: space-around;
+}
+
+.navbar-list {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem;
+  margin: 0 1rem;
+}
+
+.navbar-list-container {
+  justify-content: center;
+}
+
+#basic-nav-dropdown {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-desktop-dropdown {
+  top: 50%;
+  margin-top: calc(-15px / 2);
+  right: 1.5rem;
+}
+
+@media screen and (max-width: 990px) {
+  .navbar-list {
+    padding: 0;
+    margin: 0;
+    font-size: 11px;
+  }
+
+  .card-active {
+    border-bottom: 0;
+  }
+
+  .navbar-list-container {
+    z-index: 5;
+    background-color: #ffffff;
+    margin-top: 20px;
+  }
+
+  .navbar-list-border {
+    padding-left: 1rem !important;
+    border-bottom: 1px solid #dee2e6 !important;
+  }
+
+  .nav__dropdown {
+    display: none;
+  }
+
+  #basic-nav-dropdown {
+    display: block;
+    padding: 1rem;
+    padding-left: calc(1rem + 10px);
+  }
+
+  .dropdown-item.active {
+    color: #24c6da !important;
+  }
+}

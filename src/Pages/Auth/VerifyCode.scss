@@ -1,0 +1,25 @@
+.verifyCode{
+    background-color: white;
+   
+    width:45vw;
+     padding:2rem;
+     margin:4rem auto;
+    
+     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+ border-radius: 4px;
+ &__form-label{
+    font-size: 14px;
+    color: #808593;
+  }
+
+  .form-forget{
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 20px;
+   
+    cursor: pointer;
+    
+    color: #24C5DA;
+    
+        }
+}

@@ -1,0 +1,55 @@
+@import '../../assets/styles/custom_variables';
+
+.custom-toast {
+  h6 {
+    font-weight: bold;
+    color: #1c1b21;
+  }
+  p {
+    color: #545357;
+  }
+  .error {
+    background: $danger;
+    i {
+      color: $white;
+    }
+  }
+  .warning {
+    background: rgba(255, 219, 131, 0.3);
+    i {
+      color: #484233;
+    }
+  }
+  .success {
+    background:#24C5DA;
+    i {
+      color: $white;
+    }
+  }
+  .info {
+    background: #9bd2ff;
+    i {
+      color: #345875;
+    }
+  }
+}
+
+.custom-toast .success {
+  padding: 50px 22px !important;
+  margin-right: 2%;
+}
+
+.custom-toast .warning {
+  padding: 50px 22px !important;
+  margin-right: 2%;
+}
+
+.custom-toast .error {
+  padding: 50px 22px !important;
+  margin-right: 2%;
+}
+
+.custom-toast .info {
+  padding: 50px 22px !important;
+  margin-right: 2%;
+}

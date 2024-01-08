@@ -1,0 +1,84 @@
+.createCustomQuestion {
+  margin: 30px 120px;
+  background: #ffffff;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.0001);
+  border-radius: 4px;
+
+  &__form-label {
+    font-size: 14px;
+    color: #808593;
+  }
+
+  h5 {
+    font-size: 16px;
+  }
+
+  &__input {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__input > *:not(:last-child) {
+    margin-right: 20px;
+  }
+
+  &__type {
+    flex: 1;
+  }
+
+  &__name {
+    flex: 1;
+  }
+
+  &__removeBtn {
+    align-self: end;
+    padding: 10px 20px !important;
+  }
+
+  &__addBtn {
+    padding: 10px 20px !important;
+    margin-right: 15px;
+    margin-top: 5px;
+  }
+
+  &__testCases {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+    padding: 0 5px;
+  }
+
+  &__testCases > *:not(:last-child) {
+    margin-right: 20px;
+  }
+
+  &__border {
+    border: 1px solid #ebedf2;
+    border-radius: 4px;
+  }
+  .container-fluid {
+    height: 125vh;
+  }
+}
+
+.test-case-note {
+  font-weight: 500;
+  font-size: 14px;
+  color: #808593;
+}
+
+.remove-test-case {
+  padding: 10px 20px;
+  margin-top: 30px;
+}
+
+.card-header-text {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.MuiCheckbox-colorSecondary.Mui-checked {
+  color: #24c6da !important;
+}

@@ -1,0 +1,76 @@
+@import '../../assets/styles/custom_variables';
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
+
+.landing {
+  background-color: white;
+  overflow: hidden;
+  position: relative;
+  @media screen and (max-width: 1024px) {
+    overflow-y: auto;
+  }
+
+  .wrap {
+    margin: 0 auto;
+    .main-content__2 {
+      margin: 50px 120px;
+      background: rgba(136, 159, 231, 0.25) !important;
+      display: flex;
+      align-items: center;
+    }
+    .main-content {
+      padding: 5em;
+      display: flex;
+      background: rgba(143, 218, 232, 0.25);
+      .banner {
+        padding: 2em 0;
+        max-width: 600px;
+        &_title {
+          position: relative;
+          font-size: 3rem;
+
+          letter-spacing: 2px;
+          font-family: 'Rubik';
+
+          font-weight: 500;
+          font-size: 48px;
+          line-height: 57px;
+
+          font-style: normal;
+          &::after {
+            position: absolute;
+            content: '';
+            display: block;
+            width: 100px;
+            height: 7px;
+            left: 0;
+            bottom: -15px;
+            background: #f6bb4b;
+            border-bottom-right-radius: 10px;
+          }
+        }
+        &_description {
+          margin-top: 2em;
+          font-size: 1.4em;
+          font-family: 'Rubik';
+          font-style: normal;
+          font-weight: 400;
+
+          line-height: 24px;
+          letter-spacing: 1px;
+        }
+        &_btns {
+          margin-top: 40px;
+        }
+        .img-holder {
+          max-width: 650px;
+        }
+      }
+
+      &__videoWrap {
+        padding: 12px;
+        border-radius: 12px;
+        background-color: white !important;
+      }
+    }
+  }
+}

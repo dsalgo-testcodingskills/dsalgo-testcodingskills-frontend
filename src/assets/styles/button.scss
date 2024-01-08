@@ -1,0 +1,47 @@
+@import '../../assets/styles/custom_variables';
+
+.btns{
+   
+    font-family: 'Rubik';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 19px;
+    color: white;
+    border:none;
+    background: #24C5DA;
+   
+    padding:18px 36px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.btns--white{
+    background-color: white;
+    color:#24C5DA;
+    border :1px solid #24C5DA;
+    padding:17px 35px;
+}
+
+.btns--success{
+    background-color: $success;
+    color:white;
+    border :1px solid $success;
+}
+
+.btns--danger{
+    background-color: $danger;
+    color:white;
+    border :1px solid $danger;
+}
+
+.btns__pending{
+background-image: rgba(240, 173, 125, 0.25);
+mix-blend-mode: normal;
+// opacity: 0.25;
+border-radius: 4px;
+font-size: 14px;
+line-height: 20px;
+color: #EF8031;
+padding:8px 20px;
+}
