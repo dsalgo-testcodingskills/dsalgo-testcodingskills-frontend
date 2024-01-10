@@ -1,4 +1,4 @@
-# Frontend Web Application (dsalgo testcodingskills)
+# DsAlgo TestCodingSkills Frontend
 
 This repository contains the codebase for the dsalgo-testcodingskills-frontend of the dsalgo-testcodingskills organisation.
 
@@ -30,13 +30,17 @@ Follow these instructions to set up and run the dsalgo-testcodingskills-frontend
     - Create a `.env` file in the root directory based on the provided `sample.env` file.
     - Customize the variables in the `.env` file to match your specific environment settings.
 
-### Start the Development Server
-
-Start the development server for the dsalgo-testcodingskills-frontend by running the following command:
+### Build and Run Backend locally
 
 ```bash
-$ npm start
+# build command
+$ npm run build
+```
 
+```bash
+# run command
+$ npm run start
+```
 
 
 
