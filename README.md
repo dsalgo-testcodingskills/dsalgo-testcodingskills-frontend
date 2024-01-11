@@ -1,4 +1,4 @@
-# DsAlgo TestCodingSkills Frontend
+# DSAlgo TestCodingSkills Frontend
 
 This repository contains the codebase for the dsalgo-testcodingskills-frontend of the dsalgo-testcodingskills organisation.
 
