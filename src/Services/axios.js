@@ -17,14 +17,16 @@ const customAxios = axios.create({
 
 // Step-2: Create request, response & error handlers
 const requestHandler = (request) => {
-  // Token will be dynamic so we can use any app-specific way to always
-  // fetch the new token before making the call
-  if (store.getState().dataReducer.tokenData) {
-    if (request.url.indexOf('s3.') === -1) {
-      request.headers.Authorization = `Bearer ${
-        store.getState().dataReducer.tokenData.idToken.jwtToken
-      }`;
-    }
+  const tokenData = store.getState().dataReducer.tokenData;
+
+  if (
+    tokenData &&
+    tokenData.idToken &&
+    tokenData.idToken.jwtToken &&
+    request.url.indexOf('s3.') === -1
+  ) {
+    request.headers = request.headers || {};
+    request.headers.Authorization = `Bearer ${tokenData.idToken.jwtToken}`;
   }
   return request;
 };

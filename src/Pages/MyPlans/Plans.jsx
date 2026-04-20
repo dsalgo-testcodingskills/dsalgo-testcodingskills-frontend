@@ -71,7 +71,7 @@ function Plans() {
       const { id, notes } = result.data;
 
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_SECRET_ID, // Enter the Key ID generated from the Dashboard
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID, // Enter the Key ID generated from the Dashboard
         name: 'CODE B.',
         description: 'Test Transaction',
         image: '/images/logo.png',
