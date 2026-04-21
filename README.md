@@ -42,8 +42,9 @@ $ npm run build
 $ npm run start
 ```
 
-
-
+### References
+- [Detailed Guide](https://github.com/dsalgo-testcodingskills)
+- [Env document](https://docs.google.com/document/d/1d_oGfbvFTiNLM0RnWk_wmhdZ83SKgxzky7KQGVjxiGY/edit?tab=t.0)
 
 
 

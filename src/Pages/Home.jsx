@@ -31,7 +31,7 @@ const Home = () => {
     showStart: false,
     message: '',
   });
-  const [isVideoWatched, setIsVideoWatched] = useState(false);
+  const [isVideoWatched, setIsVideoWatched] = useState(true); // this should be set to true after instruction video is watched completely, currently set to true for testing purpose, change this to false and uncomment the instruction video block after creating an instruction video
   const videoRef = useRef(null);
 
   const setVideoWatched = () => setIsVideoWatched(true);
@@ -142,7 +142,7 @@ const Home = () => {
       <div className=" home ">
         {!error?.message || (error?.message && error?.showStart) ? (
           <>
-            <div className="videoWrap">
+            {/* <div className="videoWrap"> // this block is for instruction video, currently commented for testing purpose, uncomment this after creating a instruction video
               <video
                 width="100%"
                 height="100%"
@@ -157,7 +157,7 @@ const Home = () => {
                 />
                 Your browser does not support the video tag.
               </video>
-            </div>
+            </div> */}
             <div className="home__right">
               <div className="card-body text-center p-4">
                 {selectedTest?.emailId && (
@@ -190,9 +190,9 @@ const Home = () => {
                     </strong>
                   }
                 </p>
-                <p className="mt-3 mb-4">
+                {/* <p className="mt-3 mb-4"> // this instruction is for instruction video, currently commented for testing purpose, uncomment this after creating a instruction video
                   Please watch the instruction video before you proceed.
-                </p>
+                </p> */}
 
                 <br />
 
