@@ -198,6 +198,10 @@ export function updateOrgDb(body) {
 export function logOut() {
   return axios.post('/test/logOut');
 }
+
+export function getPlanLimits() {
+  return axios.get('/plan-limits');
+}
 export function getCustomQuestions(body) {
   return axios.post('/questions/custom-question-find', body);
 }
