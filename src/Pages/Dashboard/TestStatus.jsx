@@ -21,6 +21,7 @@ import '../../assets/styles/button.scss';
 import Plans from '../MyPlans/Plans';
 import Pagination from '../../components/Pagination/Pagination';
 import { Tooltip } from '@material-ui/core';
+import { UserRoleEnum } from '../../utils/constants';
 
 const statusOptions = [
   { label: 'ALL', value: '' },
@@ -330,7 +331,7 @@ const TestStatus = () => {
   const createTest = async () => {
     try {
       const result = await GetTotalTestsCount();
-      if (result.data.totalTests <= 0 && loginData?.role === 'admin') {
+      if (result.data.totalTests <= 0 &&[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(loginData?.role)) {
         setPaymentPlan(true);
       } else {
         history.push('/admin/createTest');
@@ -351,7 +352,7 @@ const TestStatus = () => {
         const totalTests = await GetTotalTestsCount();
         setTotalTests(totalTests.data?.totalTests);
 
-        if (totalTests.data?.totalTests <= 0 && loginData?.role === 'user') {
+        if (totalTests.data?.totalTests <= 0 && [UserRoleEnum.USER].includes(loginData?.role)) {
           //disable button
           setDisableButton(true);
         }

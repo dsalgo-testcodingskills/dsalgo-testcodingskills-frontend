@@ -15,6 +15,7 @@ import EditOrganization from '../Pages/OrganizationPage/EditOrganization';
 import MyPlans from '../Pages/MyPlans/MyPlans';
 import MultiTestStatus from '../Pages/Dashboard/MultiTestStatus';
 import UserManagement from '../Pages/UserManagement/UserManagement';
+import { UserRoleEnum } from '../utils/constants';
 
 function AdminRoutes() {
   const { loginData } = useSelector((store) => store.dataReducer);
@@ -51,7 +52,7 @@ function AdminRoutes() {
         <ProtectedRoute path="/admin/customQuestionnew/:id?">
           <CreateCustomQuestion />
         </ProtectedRoute>
-        {loginData?.role === 'admin' && (
+        {[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(loginData?.role) && (
           <>
             <ProtectedRoute path="/admin/organizatonProfile">
               <EditOrganization />

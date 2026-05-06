@@ -12,6 +12,7 @@ import {
 } from '../../Services/api';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import { useHistory } from 'react-router-dom';
+import { UserRoleEnum } from '../../utils/constants';
 
 function Register() {
   const dispatch = useDispatch();
@@ -23,6 +24,7 @@ function Register() {
     name: '',
     password: '',
     confirmpassword: '',
+    isSuperAdmin: false,
   };
   const schema = Yup.object().shape({
     organizationName: Yup.string()
@@ -37,11 +39,18 @@ function Register() {
     confirmpassword: Yup.string()
       .oneOf([Yup.ref('password')], 'Mismatched passwords')
       .required('Please confirm your password'),
+    isSuperAdmin: Yup.boolean(),
   });
   const registerUser = async (values) => {
     try {
       setLoading(true);
-      let createResp = await createOrganization(values);
+      const requestBody = {
+        ...values,
+        role: values.isSuperAdmin
+          ? UserRoleEnum.SUPER_ADMIN
+          : UserRoleEnum.ADMIN,
+      };
+      let createResp = await createOrganization(requestBody);
       if (createResp.data.status === 400) {
         toast(<CustomToast type="warning" message={createResp.data.message} />);
       } else {
@@ -118,6 +127,24 @@ function Register() {
                   render={(msg) => <div className="text-danger">{msg}</div>}
                 />
               </div>
+ 
+ {/* // only one super admin allowed to do signup via this API(via frontend), other super admins have to be created via invitation as super_admin(check database for existing super admin users before allowing signup with super admin role) */}
+              {/* 
+              <div className="form-check mb-4" style={{ textAlign: 'left' }}>
+                <Field
+                  name="isSuperAdmin"
+                  type="checkbox"
+                  className="form-check-input"
+                  id="isSuperAdmin"
+                />
+                <label
+                  className="form-check-label"
+                  htmlFor="isSuperAdmin"
+                  style={{ marginLeft: '0.5rem' }}
+                >
+                  Seed as Super Admin (initial platform owner)
+                </label>
+              </div> */}
 
               <div className=" my-1 mb-4" style={{ textAlign: 'left' }}>
                 <label className="form-label">Password</label>

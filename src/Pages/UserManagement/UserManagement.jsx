@@ -21,10 +21,12 @@ import '../Dashboard/TestStatus.scss';
 import './UserManagement.scss';
 import { Tooltip } from '@material-ui/core';
 import Plans from '../MyPlans/Plans';
+import { UserRoleEnum } from '../../utils/constants';
 
 const roleOptions = [
-  { value: 'user', label: 'User' },
-  { value: 'admin', label: 'Admin' },
+  { value: UserRoleEnum.USER, label: 'User' },
+  { value: UserRoleEnum.ADMIN, label: 'Admin' },
+  { value: UserRoleEnum.SUPER_ADMIN, label: 'Super Admin' },
 ];
 
 const statusOptions = [
@@ -33,11 +35,23 @@ const statusOptions = [
 ];
 
 const UserManagement = () => {
+  const dispatch = useDispatch();
+  const { loginData } = useSelector((store) => store.dataReducer);
+
+  const filteredRoleOptions = roleOptions.filter((option) => {
+    if (loginData?.role === UserRoleEnum.SUPER_ADMIN) {
+      return option.value === UserRoleEnum.SUPER_ADMIN;
+    }
+    if (loginData?.role === UserRoleEnum.ADMIN) {
+      return option.value === UserRoleEnum.ADMIN;
+    }
+    return false;
+  });
   const defaultDetails = {
     name: '',
     emailId: '',
 
-    role: 'user',
+    role: loginData?.role === UserRoleEnum.SUPER_ADMIN ? UserRoleEnum.SUPER_ADMIN : UserRoleEnum.ADMIN,
   };
 
   const createUserSchema = Yup.object().shape({
@@ -67,8 +81,6 @@ const UserManagement = () => {
     limit: 10,
     filter: {},
   });
-  const dispatch = useDispatch();
-  const { loginData } = useSelector((store) => store.dataReducer);
 
   useEffect(async () => {
     const userCountData = await getOrgDetails();
@@ -412,10 +424,10 @@ const UserManagement = () => {
                         <label className="form-labels">Role</label>
                         <Select
                           value={getDropdownValueFromOptions(
-                            roleOptions,
+                            filteredRoleOptions,
                             values.role,
                           )}
-                          options={roleOptions}
+                          options={filteredRoleOptions}
                           onChange={(e) => {
                             setFieldValue('role', e.value);
                           }}
@@ -555,10 +567,10 @@ const UserManagement = () => {
                         <label className="form-labels">Role</label>
                         <Select
                           value={getDropdownValueFromOptions(
-                            roleOptions,
+                            filteredRoleOptions,
                             values.role,
                           )}
-                          options={roleOptions}
+                          options={filteredRoleOptions}
                           onChange={(e) => setFieldValue('role', e.value)}
                         />
                       </div>

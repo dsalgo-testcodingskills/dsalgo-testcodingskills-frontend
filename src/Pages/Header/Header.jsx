@@ -11,6 +11,7 @@ import {
   studentOrgDetails,
 } from '../../Services/api';
 import { createImageFromInitials, getRandomColor } from '../../utils/helper';
+import { UserRoleEnum } from '../../utils/constants';
 import ForgotPassword from '../Auth/ForgotPassword';
 import Register from '../Auth/Register';
 import Verify from '../Auth/VerifyCode';
@@ -75,7 +76,7 @@ function Header() {
   const renderLoginOptions = () => {
     return (
       <div className="login-options z-40">
-        {user?.userInfo?.role == 'admin' ? (
+        {[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role) ? (
           <div
             className="login-option-block"
             onClick={() => {
@@ -93,7 +94,7 @@ function Header() {
             <div className="login-option-block--text">Organization</div>
           </div>
         ) : null}
-        {subDetails?.length > 0 && user?.userInfo?.role == 'admin' && (
+        {subDetails?.length > 0 && [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role) && (
           <div
             className="login-option-block"
             onClick={() => {
@@ -175,7 +176,7 @@ function Header() {
   useEffect(async () => {
     if (loginData) {
       getOrganization();
-      if (loginData?.role === 'admin') {
+      if ([UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role)) {
         getSubscription();
       }
     }
@@ -281,7 +282,7 @@ function Header() {
                   </div>
                 </Nav.Link>
 
-                {user?.userInfo?.role === 'admin' && (
+                {[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role) && (
                   <Nav.Link eventKey="1" className="navbar-list-border">
                     <div
                       onClick={() => history.push('/admin/userManagement')}
@@ -318,7 +319,7 @@ function Header() {
                   style={{ display: 'flex', marginLeft: '10vw' }}
                 >
                   <div className="login-options z-40">
-                    {user?.userInfo?.role == 'admin' ? (
+                    {[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role) ? (
                       <NavDropdown.Item eventKey="1">
                         <div
                           className="login-option-block"
@@ -340,7 +341,7 @@ function Header() {
                       </NavDropdown.Item>
                     ) : null}
 
-                    {subDetails?.length > 0 && user?.userInfo?.role == 'admin' && (
+                    {subDetails?.length > 0 && [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role) && (
                       <NavDropdown.Item eventKey="2">
                         <div
                           className="login-option-block"
