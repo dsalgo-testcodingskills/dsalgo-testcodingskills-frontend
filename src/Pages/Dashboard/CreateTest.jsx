@@ -119,14 +119,17 @@ const CreateTest = () => {
     easy: Yup.number()
       .integer()
       .min(0, 'Minimum Value should be Zero')
+      .max(questions.easy.length, `We don't have that much questions (Max: ${questions.easy.length})`)
       .required(),
     medium: Yup.number()
       .integer()
       .min(0, 'Minimum Value should be Zero')
+      .max(questions.medium.length, `We don't have that much questions (Max: ${questions.medium.length})`)
       .required(),
     hard: Yup.number()
       .integer()
       .min(0, 'Minimum Value should be Zero')
+      .max(questions.hard.length, `We don't have that much questions (Max: ${questions.hard.length})`)
       .when(['easy', 'medium'], {
         is: (easy, medium) => easy === 0 && medium === 0,
         then: Yup.number().min(1, 'Please fill any of the field'),
@@ -571,6 +574,7 @@ const CreateTest = () => {
                         className="border p-3 mt-3 rounded-3"
                         hidden={values.selectedQuestions.length === 0}
                       >
+                        {/* <>{JSON.stringify(values.selectedQuestions)}</> */}
                         {values.selectedQuestions.map((question, index) => (
                           <div className="selectQuestions-row" key={index}>
                             <div className="index-margin">{index + 1}.</div>
