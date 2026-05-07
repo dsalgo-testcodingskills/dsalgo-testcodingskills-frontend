@@ -79,6 +79,7 @@ const CreateCustomQuestion = () => {
       )
       .required('InputType Required'),
     outputType: Yup.string().required('OutputType Required'),
+    public: Yup.boolean(),
     testCases: Yup.array()
       .of(
         Yup.object().shape({
@@ -468,6 +469,21 @@ const CreateCustomQuestion = () => {
                     name="level"
                     render={(msg) => <div className="text-danger">{msg}</div>}
                   />
+                </div>
+
+                {/* public */}
+                <div className="col-12 mt-3">
+                  <span className="me-2">
+                    <Checkbox
+                      onChange={(e) => {
+                        setFieldValue('public', e.target.checked);
+                      }}
+                      checked={values.public}
+                    />
+                    <label className="form-label createCustomQuestion__form-label" style={{ marginBottom: 0 }}>
+                      Is Public Question
+                    </label>
+                  </span>
                 </div>
               </div>
 
