@@ -262,6 +262,20 @@ const SolutionsReview = () => {
                 />
               </div>
             </div>
+            
+            {test?.questions[0]?.answer[codeArraylength]?.runtime != null && (
+              <div className="d-flex justify-content-end mb-2">
+                <span className="badge bg-secondary me-2">
+                  <i className="fas fa-stopwatch me-1"></i>
+                  {test.questions[0].answer[codeArraylength].runtime} ms
+                </span>
+                <span className="badge bg-secondary">
+                  <i className="fas fa-memory me-1"></i>
+                  {(test.questions[0].answer[codeArraylength].memory / 1024).toFixed(2)} MB
+                </span>
+              </div>
+            )}
+
             <CustomLoadingAnimation isLoading={Loading} />
 
             <Editor

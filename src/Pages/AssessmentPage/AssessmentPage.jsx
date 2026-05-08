@@ -46,6 +46,7 @@ const AssessmentPage = () => {
   const { testExpiryTime } = useSelector((store) => store.dataReducer);
   const questionDataRef = useRef(null);
   const monacoRef = useRef(null);
+  const metricsRef = useRef({ runtime: 0, memory: 0 });
 
   const [show, setShow] = useState(false);
 
@@ -74,6 +75,8 @@ const AssessmentPage = () => {
         emailId: test.emailId,
         questionId: question.question._id,
         language: selectedLanguage.value,
+        runtime: metricsRef.current?.runtime || 0,
+        memory: metricsRef.current?.memory || 0,
       });
       setResult('Saved successfully!!!');
 
@@ -101,10 +104,27 @@ const AssessmentPage = () => {
         sampleQuestion: question?.question.sampleQuestion,
       });
       setTestResult(resp.data);
-
-      if (userImage) {
-        submitPeriodicAnswerFunc();
+      
+      if (resp.data && Array.isArray(resp.data)) {
+        let maxMemory = 0;
+        let totalRuntime = 0;
+        let count = 0;
+        resp.data.forEach(res => {
+          if (res.runtime != null) {
+            totalRuntime += res.runtime;
+            count++;
+          }
+          if (res.memory != null) {
+            maxMemory = Math.max(maxMemory, res.memory);
+          }
+        });
+        metricsRef.current = {
+          runtime: count ? parseFloat((totalRuntime / count).toFixed(3)) : 0,
+          memory: maxMemory
+        };
       }
+
+      submitPeriodicAnswerFunc();
     } catch (error) {
       setError(error);
     } finally {
@@ -127,34 +147,41 @@ const AssessmentPage = () => {
 
   const submitPeriodicAnswerFunc = async () => {
     try {
-      const signedUrlResponse = await getPresignedURL({
-        contentType: 'image/jpeg',
-        path: `tests/${_id}${new Date().getTime()}.jpg`,
-      });
+      let imgURL = '';
+      let signedUrlResponse;
 
-      const imgURL =
-        signedUrlResponse.data.url + '/' + signedUrlResponse.data.fields['key'];
+      if (userImage) {
+        signedUrlResponse = await getPresignedURL({
+          contentType: 'image/jpeg',
+          path: `tests/${_id}${new Date().getTime()}.jpg`,
+        });
+        imgURL = signedUrlResponse.data.url + '/' + signedUrlResponse.data.fields['key'];
+      }
+
       const request = {
         questionId: questionDataRef.current?.id,
         testId: _id,
         code: code.current,
         language: selectedLanguageForAPI.current?.value,
         imgURL,
+        runtime: metricsRef.current?.runtime || 0,
+        memory: metricsRef.current?.memory || 0,
       };
 
-      savePerodicAnswer(request);
+      await savePerodicAnswer(request);
 
-      const formData = new FormData();
-      Object.keys(signedUrlResponse.data.fields).forEach((key) => {
-        formData.append(key, signedUrlResponse.data.fields[key]);
-      });
-      const image = dataURLtoFile(userImage, 'item');
-      // Actual file has to be appended last.
-      formData.append('file', image);
-      await uploadFileInS3(signedUrlResponse.data.url, formData).catch(() => {
-        // throw new Error('Error while uploading image');
-      });
-
+      if (userImage && signedUrlResponse) {
+        const formData = new FormData();
+        Object.keys(signedUrlResponse.data.fields).forEach((key) => {
+          formData.append(key, signedUrlResponse.data.fields[key]);
+        });
+        const image = dataURLtoFile(userImage, 'item');
+        // Actual file has to be appended last.
+        formData.append('file', image);
+        await uploadFileInS3(signedUrlResponse.data.url, formData).catch(() => {
+          // throw new Error('Error while uploading image');
+        });
+      }
     } catch (error) {
       // toast(<CustomToast type="error" message={error.message} />);
     }
@@ -264,7 +291,7 @@ const AssessmentPage = () => {
   };
 
   return (
-    <div className=" assessmentPage disable-copy my-4">
+    <div className=" assessmentPage  my-4">
       <div className="d-flex justify-content-start align-items-center">
         <div className="flex-grow-1">
           <button
@@ -368,7 +395,7 @@ const AssessmentPage = () => {
                         </div>
                       )}
                       {testResult && testResult[index] && (
-                        <div className="status-badge">
+                        <div className="status-badge d-flex align-items-center">
                           <div
                             className={` text-uppercase  ${
                               testResult[index].result
@@ -378,6 +405,11 @@ const AssessmentPage = () => {
                           >
                             {testResult[index].result ? 'Pass' : 'Fail'}
                           </div>
+                          {testResult[index].runtime != null && (
+                            <div className="ms-3 text-muted" style={{fontSize: '0.85rem'}}>
+                               Time: {testResult[index].runtime} ms | Mem: {(testResult[index].memory / 1024).toFixed(2)}MB
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
