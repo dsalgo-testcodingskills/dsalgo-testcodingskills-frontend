@@ -291,7 +291,7 @@ const AssessmentPage = () => {
   };
 
   return (
-    <div className=" assessmentPage  my-4">
+    <div className=" assessmentPage disable-copy my-4">
       <div className="d-flex justify-content-start align-items-center">
         <div className="flex-grow-1">
           <button
