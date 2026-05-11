@@ -18,6 +18,7 @@ import { CloseButton, Modal } from 'react-bootstrap';
 import './CreateCustomQuestion.scss';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import Plans from '../MyPlans/Plans';
+import QuestionPreview from './QuestionPreview';
 
 const CreateCustomQuestion = () => {
   const inputOutputType = [
@@ -600,7 +601,7 @@ const CreateCustomQuestion = () => {
                 )}
               </FieldArray>
 
-              <div className="d-flex justify-content-evenly">
+              <div className="d-flex justify-content-center gap-3">
                 <button
                   type="submit"
                   className="btns mt-3"
@@ -608,6 +609,15 @@ const CreateCustomQuestion = () => {
                 >
                   {editMode ? 'Update' : 'Create'}
                 </button>
+                <button
+                type="button"
+                  className="btns mt-3"
+                  onClick={() => {
+                    history.push(`/admin/customQuestionnew/preview`, { question: values });
+                  }}
+                  >
+                    Preview
+                  </button>
               </div>
             </Form>
           )}
