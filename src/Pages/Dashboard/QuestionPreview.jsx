@@ -10,10 +10,10 @@ import { getQuestionTemplatesTypes, previewCustomQuestion } from '../../Services
 import '../../Pages/AssessmentPage/AssessmentPage.scss';
 
 
-const QuestionPreview = () => {
+const QuestionPreview = ({ questionData: propQuestionData, isModal }) => {
   const history = useHistory();
   const location = useLocation();
-  const questionData = location.state?.question;
+  const questionData = propQuestionData || location.state?.question;
 
   const [options, setOptions] = useState([]);
   const [testCases, setTestCases] = useState([]);
@@ -30,44 +30,6 @@ const QuestionPreview = () => {
   const questionDataRef = useRef(null);
   const monacoRef = useRef(null);
 
-  const generateBoilerplate = (lang, qData) => {
-    if (!qData) return "";
-    const { inputType, outputType } = qData;
-    const params = inputType?.map(it => it.paramName).join(", ") || "";
-
-    const instructions = `//Write your code only in provided function\n//Dont write any of your code outside this function\n//Function will be executed with inputs from test cases on run test cases\n\n`;
-
-    const getLanguageType = (type, l) => {
-      const typeMap = {
-        javascript: { int: "number", boolean: "boolean", array_int: "number[]", array_char: "string[]", "2d_array_int": "number[][]", "2d_array_char": "string[][]" },
-        python: { int: "int", boolean: "bool", array_int: "List[int]", array_char: "List[str]", "2d_array_int": "List[List[int]]", "2d_array_char": "List[List[str]]" },
-        java: { int: "int", boolean: "boolean", array_int: "int[]", array_char: "char[]", "2d_array_int": "int[][]", "2d_array_char": "char[][]" },
-        cpp: { int: "int", boolean: "bool", array_int: "vector<int>", array_char: "vector<char>", "2d_array_int": "vector<vector<int>>", "2d_array_char": "vector<vector<char>>" },
-        go: { int: "int", boolean: "bool", char: "byte", string: "string", array_int: "[]int", array_char: "[]byte", array_string: "[]string", array_boolean: "[]bool", "2d_array_int": "[][]int", "2d_array_char": "[][]byte", "2d_array_string": "[][]string", "2d_array_boolean": "[][]bool" },
-      };
-      return typeMap[l]?.[type] || type;
-    };
-
-    switch (lang) {
-      case "javascript":
-        return `function solution(${params}){\n ${instructions}}`;
-      case "python":
-        const pyInstructions = instructions.replace(/\/\//g, "#");
-        return `def solution(${params}):\n ${pyInstructions}    \n`;
-      case "java":
-         const javaParams = inputType?.map(it => `${getLanguageType(it.type, "java")} ${it.paramName}`).join(", ") || "";
-        return `public static ${getLanguageType(outputType, "java")} solution(${javaParams}) {\n        ${instructions}\n    \n}`;
-      case "cpp":
-        const cppParams = inputType?.map(it => `${getLanguageType(it.type, "cpp")} ${it.paramName}`).join(", ") || "";
-        return `${getLanguageType(outputType, "cpp")} solution(${cppParams}) {\n    ${instructions}\n}`;
-        case "go":
-    const goParams = inputType?.map(it => `${it.paramName} ${getLanguageType(it.type, "go")}`).join(", ") || "";
-    return `func solution(${goParams}) ${getLanguageType(outputType, "go")} {\n\t ${instructions}\n}`;
-      default:
-        return `// Template for ${lang}\nfunction solve(${params}) {\n  ${instructions}\n}`;
-    }
-  };
-
   const initTest = async () => {
     try {
       SetLoading(true);
@@ -81,46 +43,59 @@ const QuestionPreview = () => {
       setQuestion(questionLocalStorage);
 
       let templates = [];
+      
+      const setOptionsFromTemplates = (tempTemplates) => {
+        const optionsList = tempTemplates.map((sample) => {
+          return {
+            value: sample.language,
+            label: sample.language.toUpperCase(),
+            code: sample.code,
+          };
+        });
+        setOptions(optionsList);
+        if (optionsList.length > 0) {
+          if (!selectedLanguageForAPI.current) {
+            selectedLanguageForAPI.current = optionsList[0];
+            setSelectedLanguage(optionsList[0]);
+            code.current = optionsList[0]?.code || '';
+          } else {
+            const updatedSelected = optionsList.find(o => o.value === selectedLanguageForAPI.current.value);
+            if (updatedSelected) {
+              setSelectedLanguage(updatedSelected);
+              code.current = updatedSelected.code;
+            }
+          }
+        }
+      };
+
       if (
         questionData?.solutionTemplates &&
         questionData.solutionTemplates.length > 0
       ) {
         templates = questionData.solutionTemplates;
+        setOptionsFromTemplates(templates);
+        setTestCases(questionData?.testCases || []);
       } else if (questionData?.sampleQuestion && questionData?.sampleCode) {
         templates = questionData.sampleCode;
+        setOptionsFromTemplates(templates);
+        setTestCases(questionData?.testCases || []);
       } else {
         try {
           const res = await previewCustomQuestion(questionData);
-          if (res?.data && Array.isArray(res.data)) {
-            templates = res.data;
+          if (res?.data?.data) {
+            if (Array.isArray(res.data.data.solutionTemplates)) {
+              templates = res.data.data.solutionTemplates;
+              setOptionsFromTemplates(templates);
+            }
+            if (Array.isArray(res.data.data.testCases)) {
+              setTestCases(res.data.data.testCases);
+            }
           }
         } catch (apiErr) {
-          const fallbackLangs = ['cpp', 'java', 'python', 'javascript', 'go'];
-          templates = fallbackLangs.map((lang) => ({
-            language: lang,
-            code: generateBoilerplate(lang, questionData),
-          }));
+           console.error("API preview failed", apiErr);
+           toast(<CustomToast type="error" message="Failed to load preview templates." />);
         }
       }
-
-      const optionsList = templates.map((sample) => {
-        return {
-          value: sample.language,
-          label: sample.language.toUpperCase(),
-          code: sample.code || generateBoilerplate(sample.language, questionData),
-        };
-      });
-
-      setTestCases(questionData?.testCases || []);
-      setOptions(optionsList);
-      console.log("optionsList",optionsList)
-
-      if (optionsList.length > 0) {
-        selectedLanguageForAPI.current = optionsList[0];
-        setSelectedLanguage(optionsList[0]);
-        code.current = optionsList[0]?.code || '';
-      }
-      console.log("code", code.current);
     } catch (error) {
       toast(<CustomToast type="error" message={error.message} />);
     } finally {
@@ -164,7 +139,8 @@ const QuestionPreview = () => {
   }
 
   return (
-    <div className=" assessmentPage disable-copy my-4">
+    <div className={`${isModal ? "" : "assessmentPage"} disable-copy my-4`}>
+    {!isModal && (
       <div className="d-flex justify-content-start align-items-center">
         <div className="flex-grow-1">
           <button
@@ -175,7 +151,8 @@ const QuestionPreview = () => {
           </button>
         </div>
       </div>
-      <div className="assessmentPage__card  m-3  ">
+    )}
+      <div className={`${isModal ? "" : "assessmentPage__card"} m-3  `}>
         <div className="row">
           <div
             className="assessmentPage__left col-md-6 col-sm-12"
@@ -289,6 +266,7 @@ const QuestionPreview = () => {
                 <button
                   className="btns me-auto"
                   disabled
+                  style={{ cursor: "not-allowed", pointerEvents: "all" }}
                 >
                   Save test & Run
                 </button>
@@ -307,7 +285,6 @@ const QuestionPreview = () => {
               </div>
             </div>
             <CustomLoadingAnimation isLoading={Loading} />
-            {/* <AssessmentPage /> */}
 
             <Editor
               onMount={handleEditor}

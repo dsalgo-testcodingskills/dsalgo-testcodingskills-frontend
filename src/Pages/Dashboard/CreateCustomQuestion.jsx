@@ -16,6 +16,7 @@ import { Checkbox } from '@material-ui/core';
 import * as Yup from 'yup';
 import { CloseButton, Modal } from 'react-bootstrap';
 import './CreateCustomQuestion.scss';
+import './PreviewModal.scss';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import Plans from '../MyPlans/Plans';
 import QuestionPreview from './QuestionPreview';
@@ -65,7 +66,31 @@ const CreateCustomQuestion = () => {
   const [Loading, SetLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [paymentPlan, setPaymentPlan] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewQuestionData, setPreviewQuestionData] = useState(null);
   const [customCourseDetail, setCustomCourseDetail] = useState(defaultDetails);
+
+  const handlePreview = (values) => {
+    const tempTestCase = JSON.parse(JSON.stringify(values.testCases));
+    for (let i = 0; i < tempTestCase.length; i++) {
+      for (let j = 0; j < tempTestCase[i].input.length; j++) {
+        try {
+          if (typeof tempTestCase[i].input[j] === 'string' && tempTestCase[i].input[j].trim() !== '') {
+            tempTestCase[i].input.splice(
+              j,
+              1,
+              JSON.parse(tempTestCase[i].input[j]),
+            );
+          }
+        } catch (e) {
+          console.error("Error parsing test case input", e);
+        }
+      }
+      tempTestCase[i].input = JSON.stringify(tempTestCase[i].input);
+    }
+    setPreviewQuestionData({ ...values, testCases: tempTestCase });
+    setShowPreviewModal(true);
+  };
 
   const CustomQuestionSchema = Yup.object().shape({
     level: Yup.string().required('Level Required'),
@@ -613,7 +638,7 @@ const CreateCustomQuestion = () => {
                 type="button"
                   className="btns mt-3"
                   onClick={() => {
-                    history.push(`/admin/customQuestionnew/preview`, { question: values });
+                    handlePreview(values);
                   }}
                   >
                     Preview
@@ -623,6 +648,22 @@ const CreateCustomQuestion = () => {
           )}
         </Formik>
         <CustomLoadingAnimation isLoading={Loading} />
+        <Modal
+          show={showPreviewModal}
+          onHide={() => setShowPreviewModal(false)}
+          size="xl"
+          centered
+          className="preview-modal"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Question Preview</Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ backgroundColor: '#f4f7f9', padding: '0' }}>
+            {previewQuestionData && (
+              <QuestionPreview questionData={previewQuestionData} isModal={true} />
+            )}
+          </Modal.Body>
+        </Modal>
 
         {/* subscription payment modal */}
         <Modal
