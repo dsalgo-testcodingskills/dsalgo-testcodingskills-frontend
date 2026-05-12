@@ -69,14 +69,24 @@ const AssessmentPage = () => {
     try {
       SetLoading(true);
 
+      const testCaseMetrics = (question?.question?.testCases || []).map((tc, index) => {
+        const res = testResult?.[index];
+        return {
+          input: tc.input,
+          output: tc.output,
+          hidden: tc.hidden,
+          runtime: res?.runtime || 0,
+          memory: res?.memory || 0,
+        };
+      });
+
       await submitTestAPI({
         testId: test._id,
         code: code.current,
         emailId: test.emailId,
         questionId: question.question._id,
         language: selectedLanguage.value,
-        runtime: metricsRef.current?.runtime || 0,
-        memory: metricsRef.current?.memory || 0,
+        testCases: testCaseMetrics,
       });
       setResult('Saved successfully!!!');
 
@@ -124,7 +134,7 @@ const AssessmentPage = () => {
         };
       }
 
-      submitPeriodicAnswerFunc();
+      submitPeriodicAnswerFunc(resp.data);
     } catch (error) {
       setError(error);
     } finally {
@@ -145,7 +155,7 @@ const AssessmentPage = () => {
     return new File([u8arr], filename, { type: mime });
   };
 
-  const submitPeriodicAnswerFunc = async () => {
+  const submitPeriodicAnswerFunc = async (results = testResult) => {
     try {
       let imgURL = '';
       let signedUrlResponse;
@@ -158,14 +168,24 @@ const AssessmentPage = () => {
         imgURL = signedUrlResponse.data.url + '/' + signedUrlResponse.data.fields['key'];
       }
 
+      const testCaseMetrics = (questionDataRef.current?.question?.testCases || []).map((tc, index) => {
+        const res = results?.[index];
+        return {
+          input: tc.input,
+          output: tc.output,
+          hidden: tc.hidden,
+          runtime: res?.runtime || 0,
+          memory: res?.memory || 0,
+        };
+      });
+
       const request = {
         questionId: questionDataRef.current?.id,
         testId: _id,
         code: code.current,
         language: selectedLanguageForAPI.current?.value,
         imgURL,
-        runtime: metricsRef.current?.runtime || 0,
-        memory: metricsRef.current?.memory || 0,
+        testCases: testCaseMetrics,
       };
 
       await savePerodicAnswer(request);
