@@ -7,7 +7,6 @@ import Dashboard from '../Pages/Dashboard/Dashboard';
 import SolutionsReview from '../Pages/Dashboard/SolutionsReview';
 import TestReview from '../Pages/Dashboard/TestReview';
 import TestStatus from '../Pages/Dashboard/TestStatus';
-import Question from '../Pages/Dashboard/Question';
 import ProtectedRoute from './ProtectedRoute';
 import CustomQuestionList from '../Pages/Dashboard/CustomQuestionList';
 import CreateCustomQuestion from '../Pages/Dashboard/CreateCustomQuestion';
@@ -16,6 +15,7 @@ import MyPlans from '../Pages/MyPlans/MyPlans';
 import MultiTestStatus from '../Pages/Dashboard/MultiTestStatus';
 import UserManagement from '../Pages/UserManagement/UserManagement';
 import { UserRoleEnum } from '../utils/constants';
+import QuestionPreview from '../Pages/Dashboard/QuestionPreview';
 
 function AdminRoutes() {
   const { loginData } = useSelector((store) => store.dataReducer);
@@ -23,6 +23,9 @@ function AdminRoutes() {
   return (
     <div className="container-fluid">
       <Switch>
+        <Route path="/admin/question/:questionId">
+          <QuestionPreview />
+        </Route>
         <ProtectedRoute exact={true} path="/admin/myPlans">
           <MyPlans />
         </ProtectedRoute>
@@ -49,6 +52,9 @@ function AdminRoutes() {
         <ProtectedRoute exact={true} path="/admin/customQuestion">
           <CustomQuestionList />
         </ProtectedRoute>
+        <ProtectedRoute path="/admin/customQuestionnew/preview">
+          <QuestionPreview />
+        </ProtectedRoute>
         <ProtectedRoute path="/admin/customQuestionnew/:id?">
           <CreateCustomQuestion />
         </ProtectedRoute>
@@ -62,9 +68,6 @@ function AdminRoutes() {
             </ProtectedRoute>
           </>
         )}
-        <Route path="/admin/question/:questionId">
-          <Question />
-        </Route>
       </Switch>
     </div>
   );

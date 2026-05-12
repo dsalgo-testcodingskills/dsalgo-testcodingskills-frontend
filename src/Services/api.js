@@ -179,6 +179,9 @@ export function getQuestionTemplatesTypes() {
 export function submitCustomQuestion(body) {
   return axios.post('/questions/createCustomQuestion', body);
 }
+export function previewCustomQuestion(body) {
+  return axios.post('/questions/previewCustomQuestion', body);
+}
 
 export function checkEmail(body) {
   return axios.post('/authentication/checkEmail', body);

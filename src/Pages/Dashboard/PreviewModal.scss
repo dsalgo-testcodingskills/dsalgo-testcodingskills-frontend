@@ -1,0 +1,14 @@
+.preview-modal {
+  .modal-content {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .modal-header {
+    background-color: #fff;
+    border-bottom: 1px solid #dee2e6;
+  }
+  .modal-body {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}

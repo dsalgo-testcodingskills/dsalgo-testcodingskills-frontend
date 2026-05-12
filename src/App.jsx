@@ -52,9 +52,9 @@ function App() {
         />
         <Route exact path="/pricing" component={Pricing} />
 
-        <Route path="/student/*" component={Studentstest} />
+        <Route path="/student" component={Studentstest} />
 
-        <Route path="/admin/*" component={AdminRoutes} />
+        <Route path="/admin" component={AdminRoutes} />
 
         <Route path="*">
           {loginData ? <Redirect to="/" /> : <Redirect to="/" />}

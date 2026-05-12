@@ -67,7 +67,7 @@ function Header() {
     try {
       await logOut();
       dispatch(setLogout());
-      history.push('/');
+      window.location.href = '/login';
     } catch (error) {
       console.log('Error: while logging out', error);
     }
