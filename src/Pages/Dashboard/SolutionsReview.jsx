@@ -211,27 +211,16 @@ const SolutionsReview = () => {
                           className="testcase-output mt-2 border p-2 col-12"
                         ></textarea>
                       </div>
-                      {((testResult && testResult[index]) || (test?.questions[0]?.answer[codeArraylength]?.testCases && test.questions[0].answer[codeArraylength].testCases[index])) && (
+                      {testResult && testResult[index] && (
                         <div className="status-badge">
                           <div
                             className={`badge text-uppercase ${
-                              (testResult ? testResult[index].result : true) // We don't know the result of saved test cases easily without checking output, but for now just show metrics
+                              testResult[index].result
                                 ? 'status-badge-success'
                                 : 'status-badge-fail'
                             }`}
                           >
-                            {testResult ? (testResult[index].result ? 'Pass' : 'Fail') : 'Saved'}
-                          </div>
-                          <div className="mt-1" style={{ fontSize: '0.75rem', color: '#808081' }}>
-                            {testResult ? (
-                              <>
-                                {testResult[index].runtime} ms | {(testResult[index].memory / 1024).toFixed(2)} MB
-                              </>
-                            ) : (
-                              <>
-                                {test.questions[0].answer[codeArraylength].testCases[index]?.runtime} ms | {(test.questions[0].answer[codeArraylength].testCases[index]?.memory / 1024).toFixed(2)} MB
-                              </>
-                            )}
+                            {testResult[index].result ? 'Pass' : 'Fail'}
                           </div>
                         </div>
                       )}
@@ -276,18 +265,7 @@ const SolutionsReview = () => {
               </div>
             </div>
             
-            {test?.questions[0]?.answer[codeArraylength]?.testCases?.length > 0 && (
-              <div className="d-flex justify-content-end mb-2">
-                <span className="badge bg-secondary me-2">
-                  <i className="fas fa-stopwatch me-1"></i>
-                  {(test.questions[0].answer[codeArraylength].testCases.reduce((acc, curr) => acc + (curr.runtime || 0), 0) / test.questions[0].answer[codeArraylength].testCases.length).toFixed(3)} ms (avg)
-                </span>
-                <span className="badge bg-secondary">
-                  <i className="fas fa-memory me-1"></i>
-                  {(Math.max(...test.questions[0].answer[codeArraylength].testCases.map(tc => tc.memory || 0)) / 1024).toFixed(2)} MB (max)
-                </span>
-              </div>
-            )}
+
 
             <CustomLoadingAnimation isLoading={Loading} />
 
