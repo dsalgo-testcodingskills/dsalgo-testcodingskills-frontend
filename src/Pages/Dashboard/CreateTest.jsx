@@ -19,10 +19,13 @@ import './CreateTest.scss';
 import { Checkbox, Tooltip } from '@material-ui/core';
 import { CloseButton, Modal } from 'react-bootstrap';
 import Plans from '../MyPlans/Plans';
+import QuestionPreview from './QuestionPreview';
 
 const CreateTest = () => {
   const [multi, setMulti] = useState(false);
   const [paymentPlan, setPaymentPlan] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewQuestionId, setPreviewQuestionId] = useState(null);
   const history = useHistory();
   const questionsLevelOptions = [
     { label: 'easy', value: 'easy' },
@@ -635,12 +638,10 @@ const CreateTest = () => {
                                 disabled={question.label === null}
                                 className="btns view-btn"
                                 style={{ padding: '9px 25px' }}
-                                onClick={() =>
-                                  window.open(
-                                    `/admin/question/${question._id}`,
-                                    '_blank',
-                                  )
-                                }
+                                onClick={() => {
+                                  setPreviewQuestionId(question._id);
+                                  setShowPreviewModal(true);
+                                }}
                               >
                                 View
                               </button>
@@ -866,6 +867,23 @@ const CreateTest = () => {
           />
         </Modal.Header>
         <Plans />
+      </Modal>
+
+      <Modal
+        show={showPreviewModal}
+        onHide={() => setShowPreviewModal(false)}
+        size="xl"
+        centered
+        className="preview-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Question Preview</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ backgroundColor: '#f4f7f9', padding: '0' }}>
+          {previewQuestionId && (
+            <QuestionPreview questionId={previewQuestionId} isModal={true} />
+          )}
+        </Modal.Body>
       </Modal>
     </>
   );

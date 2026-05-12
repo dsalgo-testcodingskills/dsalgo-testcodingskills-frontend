@@ -1,19 +1,21 @@
 import Editor from '@monaco-editor/react';
 import React, { useEffect, useRef, useState } from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import QuestionInstructions from '../../components/QuestionInstructions/QuestionInstructions';
-import { getQuestionTemplatesTypes, previewCustomQuestion } from '../../Services/api';
+import { getQuestionTemplatesTypes, previewCustomQuestion, GetAllQuestions } from '../../Services/api';
 import '../../Pages/AssessmentPage/AssessmentPage.scss';
 
 
-const QuestionPreview = ({ questionData: propQuestionData, isModal }) => {
+const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestionData, isModal }) => {
   const history = useHistory();
   const location = useLocation();
-  const questionData = propQuestionData || location.state?.question;
+  const { questionId: paramQuestionId } = useParams();
+  const questionId = propQuestionId || paramQuestionId;
+  const [questionData, setQuestionData] = useState(propQuestionData || location.state?.question);
 
   const [options, setOptions] = useState([]);
   const [testCases, setTestCases] = useState([]);
@@ -30,12 +32,12 @@ const QuestionPreview = ({ questionData: propQuestionData, isModal }) => {
   const questionDataRef = useRef(null);
   const monacoRef = useRef(null);
 
-  const initTest = async () => {
+  const initTest = async (data) => {
     try {
       SetLoading(true);
 
       const questionLocalStorage = {
-        question: questionData,
+        question: data,
         answer: [],
       };
 
@@ -69,19 +71,19 @@ const QuestionPreview = ({ questionData: propQuestionData, isModal }) => {
       };
 
       if (
-        questionData?.solutionTemplates &&
-        questionData.solutionTemplates.length > 0
+        data?.solutionTemplates &&
+        data.solutionTemplates.length > 0
       ) {
-        templates = questionData.solutionTemplates;
+        templates = data.solutionTemplates;
         setOptionsFromTemplates(templates);
-        setTestCases(questionData?.testCases || []);
-      } else if (questionData?.sampleQuestion && questionData?.sampleCode) {
-        templates = questionData.sampleCode;
+        setTestCases(data?.testCases || []);
+      } else if (data?.sampleQuestion && data?.sampleCode) {
+        templates = data.sampleCode;
         setOptionsFromTemplates(templates);
-        setTestCases(questionData?.testCases || []);
+        setTestCases(data?.testCases || []);
       } else {
         try {
-          const res = await previewCustomQuestion(questionData);
+          const res = await previewCustomQuestion(data);
           if (res?.data?.data) {
             if (Array.isArray(res.data.data.solutionTemplates)) {
               templates = res.data.data.solutionTemplates;
@@ -109,9 +111,27 @@ const QuestionPreview = ({ questionData: propQuestionData, isModal }) => {
 
   useEffect(() => {
     if (questionData) {
-      initTest();
+      initTest(questionData);
+    } else if (questionId) {
+      const fetchQuestion = async () => {
+        try {
+          SetLoading(true);
+          const res = await GetAllQuestions({ questionId });
+          const fetchedData = res?.data?.data?.[0];
+          if (fetchedData) {
+            setQuestionData(fetchedData);
+          } else {
+            toast(<CustomToast type="error" message="Question not found" />);
+          }
+        } catch (err) {
+          toast(<CustomToast type="error" message={err?.message || "Error fetching question"} />);
+        } finally {
+          SetLoading(false);
+        }
+      };
+      fetchQuestion();
     }
-  }, [questionData]);
+  }, [questionData, questionId]);
 
   const handleEditor = (editor) => {
     monacoRef.current = editor;
@@ -180,19 +200,21 @@ const QuestionPreview = ({ questionData: propQuestionData, isModal }) => {
                             >
                               <div>
                                 Input: <br />
-                                {Array.isArray(ele.input) ? ele.input.map((item, itemIndex) => {
-                                  return (
-                                    <span key={itemIndex}>
-                                      {item.toString().split(',').join(' ')}
-                                      <br />
-                                    </span>
-                                  );
-                                }) : ele.input}
+                                {Array.isArray(ele.input)
+                                  ? ele.input.map((item, itemIndex) => {
+                                      return (
+                                        <span key={itemIndex}>
+                                          {item?.toString().split(',').join(' ') || ''}
+                                          <br />
+                                        </span>
+                                      );
+                                    })
+                                  : ele.input}
                               </div>
                               <div>
                                 Expected Output:
                                 <br />{' '}
-                                {ele.output.toString().split(',').join(' ')}
+                                {ele.output?.toString().split(',').join(' ') || ''}
                               </div>
                               {testResult && (
                                 <div

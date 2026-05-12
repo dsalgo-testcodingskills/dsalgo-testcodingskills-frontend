@@ -307,19 +307,21 @@ const AssessmentPage = () => {
                             >
                               <div>
                                 Input: <br />
-                                {ele.input.map((item, itemIndex) => {
-                                  return (
-                                    <span key={itemIndex}>
-                                      {item.toString().split(',').join(' ')}
-                                      <br />
-                                    </span>
-                                  );
-                                })}
+                                {Array.isArray(ele.input)
+                                  ? ele.input.map((item, itemIndex) => {
+                                      return (
+                                        <span key={itemIndex}>
+                                          {item?.toString().split(',').join(' ') || ''}
+                                          <br />
+                                        </span>
+                                      );
+                                    })
+                                  : ele.input}
                               </div>
                               <div>
                                 Expected Output:
                                 <br />{' '}
-                                {ele.output.toString().split(',').join(' ')}
+                                {ele.output?.toString().split(',').join(' ') || ''}
                               </div>
                               {testResult && (
                                 <div

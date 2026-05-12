@@ -9,6 +9,8 @@ import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import QuestionInstructions from '../../components/QuestionInstructions/QuestionInstructions';
 
 const Question = () => {
+  console.log("inside question page");
+  
   const { questionId } = useParams();
   const [testCases, setTestCases] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,26 +21,26 @@ const Question = () => {
       setLoading(true);
       const result = await GetAllQuestions({ questionId });
 
-      const testLocal = result.data.data[0];
+      const testLocal = result?.data?.data?.[0];
 
-      const questionLocalStorage = testLocal;
-      setQuestion(questionLocalStorage);
-
-      setTestCases(questionLocalStorage?.testCases);
+      if (testLocal) {
+        setQuestion(testLocal);
+        setTestCases(testLocal?.testCases || []);
+      } else {
+        toast(<CustomToast type="error" message="Question not found" />);
+      }
     } catch (error) {
-      toast(<CustomToast type="error" message={error.message} />);
+      toast(<CustomToast type="error" message={error?.message || error || 'Error fetching question'} />);
     } finally {
       setLoading(false);
     }
   };
 
-  const getTests = async () => {
-    await initTest();
-  };
-
   useEffect(() => {
-    getTests();
-  }, []);
+    if (questionId) {
+      initTest();
+    }
+  }, [questionId]);
 
   return loading ? (
     <CustomLoadingAnimation isLoading={loading} />
@@ -47,33 +49,45 @@ const Question = () => {
       <QuestionInstructions question={question} showInstructions={false} />
       <div className="mt-3">
         <h5 className="text-decoration-underline mb-2">Test Cases</h5>
-        {testCases.map((ele, index) => {
-          return (
-            <div
-              className={`d-flex align-items-center mt-2 border p-2`}
-              key={index}
-            >
-              <div className="status-text">
-                <div>
-                  <u>Test Case {index + 1}</u>
+        {testCases && testCases.length > 0 ? (
+          testCases.map((ele, index) => {
+            return (
+              <div
+                className={`d-flex align-items-center mt-2 border p-2`}
+                key={index}
+              >
+                <div className="status-text">
+                  <div>
+                    <u>Test Case {index + 1}</u>
+                  </div>
+                  {!ele.hidden && (
+                    <>
+                      <div>
+                        Input: <br />
+                        {Array.isArray(ele.input)
+                          ? ele.input.map((item, itemIndex) => {
+                              return (
+                                <span key={itemIndex}>
+                                  {item?.toString().split(',').join(' ') || ''}
+                                  <br />
+                                </span>
+                              );
+                            })
+                          : ele.input}
+                      </div>
+                      <div>
+                        Expected Output:
+                        <br /> {ele.output?.toString().split(',').join(' ') || ''}
+                      </div>
+                    </>
+                  )}
                 </div>
-                {!ele.hidden && (
-                  <>
-                    <div>Input: <br/>
-                          {ele.input.map((item,itemIndex)=>{
-                            return (
-                            <span key={itemIndex}>
-                             {item.toString().split(',').join(' ')}<br/>
-                            </span>)
-                          })}
-                          </div>
-                            <div>Expected Output:<br/> {ele.output.toString().split(',').join(' ')}</div>
-                  </>
-                )}
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div>No test cases found for this question.</div>
+        )}
       </div>
     </div>
   );

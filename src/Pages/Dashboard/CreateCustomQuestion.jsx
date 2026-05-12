@@ -233,7 +233,6 @@ const CreateCustomQuestion = () => {
     }
   };
 
-  // React Rich Text Editor
   const modules = {
     toolbar: [
       [
