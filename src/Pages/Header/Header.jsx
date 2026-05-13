@@ -341,7 +341,7 @@ function Header() {
                       </NavDropdown.Item>
                     ) : null}
 
-                    {subDetails?.length > 0 && [UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role) && (
+                    {[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role) && (
                       <NavDropdown.Item eventKey="2">
                         <div
                           className="login-option-block"

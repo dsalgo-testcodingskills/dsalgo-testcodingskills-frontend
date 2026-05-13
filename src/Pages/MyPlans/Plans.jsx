@@ -1,32 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import {
   createSubscription,
   getOrgDetails,
   updatePaymentStatus,
+  getPlanLimits,
+  getSubDetails,
 } from '../../Services/api';
 import './Plans.scss';
 import { useHistory } from 'react-router';
-import { useEffect } from 'react';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 
 function Plans() {
   const history = useHistory();
+  const { testsCount } = useSelector((store) => store.dataReducer);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const getOrganization = async () => {
+  const [planLimits, setPlanLimits] = useState(null);
+  const [subDetails, setSubDetails] = useState(null);
+
+  const fetchData = async () => {
     try {
-      let resp = await getOrgDetails();
-      setUser(resp.data);
+      setLoading(true);
+      const [orgResp, limitsResp, subResp] = await Promise.all([
+        getOrgDetails(),
+        getPlanLimits(),
+        getSubDetails(),
+      ]);
+      setUser(orgResp.data);
+      setPlanLimits(limitsResp.data);
+      setSubDetails(subResp.data.data);
     } catch (error) {
-      console.log('Error: while getting organization details', error);
+      console.log('Error: while getting plans data', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    getOrganization();
+    fetchData();
   }, []);
 
   //Generic Load script function
@@ -117,23 +132,35 @@ function Plans() {
         <p className="plans__plan-p">
           <b>Plan 1</b>
         </p>
-        <h2> 20 Test</h2>
+        <h2> {planLimits?.free?.tests || 20} Test</h2>
         <p className="plans__plan-mon">in a month (30 days)</p>
         <h6>Free</h6>
         <button type="submit" className="plans__plan-disable">
           {' '}
           Current Plan
         </button>
-        <p className="plans__plan-exp">Expired</p>
+        {(!subDetails || subDetails.length === 0) ? (
+          testsCount > 0 ? (
+            <p className="plans__plan-exp" style={{ color: '#24C5DA' }}>Active</p>
+          ) : (
+            <p className="plans__plan-exp">Expired</p>
+          )
+        ) : (
+          <p className="plans__plan-exp">Expired</p>
+        )}
       </div>
       <div className="plans__plan plan-1">
         <p className="plans__plan-p">
           <b>Plan 2</b>
         </p>
-        <h2> 100 Test</h2>
+        <h2> {planLimits?.paid?.tests || 100} Test</h2>
         <p className="plans__plan-mon">in a month (30 days)</p>
-        <p className="plans__plan-p">Create 20 custom questions</p>
-        <p className="plans__plan-p">Create 10 users</p>
+        <p className="plans__plan-p">
+          Create {planLimits?.paid?.customQuestions || 20} custom questions
+        </p>
+        <p className="plans__plan-p">
+          Create {planLimits?.paid?.users || 10} users
+        </p>
         <h6>
           Rs 1000 <span>/ Month</span>
         </h6>

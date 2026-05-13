@@ -16,6 +16,7 @@ import moment from 'moment';
 import { Dialog } from '@material-ui/core';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import { toast } from 'react-toastify';
+import Plans from './Plans';
 
 const MyPlans = () => {
   const dispatch = useDispatch();
@@ -217,9 +218,9 @@ const MyPlans = () => {
       </label>
 
       <div className="myPlans__content">
+        {subDetails && subDetails.length > 0 ? (
         <div className="my-4">
           <div className="row">
-            {subDetails && (
               <div className=" myPlans__active col-9">
                 <h4>
                   <label>Current Plan :</label>
@@ -240,16 +241,15 @@ const MyPlans = () => {
                 <p>
                   <label>Expire in : </label>
                   {console.log(subDetails[0]?.end_at * 1000)}
-                  <sapn>
+                  <span>
                     {subDetails[0]?.end_at
                       ? `${moment(subDetails[0]?.end_at * 1000).format(
                           'DD/MM/YYYY',
                         )}`
                       : '-'}
-                  </sapn>
+                  </span>
                 </p>
               </div>
-            )}
             <div className="col-3">
               <button className="btns" onClick={handleOpen}>
                 Cancel Plan
@@ -264,6 +264,11 @@ const MyPlans = () => {
             columns={paymentData.length > 0 ? columns : columnsSubscription}
           />
         </div>
+        ) : (
+          <div className="my-4">
+            <Plans />
+          </div>
+        )}
       </div>
       <CustomLoadingAnimation isLoading={Loading} />
     </>

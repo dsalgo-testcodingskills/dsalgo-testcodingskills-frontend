@@ -111,29 +111,46 @@ const CreateTest = () => {
         .required('Email is required'),
     }),
     phone: Yup.string()
-      .optional()
-      .min(10, 'Phone number should contain 10 digits')
-      .max(12, 'Phone number length should not be greater than 12'),
+      .test('len', 'Phone number should be 10-12 digits', (val) => {
+        if (!val) return true;
+        return val.length >= 10 && val.length <= 12;
+      }),
     selectedQuestions: Yup.array().of(
       Yup.object().shape({
         _id: Yup.string().nullable().required('Please select a question!'),
       }),
     ),
-    easy: Yup.number()
-      .integer()
-      .min(0, 'Minimum Value should be Zero')
-      .required(),
-    medium: Yup.number()
-      .integer()
-      .min(0, 'Minimum Value should be Zero')
-      .required(),
-    hard: Yup.number()
-      .integer()
-      .min(0, 'Minimum Value should be Zero')
-      .when(['easy', 'medium'], {
-        is: (easy, medium) => easy === 0 && medium === 0,
-        then: Yup.number().min(1, 'Please fill any of the field'),
-      }),
+    easy: Yup.number().when('questionSelection', {
+      is: 'random',
+      then: Yup.number()
+        .integer()
+        .min(0, 'Minimum Value should be Zero')
+        .max(questions.easy.length, `We don't have that much questions (Max: ${questions.easy.length})`)
+        .required(),
+      otherwise: Yup.number().notRequired()
+    }),
+    medium: Yup.number().when('questionSelection', {
+      is: 'random',
+      then: Yup.number()
+        .integer()
+        .min(0, 'Minimum Value should be Zero')
+        .max(questions.medium.length, `We don't have that much questions (Max: ${questions.medium.length})`)
+        .required(),
+      otherwise: Yup.number().notRequired()
+    }),
+    hard: Yup.number().when('questionSelection', {
+      is: 'random',
+      then: Yup.number()
+        .integer()
+        .min(0, 'Minimum Value should be Zero')
+        .max(questions.hard.length, `We don't have that much questions (Max: ${questions.hard.length})`)
+        .when(['easy', 'medium'], {
+          is: (easy, medium) => easy === 0 && medium === 0,
+          then: Yup.number().min(1, 'Please fill any of the field'),
+        })
+        .required(),
+      otherwise: Yup.number().notRequired()
+    }),
     TestDuration: Yup.number().required().positive().integer().max(180).min(5),
     StartDate: Yup.date().default(function () {
       return new Date();
@@ -149,21 +166,34 @@ const CreateTest = () => {
         _id: Yup.string().nullable(),
       }),
     ),
-    easy: Yup.number()
-      .integer()
-      .min(0, 'Minimum Value should be Zero')
-      .required(),
-    medium: Yup.number()
-      .integer()
-      .min(0, 'Minimum Value should be Zero')
-      .required(),
-    hard: Yup.number()
-      .integer()
-      .min(0, 'Minimum Value should be Zero')
-      .when(['easy', 'medium'], {
-        is: (easy, medium) => easy === 0 && medium === 0,
-        then: Yup.number().min(1, 'Please fill any of the field'),
-      }),
+    easy: Yup.number().when('questionSelection', {
+      is: 'random',
+      then: Yup.number()
+        .integer()
+        .min(0, 'Minimum Value should be Zero')
+        .required(),
+      otherwise: Yup.number().notRequired()
+    }),
+    medium: Yup.number().when('questionSelection', {
+      is: 'random',
+      then: Yup.number()
+        .integer()
+        .min(0, 'Minimum Value should be Zero')
+        .required(),
+      otherwise: Yup.number().notRequired()
+    }),
+    hard: Yup.number().when('questionSelection', {
+      is: 'random',
+      then: Yup.number()
+        .integer()
+        .min(0, 'Minimum Value should be Zero')
+        .when(['easy', 'medium'], {
+          is: (easy, medium) => easy === 0 && medium === 0,
+          then: Yup.number().min(1, 'Please fill any of the field'),
+        })
+        .required(),
+      otherwise: Yup.number().notRequired()
+    }),
     TestDuration: Yup.number().required().positive().integer().max(180).min(5),
     StartDate: Yup.date().default(function () {
       return new Date();
@@ -574,6 +604,7 @@ const CreateTest = () => {
                         className="border p-3 mt-3 rounded-3"
                         hidden={values.selectedQuestions.length === 0}
                       >
+                        {/* <>{JSON.stringify(values.selectedQuestions)}</> */}
                         {values.selectedQuestions.map((question, index) => (
                           <div className="selectQuestions-row" key={index}>
                             <div className="index-margin">{index + 1}.</div>
