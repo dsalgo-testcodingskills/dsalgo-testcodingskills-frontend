@@ -24,6 +24,7 @@ import "./AssessmentPage.scss";
 const AssessmentPage = () => {
   const history = useHistory();
   const query = useQuery();
+  const questionData = location.state?.question;
 
   const {
     selectedTest: { _id, emailId },
@@ -32,6 +33,7 @@ const AssessmentPage = () => {
   const { qid } = useParams();
   const [options, setOptions] = useState([]);
   const [testCases, setTestCases] = useState([]);
+  const [topics, setTopics] = useState([]);
 
   const selectedLanguageForAPI = useRef();
   const [selectedLanguage, setSelectedLanguage] = useState();
@@ -234,6 +236,10 @@ const AssessmentPage = () => {
       }
       questionDataRef.current = questionLocalStorage;
       setQuestion(questionLocalStorage);
+
+      const topics = questionLocalStorage?.question?.topics || [];
+      setTopics(topics); 
+
       const optionsList = (
         questionLocalStorage?.question.sampleQuestion
           ? questionLocalStorage?.question?.sampleCode
@@ -338,7 +344,7 @@ const AssessmentPage = () => {
           <div className="assessmentPage__left col-md-6 col-sm-12">
             <div>
               <QuestionInstructions
-                question={question?.question}
+                question={questionData}
                 showInstructions={true}
               />
               <div className="mt-3 test-cases-scroll">

@@ -44,6 +44,8 @@ const CreateCustomQuestion = () => {
     instructions: '',
     sampleQuestion: false,
     public: false,
+    topics: [],
+    topicInput: '',
     testCases: [
       {
         input: [],
@@ -97,6 +99,7 @@ const CreateCustomQuestion = () => {
     level: Yup.string().required('Level Required'),
     question: Yup.string().required('Question Title Required'),
     instructions: Yup.string().required('Question Description Required'),
+    topics: Yup.array().min(1, 'Topics Required').required('Topics Required'),
     inputType: Yup.array()
       .of(
         Yup.object().shape({
@@ -136,19 +139,27 @@ const CreateCustomQuestion = () => {
     if (params.id) {
       const res = await getCustomQuestionById(params.id);
       if (res?.data?.data) {
-        for (let i = 0; i < res.data.data.testCases.length; i++) {
-          for (let j = 0; j < res.data.data.testCases[i].input.length; j++) {
-            res.data.data.testCases[i].input[j] = JSON.stringify(
-              res.data.data.testCases[i].input[j],
+        const questionData = res.data.data;
+        for (let i = 0; i < questionData.testCases.length; i++) {
+          for (let j = 0; j < questionData.testCases[i].input.length; j++) {
+            questionData.testCases[i].input[j] = JSON.stringify(
+              questionData.testCases[i].input[j],
             );
           }
-          res.data.data.testCases[i].output = JSON.stringify(
-            res.data.data.testCases[i].output,
+          questionData.testCases[i].output = JSON.stringify(
+            questionData.testCases[i].output,
           );
         }
 
+        if (questionData.topics && typeof questionData.topics === 'string') {
+          questionData.topics = questionData.topics.split(',').filter(t => t.trim() !== '');
+        } else if (!questionData.topics) {
+          questionData.topics = [];
+        }
+
         setCustomCourseDetail({
-          ...res?.data?.data,
+          ...questionData,
+          topicInput: '',
         });
       }
     }
@@ -170,11 +181,13 @@ const CreateCustomQuestion = () => {
         }
         tempTestCase[i].input = JSON.stringify(tempTestCase[i].input);
       }
+      
+      const { topicInput, ...otherValues } = values;
       const req = {
-        ...values,
+        ...otherValues,
+        // topics: values.topics.join(','), // Assuming backend expects comma separated string
         testCases: tempTestCase,
       };
-
       if (editMode) {
         const editCustomQuestons = await editCustomQuestions(params.id, req);
         if (editCustomQuestons && editCustomQuestons.data.code === 200) {
@@ -307,55 +320,145 @@ const CreateCustomQuestion = () => {
             submitCustomQuestionForm(values, resetForm);
           }}
         >
-          {({ values, setFieldValue, handleSubmit }) => (
-            <Form className="px-5 d-flex flex-column my-3 ">
-              <div className="row mt-3">
-                <div>
-                  {' '}
-                  <h5>Question Details</h5>
+          {({ values, setFieldValue, handleSubmit }) => {
+            const addTopic = () => {
+              if (values.topicInput.trim() !== '') {
+                const newTopic = values.topicInput.trim();
+                if (!values.topics.includes(newTopic)) {
+                  setFieldValue('topics', [...values.topics, newTopic]);
+                }
+                setFieldValue('topicInput', '');
+              }
+            };
+
+            const removeTopic = (index) => {
+              const updated = values.topics.filter((_, i) => i !== index);
+              setFieldValue('topics', updated);
+            };
+            return (
+              <Form className="px-5 d-flex flex-column my-3 ">
+                <div className="row mt-3">
+                  <div>
+                    {' '}
+                    <h5>Question Details</h5>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label createCustomQuestion__form-label">
+                      Question Title
+                    </label>
+                    <Field
+                      name="question"
+                      type="string"
+                      className="form-control"
+                    />
+                    <ErrorMessage
+                      name="question"
+                      render={(msg) => <div className="text-danger">{msg}</div>}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label createCustomQuestion__form-label">
+                      Question Description
+                    </label>
+                    <Field
+                      name="instructions"
+                      type="text"
+                      className="form-control"
+                    >
+                      {({ field }) => (
+                        <ReactQuill
+                          placeholder="Write Something..."
+                          modules={modules}
+                          formats={formats}
+                          onChange={field.onChange(field.name)}
+                          value={field.value}
+                        />
+                      )}
+                    </Field>
+                    <ErrorMessage
+                      name="instructions"
+                      render={(msg) => <div className="text-danger">{msg}</div>}
+                    />
+                  </div>
                 </div>
-                <div className="col-6">
-                  <label className="form-label createCustomQuestion__form-label">
-                    Question Title
-                  </label>
-                  <Field
-                    name="question"
-                    type="string"
-                    className="form-control"
-                  />
-                  <ErrorMessage
-                    name="question"
-                    render={(msg) => <div className="text-danger">{msg}</div>}
-                  />
-                </div>
-                <div className="col-6">
-                  <label className="form-label createCustomQuestion__form-label">
-                    Question Description
-                  </label>
-                  <Field
-                    name="instructions"
-                    type="text"
-                    className="form-control"
-                  >
-                    {({ field }) => (
-                      <ReactQuill
-                        placeholder="Write Something..."
-                        modules={modules}
-                        formats={formats}
-                        onChange={field.onChange(field.name)}
-                        value={field.value}
+
+                <div className="row mt-3">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h5>Tags/Topics</h5>
+                    </div>
+                  </div>
+
+                  <div className="d-flex align-items-center flex-wrap gap-2">
+                    <div style={{ width: '500px' }}>
+                      <div className="d-flex align-items-center gap-2">
+                        <Field
+                          name="topicInput"
+                          type="text"
+                          className="form-control"
+                        />
+                        <button
+                          type="button"
+                          onClick={addTopic}
+                          disabled={values.topicInput.trim() === ''}
+                          style={{
+                            background: 'none',
+                            border: '2px solid green',
+                            borderRadius: '6px',
+                            cursor: values.topicInput.trim() === '' ? 'not-allowed' : 'pointer',
+                            color: 'green',
+                            fontWeight: 'bold',
+                            fontSize: '18px',
+                            padding: '4px 10px',
+                            lineHeight: '1',
+                            opacity: values.topicInput.trim() === '' ? 0.4 : 1,
+                          }}
+                        >
+                          ✓
+                        </button>
+                      </div>
+
+                      <ErrorMessage
+                        name="topics"
+                        render={(msg) => (
+                          <div className="text-danger">{msg}</div>
+                        )}
                       />
-                    )}
-                  </Field>
-                  <ErrorMessage
-                    name="instructions"
-                    render={(msg) => <div className="text-danger">{msg}</div>}
-                  />
+                    </div>
+
+                    {/* Topics */}
+                    {values.topics.map((topic, index) => (
+                      <div
+                        key={index}
+                        className="badge bg-primary text-dark d-flex align-items-center p-2"
+                        style={{
+                          fontSize: '16px',
+                          fontFamily: 'Arial',
+                        }}
+                      >
+                        <span>{topic}</span>
+
+                        <button
+                          type="button"
+                          onClick={() => removeTopic(index)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            marginLeft: '8px',
+                            color: 'red',
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            lineHeight: '1',
+                            padding: '0',
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              <div className="row mt-3"></div>
-
               {/* InputType */}
               <FieldArray name="inputType">
                 {({ remove, push }) => (
@@ -650,18 +753,24 @@ const CreateCustomQuestion = () => {
                 >
                   {editMode ? 'Update' : 'Create'}
                 </button>
-                <button
-                type="button"
-                  className="btns mt-3"
-                  onClick={() => {
-                    handlePreview(values);
-                  }}
+                  <button
+                    type="button"
+                    className="btns mt-3"
+                    onClick={() => {
+                      history.push(`/admin/customQuestionnew/preview`, {
+                        question: {
+                          ...values,
+                          topics: values.topics || [],
+                        }
+                      });
+                    }}
                   >
                     Preview
                   </button>
               </div>
             </Form>
           )}
+        }
         </Formik>
         <CustomLoadingAnimation isLoading={Loading} />
         <Modal
