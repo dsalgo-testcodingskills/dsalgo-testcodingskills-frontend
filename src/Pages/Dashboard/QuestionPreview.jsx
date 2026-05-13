@@ -172,23 +172,20 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
         </div>
       </div>
     )}
-      <div className={`${isModal ? "" : "assessmentPage__card"} m-3  `}>
-        <div className="row">
-          <div
-            className="assessmentPage__left col-md-6 col-sm-12"
-            style={{ padding: '30px 35px' }}
-          >
+      <div className={`${isModal ? "" : "assessmentPage__card"}`}>
+        <div className="row assessment-content-row">
+          <div className="assessmentPage__left col-md-6 col-sm-12">
             <div>
               <QuestionInstructions
                 question={question?.question}
                 showInstructions={true}
               />
-              <div className="mt-3">
+              <div className="mt-3 test-cases-scroll">
                 <h5 className=" mb-2">Test Cases</h5>
                 {testCases.map((ele, index) => {
                   return (
                     <div className={`card p-3`} key={index}>
-                      {!ele.hidden && (
+                      {(!ele.hidden || (ele.hidden && testResult && testResult[index] && !testResult[index].result)) && (
                         <>
                           <div className="status-text">
                             <div>
@@ -253,7 +250,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
                         </>
                       )}
 
-                      {ele.hidden && (
+                      {(ele.hidden && (!testResult || !testResult[index] || testResult[index].result)) && (
                         <div className="assessmentPage__hidden">
                           <div>
                             <h6>Test Case {index + 1}</h6>
@@ -282,7 +279,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
               </div>
             </div>
           </div>
-          <div className="col-md-6 col-sm-12" style={{ padding: '30px 35px' }}>
+          <div className="col-md-6 col-sm-12 scrollable-column">
             <div className="row d-flex mb-3 justify-content-between">
               <div className="mt-3 d-flex justify-content-center col-6">
                 <button

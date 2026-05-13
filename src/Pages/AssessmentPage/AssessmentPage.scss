@@ -1,16 +1,48 @@
 @import '../../assets/styles/custom_variables';
 
-
-.assessmentPage{
-  margin:30px 120px;
-&__card{
-  background-color: white;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.0001);
-border-radius: 4px;
+.body{
+  overflow: hidden;
 }
-  &__left{
-    padding:30px;
+
+.assessmentPage {
+  height: 90vh;
+  margin: 0;
+  padding: 20px 120px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &__card {
+    background-color: white;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.0001);
+    border-radius: 4px;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin: 1rem 0 !important;
   }
+
+
+  &__left {
+    padding: 30px;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+
+.assessment-content-row {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex: 1;
+}
+
+.scrollable-column {
+  height: 100%;
+  overflow-y: auto;
+  padding: 30px 35px;
+}
 
   &__time{
     font-weight: 500;
@@ -33,7 +65,7 @@ color: #EF8031;
     mix-blend-mode: normal;
    
     border-radius: 4px;
-    padding:5px 10px;
+    // padding:5px 10px;
 
   }
 
@@ -84,6 +116,13 @@ color: #EF8031;
   overflow-x: hidden;
   overflow-y: scroll;
   resize: none;
+}
+
+.test-cases-scroll {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 5px;
 }
 
 test-output_error {
