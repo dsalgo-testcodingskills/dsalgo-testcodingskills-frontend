@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom';
 import AdminRoutes from './Routes/AdminRoutes';
+import SuperAdminRoutes from './Routes/SuperAdminRoutes';
 import Studentstest from './Pages/StudentTest/Studentstest';
 import './App.scss';
 import Header from './Pages/Header/Header';
@@ -55,6 +56,7 @@ function App() {
         <Route path="/student" component={Studentstest} />
 
         <Route path="/admin" component={AdminRoutes} />
+        <Route path="/super-admin" component={SuperAdminRoutes} />
 
         <Route path="*">
           {loginData ? <Redirect to="/" /> : <Redirect to="/" />}
