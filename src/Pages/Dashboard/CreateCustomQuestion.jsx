@@ -29,6 +29,7 @@ const CreateCustomQuestion = () => {
     'array_char',
     'int',
     'boolean',
+    'string',
   ];
 
   const questionsLevelOptions = [

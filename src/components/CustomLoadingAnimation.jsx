@@ -1,6 +1,6 @@
-import React from 'react';
-import { Backdrop, makeStyles } from '@material-ui/core';
-import { Spinner } from 'react-bootstrap';
+import React from "react";
+import { Backdrop, makeStyles } from "@material-ui/core";
+import { Spinner } from "react-bootstrap";
 
 function CustomLoadingAnimation({
   isLoading,
@@ -11,8 +11,8 @@ function CustomLoadingAnimation({
   const useStyles = makeStyles((theme) => ({
     backdrop: {
       // default styles
-      color: '#fff',
-      backgroundColor: 'rgba(0,0,0,0.5) !important',
+      color: "#fff",
+      backgroundColor: "rgba(0,0,0,0.5) !important",
 
       // override backdrop styles
       ...backdropStyle,
