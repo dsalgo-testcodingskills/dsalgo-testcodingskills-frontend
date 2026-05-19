@@ -3,6 +3,7 @@ import PageContainer from "./PageContainer";
 import { getAllOrganizations } from "../../Services/api";
 import ReactPaginate from "react-paginate";
 import "./OrganizationList.scss";
+import ViewOrganisationDetail from "./ViewOrganisationDetail";
 
 //  Helpers
 const avatarColors = [
@@ -58,7 +59,7 @@ const OrganisationsList = () => {
 
   if (selectedOrgId) {
     return (
-      <OrganisationDetail
+      <ViewOrganisationDetail
         orgId={selectedOrgId}
         onBack={() => setSelectedOrgId(null)}
       />
