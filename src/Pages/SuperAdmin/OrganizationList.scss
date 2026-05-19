@@ -301,13 +301,30 @@
 }
 
 //  Pagination 
-.org-pagination {
+.org-pagination-container {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   padding: 14px 20px;
-  gap: 4px;
   border-top: 1px solid #f3f4f6;
+}
+
+.org-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.org-page-item {
+  display: inline-flex;
+
+  &.disabled .org-page-btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .org-page-info {
@@ -330,6 +347,7 @@
   justify-content: center;
   font-family: 'Inter', sans-serif;
   transition: all 0.15s;
+  text-decoration: none;
 
   &:hover {
     background: #f3f4f6;

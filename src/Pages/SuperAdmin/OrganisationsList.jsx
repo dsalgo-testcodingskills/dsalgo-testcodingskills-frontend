@@ -1,16 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import PageContainer from './PageContainer';
-import { getAllOrganizations } from '../../Services/api';
-import './OrganizationList.scss';
+import React, { useEffect, useState } from "react";
+import PageContainer from "./PageContainer";
+import { getAllOrganizations } from "../../Services/api";
+import ReactPaginate from "react-paginate";
+import "./OrganizationList.scss";
 
-//  Helpers 
-const avatarColors = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#0891b2'];
-const getColor = (name) => avatarColors[name?.charCodeAt(0) % avatarColors.length];
-const getInitials = (name) => name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+//  Helpers
+const avatarColors = [
+  "#7c3aed",
+  "#2563eb",
+  "#059669",
+  "#d97706",
+  "#dc2626",
+  "#0891b2",
+];
+const getColor = (name) =>
+  avatarColors[name?.charCodeAt(0) % avatarColors.length];
+const getInitials = (name) =>
+  name
+    ?.split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "?";
 
 const getPlanClass = (plan) => {
-  const map = { Free: 'free', paid: 'paid' };
-  return map[plan] || 'free';
+  const map = { Free: "free", paid: "paid" };
+  return map[plan] || "free";
 };
 
 const OrganisationsList = () => {
@@ -20,7 +35,7 @@ const OrganisationsList = () => {
   const [page, setPage] = useState(1);
   const [selectedOrgId, setSelectedOrgId] = useState(null);
 
-  const limit = 8;
+  const limit = 10;
   const totalPages = Math.ceil(count / limit);
 
   const fetchOrganizations = async () => {
@@ -37,24 +52,33 @@ const OrganisationsList = () => {
     }
   };
 
-  useEffect(() => { fetchOrganizations(); }, [page]);
+  useEffect(() => {
+    fetchOrganizations();
+  }, [page]);
 
   if (selectedOrgId) {
-    return <OrganisationDetail orgId={selectedOrgId} onBack={() => setSelectedOrgId(null)} />;
+    return (
+      <OrganisationDetail
+        orgId={selectedOrgId}
+        onBack={() => setSelectedOrgId(null)}
+      />
+    );
   }
 
-  const getPageNumbers = () => {
-    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (page <= 3) return [1, 2, 3, '...', totalPages];
-    if (page >= totalPages - 2) return [1, '...', totalPages - 2, totalPages - 1, totalPages];
-    return [1, '...', page - 1, page, page + 1, '...', totalPages];
+  const handlePageClick = (event) => {
+    setPage(event.selected + 1);
   };
 
   return (
-    <PageContainer title="Organisations" sub="Manage all registered organisations">
-
+    <PageContainer
+      title="Organisations"
+      sub="Manage all registered organisations"
+    >
       <div className="org-toolbar">
-        <input className="org-search" placeholder="Search by name or email..." />
+        <input
+          className="org-search"
+          placeholder="Search by name or email..."
+        />
         <select className="org-select">
           <option>All Plans</option>
           <option>Paid</option>
@@ -67,9 +91,9 @@ const OrganisationsList = () => {
       <div className="org-table-card">
         <div className="org-table-meta">
           <span>
-            Showing {(page - 1) * limit + 1}–{Math.min(page * limit, count)} of {count.toLocaleString()} results
+            Showing {(page - 1) * limit + 1}–{Math.min(page * limit, count)} of{" "}
+            {count.toLocaleString()} results
           </span>
-
         </div>
 
         {loading ? (
@@ -78,7 +102,6 @@ const OrganisationsList = () => {
           <table className="org-table">
             <thead>
               <tr>
-                <th><input type="checkbox" className="org-checkbox" /></th>
                 <th>Organisation</th>
                 <th>Plan</th>
                 <th>Users</th>
@@ -87,41 +110,58 @@ const OrganisationsList = () => {
               </tr>
             </thead>
             <tbody>
-              {organizations.map(org => (
+              {organizations.map((org) => (
                 <tr key={org._id}>
-                  <td><input type="checkbox" className="org-checkbox" /></td>
                   <td>
                     <div className="org-name-cell">
-                      <div className="org-avatar" style={{ background: getColor(org.name) }}>
+                      <div
+                        className="org-avatar"
+                        style={{ background: getColor(org.name) }}
+                      >
                         {getInitials(org.name)}
                       </div>
                       <div className="org-name-info">
                         <span className="org-name-text">{org.name}</span>
-
                       </div>
                     </div>
                   </td>
 
                   <td>
-                    <span className={`plan-badge ${getPlanClass(org.subscriptionPlan)}`}>
-                      {org.subscriptionPlan || 'N/A'}
+                    <span
+                      className={`plan-badge ${getPlanClass(
+                        org.subscriptionPlan,
+                      )}`}
+                    >
+                      {org.subscriptionPlan || "N/A"}
                     </span>
                   </td>
-                  <td>{org.noOfUsers ?? '—'}</td>
+                  <td>{org.noOfUsers ?? "—"}</td>
                   <td>
                     <div className="progress-wrap">
-                      <span className="progress-num">{org.availableTests ?? '—'}</span>
+                      <span className="progress-num">
+                        {org.availableTests ?? "—"}
+                      </span>
                       <div className="progress-bar-bg">
                         <div
                           className="progress-bar-fill"
-                          style={{ width: `${Math.min((org.availableTests / 1500) * 100, 100)}%` }}
+                          style={{
+                            width: `${Math.min(
+                              (org.availableTests / 1500) * 100,
+                              100,
+                            )}%`,
+                          }}
                         />
                       </div>
                     </div>
                   </td>
 
                   <td>
-                    <button className="org-view-btn" onClick={() => setSelectedOrgId(org._id)}>View</button>
+                    <button
+                      className="org-view-btn"
+                      onClick={() => setSelectedOrgId(org._id)}
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -129,24 +169,33 @@ const OrganisationsList = () => {
           </table>
         )}
 
-
-        <div className="org-pagination">
-          <span className="org-page-info">Page {page} of {totalPages}</span>
-          {getPageNumbers().map((p, i) =>
-            p === '...' ? (
-              <span key={i} className="org-page-dots">...</span>
-            ) : (
-              <button
-                key={i}
-                className={`org-page-btn ${page === p ? 'active' : ''}`}
-                onClick={() => setPage(p)}
-              >
-                {p}
-              </button>
-            )
-          )}
+        <div className="org-pagination-container">
+          <span className="org-page-info">
+            Page {page} of {totalPages}
+          </span>
+          <ReactPaginate
+            breakLabel="..."
+            nextLabel=">"
+            onPageChange={handlePageClick}
+            pageRangeDisplayed={3}
+            marginPagesDisplayed={1}
+            pageCount={totalPages || 1}
+            previousLabel="<"
+            renderOnZeroPageCount={null}
+            containerClassName="org-pagination"
+            pageClassName="org-page-item"
+            pageLinkClassName="org-page-btn"
+            previousClassName="org-page-item"
+            previousLinkClassName="org-page-btn"
+            nextClassName="org-page-item"
+            nextLinkClassName="org-page-btn"
+            activeLinkClassName="active"
+            breakClassName="org-page-item"
+            breakLinkClassName="org-page-dots"
+            disabledClassName="disabled"
+            forcePage={page - 1}
+          />
         </div>
-
       </div>
     </PageContainer>
   );
