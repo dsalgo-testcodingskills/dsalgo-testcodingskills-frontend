@@ -1,72 +1,152 @@
 import React, { useEffect, useState } from 'react';
 import PageContainer from './PageContainer';
-// import { getAllOrganisations } from '../../Services/superAdminService';
+import { getAllOrganizations } from '../../Services/api';
+import './OrganizationList.scss';
+
+//  Helpers 
+const avatarColors = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#0891b2'];
+const getColor = (name) => avatarColors[name?.charCodeAt(0) % avatarColors.length];
+const getInitials = (name) => name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+
+const getPlanClass = (plan) => {
+  const map = { Free: 'free', paid: 'paid' };
+  return map[plan] || 'free';
+};
 
 const OrganisationsList = () => {
-  const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [organizations, setOrganizations] = useState([]);
+  const [count, setCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [selectedOrgId, setSelectedOrgId] = useState(null);
 
-  useEffect(() => {
-    // fetchOrgs();
-  }, []);
+  const limit = 8;
+  const totalPages = Math.ceil(count / limit);
 
-  // const fetchOrgs = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await getAllOrganisations();
-  //     setOrgs(response.data);
-  //   } catch (error) {
-  //     console.error('Error fetching orgs:', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const fetchOrganizations = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllOrganizations(page, limit, {});
+      const { data, count } = response.data;
+      setOrganizations(data);
+      setCount(count);
+    } catch (error) {
+      console.error("Failed to fetch organizations:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchOrganizations(); }, [page]);
+
+  if (selectedOrgId) {
+    return <OrganisationDetail orgId={selectedOrgId} onBack={() => setSelectedOrgId(null)} />;
+  }
+
+  const getPageNumbers = () => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (page <= 3) return [1, 2, 3, '...', totalPages];
+    if (page >= totalPages - 2) return [1, '...', totalPages - 2, totalPages - 1, totalPages];
+    return [1, '...', page - 1, page, page + 1, '...', totalPages];
+  };
 
   return (
     <PageContainer title="Organisations" sub="Manage all registered organisations">
-      <div className="toolbar" style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-        <input className="input-field" placeholder="Search by name or email…" style={{ width: '220px' }} />
-        <select className="input-field"><option>All Plans</option></select>
-        <select className="input-field"><option>All Statuses</option></select>
-        <button className="btn btn-primary" style={{ marginLeft: 'auto' }}>+ Add Organisation</button>
+
+      <div className="org-toolbar">
+        <input className="org-search" placeholder="Search by name or email..." />
+        <select className="org-select">
+          <option>All Plans</option>
+          <option>Paid</option>
+          <option>Free</option>
+        </select>
+
+        <button className="org-btn-add">+ Add Organisation</button>
       </div>
 
-      <div className="table-wrap">
+      <div className="org-table-card">
+        <div className="org-table-meta">
+          <span>
+            Showing {(page - 1) * limit + 1}–{Math.min(page * limit, count)} of {count.toLocaleString()} results
+          </span>
+
+        </div>
+
         {loading ? (
-          <div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>
+          <div className="org-loading">Loading...</div>
         ) : (
-          <table>
+          <table className="org-table">
             <thead>
               <tr>
+                <th><input type="checkbox" className="org-checkbox" /></th>
                 <th>Organisation</th>
-                <th>Owner Email</th>
                 <th>Plan</th>
                 <th>Users</th>
-                <th>Tests</th>
-                <th>Status</th>
+                <th>Tests Created</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {orgs.map(org => (
+              {organizations.map(org => (
                 <tr key={org._id}>
+                  <td><input type="checkbox" className="org-checkbox" /></td>
                   <td>
-                    <div className="org-logo" style={{ background: '#7C3AED', display: 'inline-flex', marginRight: '8px' }}>
-                      {org.name.charAt(0)}
+                    <div className="org-name-cell">
+                      <div className="org-avatar" style={{ background: getColor(org.name) }}>
+                        {getInitials(org.name)}
+                      </div>
+                      <div className="org-name-info">
+                        <span className="org-name-text">{org.name}</span>
+
+                      </div>
                     </div>
-                    {org.name}
                   </td>
-                  <td>{org.ownerEmail || 'N/A'}</td>
-                  <td><span className="badge badge-purple">{org.subscriptionPlan}</span></td>
-                  <td>{org.noOfUsers}</td>
-                  <td>{org.availableTests}</td>
-                  <td><span className="badge badge-green">Active</span></td>
-                  <td><button className="btn btn-secondary">View</button></td>
+
+                  <td>
+                    <span className={`plan-badge ${getPlanClass(org.subscriptionPlan)}`}>
+                      {org.subscriptionPlan || 'N/A'}
+                    </span>
+                  </td>
+                  <td>{org.noOfUsers ?? '—'}</td>
+                  <td>
+                    <div className="progress-wrap">
+                      <span className="progress-num">{org.availableTests ?? '—'}</span>
+                      <div className="progress-bar-bg">
+                        <div
+                          className="progress-bar-fill"
+                          style={{ width: `${Math.min((org.availableTests / 1500) * 100, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <button className="org-view-btn" onClick={() => setSelectedOrgId(org._id)}>View</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
+
+
+        <div className="org-pagination">
+          <span className="org-page-info">Page {page} of {totalPages}</span>
+          {getPageNumbers().map((p, i) =>
+            p === '...' ? (
+              <span key={i} className="org-page-dots">...</span>
+            ) : (
+              <button
+                key={i}
+                className={`org-page-btn ${page === p ? 'active' : ''}`}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </button>
+            )
+          )}
+        </div>
+
       </div>
     </PageContainer>
   );

@@ -1,0 +1,404 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+//  Page 
+.org-page {
+  font-family: 'Inter', sans-serif;
+  background: #f9fafb;
+  min-height: 100vh;
+  padding: 32px;
+}
+
+//  Toolbar 
+.org-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+
+  .org-search {
+    padding: 8px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    color: #374151;
+    background: #fff;
+    width: 220px;
+    outline: none;
+
+    &:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  }
+
+  .org-select {
+    padding: 8px 32px 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    color: #374151;
+    background: #fff;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+
+    &:focus {
+      border-color: #3b82f6;
+    }
+  }
+
+  .org-btn-add {
+    margin-left: auto;
+    padding: 8px 18px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: #1d4ed8;
+    }
+  }
+}
+
+//  Table Card 
+.org-table-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+
+  .org-table-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f3f4f6;
+
+    span {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .org-export-btn {
+      padding: 6px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 7px;
+      background: #fff;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      color: #374151;
+      cursor: pointer;
+
+      &:hover {
+        background: #f9fafb;
+      }
+    }
+  }
+}
+
+//  Table 
+.org-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr {
+    background: #fff;
+  }
+
+  th {
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: #9ca3af;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid #f3f4f6;
+
+    &:first-child {
+      width: 48px;
+    }
+  }
+
+  td {
+    padding: 16px 20px;
+    font-size: 13px;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    &:last-child td {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: #fafafa;
+    }
+  }
+}
+
+//  Checkbox 
+.org-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+//  Avatar 
+.org-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-right: 12px;
+  flex-shrink: 0;
+
+  &.large {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+}
+
+//  Name Cell 
+.org-name-cell {
+  display: flex;
+  align-items: center;
+}
+
+.org-name-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.org-name-text {
+  font-weight: 500;
+  color: #111827;
+  font-size: 14px;
+}
+
+.org-domain {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+//  Plan Badges 
+.plan-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.free {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  &.paid {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+}
+
+//  Status 
+.status-active {
+  color: #16a34a;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.status-suspended {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+//  Progress Bar 
+.progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.progress-num {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.progress-bar-bg {
+  width: 90px;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 99px;
+}
+
+//  View Button 
+.org-view-btn {
+  padding: 6px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
+}
+
+//  Back Button 
+.org-back-btn {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: #374151;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+//  Pagination 
+.org-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 14px 20px;
+  gap: 4px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.org-page-info {
+  font-size: 13px;
+  color: #6b7280;
+  margin-right: 8px;
+}
+
+.org-page-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+
+  &.active {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
+}
+
+.org-page-dots {
+  font-size: 13px;
+  color: #9ca3af;
+  padding: 0 4px;
+}
+
+//  Loading 
+.org-loading {
+  padding: 40px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+// Detail Page
+.org-detail-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.org-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.org-detail-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.org-detail-email {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.org-detail-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.org-detail-stat-label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.org-detail-stat-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin-top: 4px;
+}
