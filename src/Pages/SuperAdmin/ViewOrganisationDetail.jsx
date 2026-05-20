@@ -73,77 +73,147 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
       title="Organisation Details"
       sub="View organisation information"
     >
-      <button className="org-back-btn" onClick={onBack}>
-        ← Back to Organisations
-      </button>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          marginBottom: "12px",
+        }}
+      >
+        <button
+          className="btn btn-secondary"
+          style={{ height: "28px", fontSize: "11px", padding: "4px 10px" }}
+          onClick={onBack}
+        >
+          ← Back
+        </button>
+        <span style={{ fontSize: "11px", color: "var(--gray-400)" }}>
+          Organisations / {selectedOrg?.name || "Loading..."}
+        </span>
+      </div>
 
       {selectedOrg && (
-        <div className="org-detail-card">
-          <div className="org-detail-header">
+        <>
+          <div className="org-header">
             <div
-              className="org-avatar large"
+              className="org-logo-lg"
               style={{ background: getColor(selectedOrg.name) }}
             >
               {getInitials(selectedOrg.name)}
             </div>
-            <div>
-              <div className="org-detail-name">{selectedOrg.name}</div>
+            <div className="meta">
+              <h2>{selectedOrg.name}</h2>
+              <p>{selectedOrg.email || "N/A"}</p>
+              <div style={{ marginTop: "6px" }}>
+                <span
+                  className="badge badge-green"
+                  style={{ marginRight: "6px" }}
+                >
+                  Active
+                </span>
+                <span
+                  className={`badge ${
+                    selectedOrg.subscriptionPlan?.toLowerCase() === "paid"
+                      ? "badge-blue"
+                      : "badge-amber"
+                  }`}
+                >
+                  {selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"}
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button className="actions-btn">Edit</button>
+              <button className="actions-btn" style={{ color: "#DC2626" }}>
+                Suspend
+              </button>
             </div>
           </div>
-          <div className="org-detail-stats">
-            <div>
-              <div className="org-detail-stat-label">Plan</div>
-              <div className="org-detail-stat-value">
-                {selectedOrg.subscriptionPlan || "N/A"}
+
+          <div className="card-grid">
+            <div className="stat-card">
+              <div className="stat-label">REMAINING TEST QUOTA</div>
+              <div className="stat-value">
+                {selectedOrg.availableTests ?? "—"}
               </div>
-            </div>
-            <div
-              style={{ cursor: "pointer" }}
-              onClick={() => setActiveTab("users")}
-            >
-              <div className="org-detail-stat-label">Users</div>
-              <div
-                className="org-detail-stat-value"
-                style={{ color: activeTab === "users" ? "#2563eb" : "#111827" }}
-              >
-                {users.length}
+              <div className="progress-bar" style={{ marginTop: "8px" }}>
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${Math.min(
+                      ((selectedOrg.availableTests || 0) / 1500) * 100,
+                      100,
+                    )}%`,
+                  }}
+                ></div>
               </div>
-            </div>
-            <div
-              style={{ cursor: "pointer" }}
-              onClick={() => setActiveTab("questions")}
-            >
-              <div className="org-detail-stat-label">Questions</div>
               <div
-                className="org-detail-stat-value"
                 style={{
-                  color: activeTab === "questions" ? "#2563eb" : "#111827",
+                  fontSize: "10px",
+                  color: "var(--gray-400)",
+                  marginTop: "4px",
                 }}
               >
-                {questionsCount}
+                {Math.round(((selectedOrg.availableTests || 0) / 1500) * 100)}%
+                of 1500 used
               </div>
             </div>
-            <div
-              style={{ cursor: "pointer" }}
-              onClick={() => setActiveTab("tests")}
-            >
-              <div className="org-detail-stat-label">Tests</div>
+            <div className="stat-card">
+              <div className="stat-label">TOTAL ACTIVE USERS</div>
+              <div className="stat-value">{users.length}</div>
+              <div className="stat-sub">Users in organisation</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">SUBSCRIPTION TIER</div>
               <div
-                className="org-detail-stat-value"
-                style={{ color: activeTab === "tests" ? "#2563eb" : "#111827" }}
+                className="stat-value"
+                style={{ fontSize: "17px", marginTop: "4px" }}
               >
-                {testsCount}
+                <span
+                  className={`badge ${
+                    selectedOrg.subscriptionPlan?.toLowerCase() === "paid"
+                      ? "badge-blue"
+                      : "badge-amber"
+                  }`}
+                  style={{ fontSize: "13px", padding: "4px 12px" }}
+                >
+                  {selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"}
+                </span>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
+
+      <div className="tab-bar">
+        <div
+          className={`tab ${activeTab === "users" ? "active" : ""}`}
+          onClick={() => setActiveTab("users")}
+        >
+          Users
+        </div>
+        <div
+          className={`tab ${activeTab === "questions" ? "active" : ""}`}
+          onClick={() => setActiveTab("questions")}
+        >
+          Questions
+        </div>
+        <div
+          className={`tab ${activeTab === "tests" ? "active" : ""}`}
+          onClick={() => setActiveTab("tests")}
+        >
+          Tests
+        </div>
+      </div>
 
       {/* Users */}
       {activeTab === "users" && (
-        <div className="org-table-card" style={{ marginBottom: 20 }}>
-          <div className="org-table-meta">
-            <span>Users ({users.length})</span>
+        <div className="table-wrap">
+          <div className="table-header">
+            <span style={{ fontSize: "12px", fontWeight: 500 }}>
+              {users.length} Users
+            </span>
           </div>
           <table className="org-table">
             <thead>
@@ -158,18 +228,24 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
               {users.length > 0 ? (
                 users.map((u) => (
                   <tr key={u._id}>
-                    <td>{u.name || "N/A"}</td>
-                    <td>{u.emailId || u.email || "N/A"}</td>
+                    <td style={{ fontWeight: 500 }}>{u.name || "N/A"}</td>
+                    <td style={{ color: "var(--gray-600)" }}>
+                      {u.emailId || u.email || "N/A"}
+                    </td>
                     <td>
-                      <span className={`plan-badge ${getPlanClass(u.role)}`}>
+                      <span
+                        className={`badge ${
+                          u.role === "admin" ? "badge-purple" : "badge-blue"
+                        }`}
+                      >
                         {u.role}
                       </span>
                     </td>
                     <td>
                       <span
-                        className={
-                          u.status === 1 ? "status-active" : "status-suspended"
-                        }
+                        className={`badge ${
+                          u.status === 1 ? "badge-green" : "badge-red"
+                        }`}
                       >
                         {u.status === 1 ? "Active" : "Inactive"}
                       </span>
@@ -193,21 +269,33 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
 
       {/* Questions */}
       {activeTab === "questions" && (
-        <div className="org-table-card" style={{ marginBottom: 20 }}>
-          <div className="org-table-meta">
-            <span>Questions ({questionsCount})</span>
+        <div className="table-wrap">
+          <div className="table-header">
+            <span style={{ fontSize: "12px", fontWeight: 500 }}>
+              {questionsCount} Questions
+            </span>
           </div>
           <table className="org-table">
             <thead>
               <tr>
-                <th>Title</th>
+                <th>Question (Preview)</th>
               </tr>
             </thead>
             <tbody>
               {questions.length > 0 ? (
                 questions.map((q) => (
                   <tr key={q._id}>
-                    <td>{q.title || q.question || "N/A"}</td>
+                    <td
+                      style={{
+                        maxWidth: "300px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        color: "var(--gray-700)",
+                      }}
+                    >
+                      {q.title || q.question || "N/A"}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -224,21 +312,25 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
 
       {/* Tests */}
       {activeTab === "tests" && (
-        <div className="org-table-card">
-          <div className="org-table-meta">
-            <span>Tests ({testsCount})</span>
+        <div className="table-wrap">
+          <div className="table-header">
+            <span style={{ fontSize: "12px", fontWeight: 500 }}>
+              {testsCount} Tests Created
+            </span>
           </div>
           <table className="org-table">
             <thead>
               <tr>
-                <th>Title</th>
+                <th>Test Name / Student</th>
               </tr>
             </thead>
             <tbody>
               {tests.length > 0 ? (
                 tests.map((t) => (
                   <tr key={t._id}>
-                    <td>{t.title || t.name || "N/A"}</td>
+                    <td style={{ fontWeight: 500 }}>
+                      {t?.studentName || "N/A"}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -250,21 +342,6 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
               )}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {!activeTab && (
-        <div
-          style={{
-            textAlign: "center",
-            color: "#9ca3af",
-            padding: "30px",
-            background: "#fff",
-            borderRadius: "12px",
-            border: "1px solid #e5e7eb",
-          }}
-        >
-          Click on Users, Questions, or Tests above to view details
         </div>
       )}
     </PageContainer>

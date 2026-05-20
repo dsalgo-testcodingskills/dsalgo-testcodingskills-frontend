@@ -75,26 +75,36 @@ const OrganisationsList = () => {
       title="Organisations"
       sub="Manage all registered organisations"
     >
-      <div className="org-toolbar">
-        <input
-          className="org-search"
-          placeholder="Search by name or email..."
-        />
-        <select className="org-select">
+      <div className="toolbar">
+        <div className="search-box">
+          <input placeholder="Search by name or email..." />
+        </div>
+        <select className="input-field">
           <option>All Plans</option>
           <option>Paid</option>
           <option>Free</option>
         </select>
-
-        <button className="org-btn-add">+ Add Organisation</button>
+        <select className="input-field">
+          <option>All Statuses</option>
+          <option>Active</option>
+          <option>Suspended</option>
+        </select>
+        <div style={{ flex: 1 }}></div>
+        {/* <button className="btn btn-primary">Add Organisation</button> */}
       </div>
 
-      <div className="org-table-card">
-        <div className="org-table-meta">
-          <span>
+      <div className="table-wrap">
+        <div className="table-header">
+          <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>
             Showing {(page - 1) * limit + 1}–{Math.min(page * limit, count)} of{" "}
             {count.toLocaleString()} results
           </span>
+          {/* <button
+            className="btn btn-secondary"
+            style={{ fontSize: "11px", height: "28px" }}
+          >
+            Export
+          </button> */}
         </div>
 
         {loading ? (
@@ -113,52 +123,70 @@ const OrganisationsList = () => {
             <tbody>
               {organizations.map((org) => (
                 <tr key={org._id}>
+                  {" "}
                   <td>
-                    <div className="org-name-cell">
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
                       <div
-                        className="org-avatar"
+                        className="org-logo"
                         style={{ background: getColor(org.name) }}
                       >
                         {getInitials(org.name)}
                       </div>
-                      <div className="org-name-info">
-                        <span className="org-name-text">{org.name}</span>
+                      <div>
+                        <div
+                          style={{
+                            fontWeight: 500,
+                            color: "var(--gray-900)",
+                            fontSize: "13px",
+                          }}
+                        >
+                          {org.name}
+                        </div>
                       </div>
                     </div>
                   </td>
-
                   <td>
                     <span
-                      className={`plan-badge ${getPlanClass(
-                        org.subscriptionPlan,
-                      )}`}
+                      className={`badge ${
+                        org.subscriptionPlan?.toLowerCase() === "paid"
+                          ? "badge-blue"
+                          : "badge-amber"
+                      }`}
                     >
-                      {org.subscriptionPlan || "N/A"}
+                      {org.subscriptionPlan?.toUpperCase() || "N/A"}
                     </span>
                   </td>
-                  <td>{org.noOfUsers ?? "—"}</td>
+                  <td style={{ fontWeight: 500 }}>{org.noOfUsers ?? "—"}</td>
                   <td>
-                    <div className="progress-wrap">
-                      <span className="progress-num">
-                        {org.availableTests ?? "—"}
-                      </span>
-                      <div className="progress-bar-bg">
-                        <div
-                          className="progress-bar-fill"
-                          style={{
-                            width: `${Math.min(
-                              (org.availableTests / 1500) * 100,
-                              100,
-                            )}%`,
-                          }}
-                        />
-                      </div>
+                    <div style={{ fontWeight: 500 }}>
+                      {org.availableTests ?? "—"}
+                    </div>
+                    <div className="progress-bar" style={{ width: "80px" }}>
+                      <div
+                        className="progress-fill"
+                        style={{
+                          width: `${Math.min(
+                            ((org.availableTests || 0) / 1500) * 100,
+                            100,
+                          )}%`,
+                        }}
+                      />
                     </div>
                   </td>
-
                   <td>
                     <button
-                      className="org-view-btn"
+                      className="btn btn-secondary"
+                      style={{
+                        height: "26px",
+                        fontSize: "11px",
+                        padding: "4px 10px",
+                      }}
                       onClick={() => setSelectedOrgId(org._id)}
                     >
                       View
