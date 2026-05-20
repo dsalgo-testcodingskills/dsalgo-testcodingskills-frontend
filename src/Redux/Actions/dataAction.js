@@ -71,3 +71,8 @@ export const webCamStatusUpdate = (data) => ({
   type: 'SET_WEBCAM_STATUS',
   payload: data,
 });
+
+export const superAdminViewToggle = (data) => ({
+  type: 'SUPER_ADMIN_VIEW',
+  payload: data,
+});

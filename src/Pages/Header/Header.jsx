@@ -3,7 +3,7 @@ import { CloseButton, Modal, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
 
-import { setLogout } from '../../Redux/Actions/dataAction';
+import { setLogout, superAdminViewToggle } from '../../Redux/Actions/dataAction';
 import {
   getOrgDetails,
   getSubDetails,
@@ -20,7 +20,7 @@ import './Header.scss';
 function Header() {
   const dispatch = useDispatch();
   const location = useLocation();
-  const { tokenData, loginData } = useSelector((store) => store.dataReducer);
+  const { tokenData, loginData, isSuperAdminView } = useSelector((store) => store.dataReducer);
   const history = useHistory();
   const toggleRef = useRef(null);
   const [login, setLogin] = useState(false);
@@ -182,6 +182,13 @@ function Header() {
     }
   }, [loginData]);
 
+  useEffect(() => {
+    const isSuperAdminPath = location.pathname.startsWith('/super-admin');
+    if (isSuperAdminPath !== isSuperAdminView) {
+      dispatch(superAdminViewToggle(isSuperAdminPath));
+    }
+  }, [location.pathname, isSuperAdminView, dispatch]);
+
   return (
     <>
       <Navbar bg="light" expand="lg" collapseOnSelect={true}>
@@ -303,6 +310,28 @@ function Header() {
                       </>
                     </div>
                   </Nav.Link>
+                )}
+
+                {user?.userInfo?.role === UserRoleEnum.SUPER_ADMIN && (
+                  <div className="d-flex align-items-center ms-lg-auto me-3 super-admin-toggle-wrapper">
+                    <span className="me-2 toggle-label">Super Admin View</span>
+                    <label className="sa-switch">
+                      <input
+                        type="checkbox"
+                        checked={isSuperAdminView}
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          dispatch(superAdminViewToggle(val));
+                          if (val) {
+                            history.push('/super-admin/dashboard');
+                          } else {
+                            history.push('/admin/dashboard');
+                          }
+                        }}
+                      />
+                      <span className="sa-slider round"></span>
+                    </label>
+                  </div>
                 )}
 
                 {/* navbar dropdown */}

@@ -24,10 +24,16 @@ const DEFAULT_STATE = {
     limit: 10,
   },
   webCamStatus: true,
+  isSuperAdminView: false,
 };
 
 const dataReducer = (state = DEFAULT_STATE, action) => {
   switch (action.type) {
+    case 'SUPER_ADMIN_VIEW':
+      return {
+        ...state,
+        isSuperAdminView: action.payload,
+      };
     case 'WEB_CAM':
       return {
         ...state,

@@ -224,3 +224,29 @@ export function updateUserPass(body) {
 export function studentOrgDetails(id) {
   return axios.get(`/test/studentOrgDetails/${id}`);
 }
+
+export function getAllOrganizations(page = 1, limit = 10, filter = {}) {
+  return axios.post(`/super-admin/getAllOrganizations`,{ page, limit, filter });
+}
+
+export function organizationById(id) {
+  return axios.get(`/super-admin/organization/${id}`);
+}
+
+export function organizationByUser(id, page = 1, limit = 10, filter = {}) {
+  return axios.post(`/super-admin/organization/${id}/users`,
+     { page, limit, filter }
+  );
+}
+
+export function organizationQuestions(id, page = 1, limit = 10, filter = {}) {
+  return axios.post(`/super-admin/organization/${id}/questions`,
+     { page, limit, filter }
+  );
+}
+
+export function organizationTests(id, page = 1, limit = 10, filter = {}) {
+  return axios.post(`/super-admin/organization/${id}/tests`,
+     { page, limit, filter }
+  );
+}
