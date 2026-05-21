@@ -7,6 +7,7 @@ import {
   organizationQuestions,
   organizationTests,
   organisationSubscription,
+  organizationPayment,
 } from "../../Services/api";
 import "./OrganizationList.scss";
 
@@ -42,6 +43,9 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
   const [subscription, setSubscription] = useState([]);
   const [subscriptionCount, setSubscriptionCount] = useState(0);
   const [subscriptionPage, setSubscriptionPage] = useState(1);
+  const [payment, setPayment] = useState([]);
+  const [paymentCount, setPaymentCount] = useState(0);
+  const [paymentPage, setPaymentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("users");
 
@@ -80,6 +84,13 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
       setSubscriptionCount(r.data?.count || 0);
     });
   }, [orgId, subscriptionPage]);
+
+  useEffect(() => {
+    organizationPayment(orgId, paymentPage, limit, {}).then((r) => {
+      setPayment(r.data?.data || []);
+      setPaymentCount(r.data?.count || 0);
+    });
+  }, [orgId, paymentPage]);
 
   const Pagination = ({ page, count, onPageChange }) => {
     const totalPages = Math.ceil(count / limit) || 1;
@@ -268,6 +279,12 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
           onClick={() => setActiveTab("subscription")}
         >
           subscription
+        </div>
+        <div
+          className={`tab ${activeTab === "payment" ? "active" : ""}`}
+          onClick={() => setActiveTab("payment")}
+        >
+          Payments
         </div>
       </div>
 
@@ -572,6 +589,120 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
             page={subscriptionPage}
             count={subscriptionCount}
             onPageChange={setSubscriptionPage}
+          />
+        </div>
+      )}
+
+      {/* Payment Tab */}
+      {activeTab === "payment" && (
+        <div className="table-wrap">
+          <div className="table-header">
+            <span style={{ fontSize: "12px", fontWeight: 500 }}>
+              {paymentCount} Payments
+            </span>
+          </div>
+          <div className="table-responsive">
+            <table className="org-table">
+              <thead>
+                <tr>
+                  <th>Payment ID / Order ID</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Method</th>
+                  <th>Contact</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payment.length > 0 ? (
+                  payment.map((p) => (
+                    <tr key={p._id}>
+                      <td
+                        style={{
+                          color: "var(--gray-700)",
+                          fontWeight: 500,
+                          fontSize: "11px",
+                        }}
+                      >
+                        <div>{p.id || "N/A"}</div>
+                        {p.order_id && (
+                          <div
+                            style={{
+                              fontSize: "10px",
+                              color: "var(--gray-400)",
+                              marginTop: "2px",
+                            }}
+                          >
+                            {p.order_id}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ fontWeight: 600 }}>
+                        {p.currency === "INR" ? "₹" : p.currency}{" "}
+                        {p.amount ? (p.amount / 100).toFixed(2) : "0.00"}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            p.status === "captured"
+                              ? "badge-green"
+                              : p.status === "failed"
+                              ? "badge-red"
+                              : "badge-amber"
+                          }`}
+                        >
+                          {p.status
+                            ? p.status.charAt(0).toUpperCase() +
+                              p.status.slice(1)
+                            : "N/A"}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            textTransform: "uppercase",
+                            color: "var(--gray-600)",
+                            fontSize: "11px",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {p.method || "N/A"}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ color: "var(--gray-800)" }}>
+                          {p.email || "N/A"}
+                        </div>
+                        <div
+                          style={{ fontSize: "11px", color: "var(--gray-500)" }}
+                        >
+                          {p.contact || "N/A"}
+                        </div>
+                      </td>
+                      <td style={{ color: "var(--gray-600)" }}>
+                        {p.createdAt
+                          ? new Date(p.createdAt).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      style={{ textAlign: "center", color: "#9ca3af" }}
+                    >
+                      No payments found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <Pagination
+            page={paymentPage}
+            count={paymentCount}
+            onPageChange={setPaymentPage}
           />
         </div>
       )}
