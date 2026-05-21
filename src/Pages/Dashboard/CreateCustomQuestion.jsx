@@ -64,6 +64,7 @@ const CreateCustomQuestion = () => {
     { label: 'hard', value: 'hard' },
   ];
 
+  // defaultDetails
   const defaultDetails = {
     level: '',
     question: '',
