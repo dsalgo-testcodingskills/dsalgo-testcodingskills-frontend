@@ -120,6 +120,78 @@
   right: 1.5rem;
 }
 
+/* Super Admin Toggle Switch Styles */
+.super-admin-toggle-wrapper {
+  margin-left: 20px;
+  
+  .toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+    white-space: nowrap;
+  }
+}
+
+.sa-switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  margin-bottom: 0;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .sa-slider {
+      background-color: #24c6da;
+    }
+
+    &:focus + .sa-slider {
+      box-shadow: 0 0 1px #24c6da;
+    }
+
+    &:checked + .sa-slider:before {
+      -webkit-transform: translateX(22px);
+      -ms-transform: translateX(22px);
+      transform: translateX(22px);
+    }
+  }
+
+  .sa-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    &.round {
+      border-radius: 34px;
+
+      &:before {
+        border-radius: 50%;
+      }
+    }
+  }
+}
+
 @media screen and (max-width: 990px) {
   .navbar-list {
     padding: 0;

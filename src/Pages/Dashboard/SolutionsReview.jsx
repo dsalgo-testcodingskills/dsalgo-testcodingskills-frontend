@@ -1,14 +1,14 @@
-import Editor from '@monaco-editor/react';
-import Slider, { SliderTooltip } from 'rc-slider';
-import React, { useEffect, useRef, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
-import Select from 'react-select';
-import { toast } from 'react-toastify';
-import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
-import CustomToast from '../../components/CustomToast/CustomToast';
-import QuestionInstructions from '../../components/QuestionInstructions/QuestionInstructions';
-import { getTestByQuestionAPI, runTestsAPI } from '../../Services/api';
-import '../AssessmentPage/AssessmentPage.scss';
+import Editor from "@monaco-editor/react";
+import Slider, { SliderTooltip } from "rc-slider";
+import React, { useEffect, useRef, useState } from "react";
+import { useHistory, useParams } from "react-router-dom";
+import Select from "react-select";
+import { toast } from "react-toastify";
+import CustomLoadingAnimation from "../../components/CustomLoadingAnimation";
+import CustomToast from "../../components/CustomToast/CustomToast";
+import QuestionInstructions from "../../components/QuestionInstructions/QuestionInstructions";
+import { getTestByQuestionAPI, runTestsAPI } from "../../Services/api";
+import "../AssessmentPage/AssessmentPage.scss";
 
 const SolutionsReview = () => {
   const history = useHistory();
@@ -111,7 +111,6 @@ const SolutionsReview = () => {
     initTest();
   }, []);
 
-
   const { Handle } = Slider;
   const handle = (props) => {
     const { value, dragging, index, ...restProps } = props;
@@ -131,45 +130,42 @@ const SolutionsReview = () => {
   const wrapperStyle = { width: 400 };
 
   return (
-    <div className="" style={{ margin: '30px 120px' }}>
+    <div className="assessmentPage">
       <div className="d-flex justify-content-start">
         <button className="btns btns--white" onClick={() => history.goBack()}>
           <i className="fas fa-arrow-left"></i>&nbsp;&nbsp;Go Back
         </button>
       </div>
-      <div
-        className=" mt-4 assessmentPage__card"
-        style={{ padding: '30px 35px' }}
-      >
+      <div className="mt-4 assessmentPage__card">
         <div className="row p-2">
-          <h4 className="my-auto" style={{ fontSize: '21px', fontWeight: 700 }}>
+          <h4 className="my-auto" style={{ fontSize: "21px", fontWeight: 700 }}>
             {test?.emailId
               ? test?.emailId
               : test?.phone
               ? test?.phone
-              : 'No Data Available'}{' '}
+              : "No Data Available"}{" "}
           </h4>
         </div>
-        <div className="row">
-          <div className="col-md-6 col-sm-12">
+        <div className="row assessment-content-row mx-4">
+          <div className="assessmentPage__left col-md-6 col-sm-12">
             <div>
               <QuestionInstructions
                 question={question?.question}
                 showInstructions={true}
               />
-              <div className="mt-3">
+              <div className="mt-3 test-cases-scroll">
                 <h5 className=" mb-2">Test Cases</h5>
                 {testCases.map((ele, index) => {
                   return (
                     <div
                       className={`d-flex mt-2 border p-2  ${
                         testResult && testResult[index].result
-                          ? 'text-success'
-                          : ''
+                          ? "text-success"
+                          : ""
                       } ${
                         testResult && !testResult[index].result
-                          ? 'text-danger'
-                          : ''
+                          ? "text-danger"
+                          : ""
                       }`}
                       key={index}
                     >
@@ -177,59 +173,83 @@ const SolutionsReview = () => {
                         <div>
                           <h6>Test Case {index + 1}</h6>
                         </div>
-                        <div style={{ color: '#808081' }}>
+                        <div style={{ color: "#808081" }}>
                           Input: <br />
                           {Array.isArray(ele.input)
                             ? ele.input.map((item, itemIndex) => {
                                 return (
                                   <span key={itemIndex}>
-                                    {item?.toString().split(',').join(' ') || ''}
+                                    {item?.toString().split(",").join(" ") ||
+                                      ""}
                                     <br />
                                   </span>
                                 );
                               })
                             : ele.input}
                         </div>
-                        <div style={{ color: '#808081' }}>
+                        <div style={{ color: "#808081" }}>
                           Output:
-                          <br /> {ele.output?.toString().split(',').join(' ') || ''}
+                          <br />{" "}
+                          {ele.output?.toString().split(",").join(" ") || ""}
                         </div>
 
                         <textarea
                           value={
-                            typeof testResult === 'object'
+                            typeof testResult === "object"
                               ? testResult[index].logs
                               : testResult
                           }
                           hidden={
                             testResult === undefined
                               ? true
-                              : testResult[index].hidden
-                              ? true
-                              : false
+                              : testResult[index].hidden &&
+                                testResult[index].result
                           }
                           className="testcase-output mt-2 border p-2 col-12"
                         ></textarea>
                       </div>
-                      {((testResult && testResult[index]) || (test?.questions[0]?.answer[codeArraylength]?.testCases && test.questions[0].answer[codeArraylength].testCases[index])) && (
+                      {((testResult && testResult[index]) ||
+                        (test?.questions[0]?.answer[codeArraylength]
+                          ?.testCases &&
+                          test.questions[0].answer[codeArraylength].testCases[
+                            index
+                          ])) && (
                         <div className="status-badge">
                           <div
                             className={`badge text-uppercase ${
                               (testResult ? testResult[index].result : true) // We don't know the result of saved test cases easily without checking output, but for now just show metrics
-                                ? 'status-badge-success'
-                                : 'status-badge-fail'
+                                ? "status-badge-success"
+                                : "status-badge-fail"
                             }`}
                           >
-                            {testResult ? (testResult[index].result ? 'Pass' : 'Fail') : 'Saved'}
+                            {testResult
+                              ? testResult[index].result
+                                ? "Pass"
+                                : "Fail"
+                              : "Saved"}
                           </div>
-                          <div className="mt-1" style={{ fontSize: '0.75rem', color: '#808081' }}>
+                          <div
+                            className="mt-1"
+                            style={{ fontSize: "0.75rem", color: "#808081" }}
+                          >
                             {testResult ? (
                               <>
-                                {testResult[index].runtime} ms | {(testResult[index].memory / 1024).toFixed(2)} MB
+                                {testResult[index].runtime} ms |{" "}
+                                {(testResult[index].memory / 1024).toFixed(2)}{" "}
+                                MB
                               </>
                             ) : (
                               <>
-                                {test.questions[0].answer[codeArraylength].testCases[index]?.runtime} ms | {(test.questions[0].answer[codeArraylength].testCases[index]?.memory / 1024).toFixed(2)} MB
+                                {
+                                  test.questions[0].answer[codeArraylength]
+                                    .testCases[index]?.runtime
+                                }{" "}
+                                ms |{" "}
+                                {(
+                                  test.questions[0].answer[codeArraylength]
+                                    .testCases[index]?.memory / 1024
+                                ).toFixed(2)}{" "}
+                                MB
                               </>
                             )}
                           </div>
@@ -241,10 +261,7 @@ const SolutionsReview = () => {
               </div>
             </div>
           </div>
-          <div
-            className="col-md-6 col-sm-12 
-            test-case-style"
-          >
+          <div className="col-md-6 col-sm-12 scrollable-column">
             <div className="row d-flex justify-content-between">
               <div className="col-8 img-container">
                 {test?.questions[0]?.answer[codeArraylength]?.imgurl ? (
@@ -275,31 +292,44 @@ const SolutionsReview = () => {
                 />
               </div>
             </div>
-            {test?.questions[0]?.answer[codeArraylength]?.testCases?.length > 0 && (
+            {test?.questions[0]?.answer[codeArraylength]?.testCases?.length >
+              0 && (
               <div className="d-flex justify-content-end mb-2">
                 <span className="badge bg-secondary me-2">
                   <i className="fas fa-stopwatch me-1"></i>
-                  {(test.questions[0].answer[codeArraylength].testCases.reduce((acc, curr) => acc + (curr.runtime || 0), 0) / test.questions[0].answer[codeArraylength].testCases.length).toFixed(3)} ms (avg)
+                  {(
+                    test.questions[0].answer[codeArraylength].testCases.reduce(
+                      (acc, curr) => acc + (curr.runtime || 0),
+                      0,
+                    ) /
+                    test.questions[0].answer[codeArraylength].testCases.length
+                  ).toFixed(3)}{" "}
+                  ms (avg)
                 </span>
                 <span className="badge bg-secondary">
                   <i className="fas fa-memory me-1"></i>
-                  {(Math.max(...test.questions[0].answer[codeArraylength].testCases.map(tc => tc.memory || 0)) / 1024).toFixed(2)} MB (max)
+                  {(
+                    Math.max(
+                      ...test.questions[0].answer[
+                        codeArraylength
+                      ].testCases.map((tc) => tc.memory || 0),
+                    ) / 1024
+                  ).toFixed(2)}{" "}
+                  MB (max)
                 </span>
               </div>
             )}
-            
-
 
             <CustomLoadingAnimation isLoading={Loading} />
 
             <Editor
-              height={testResult === undefined ? '70vh' : '70vh'}
+              height={testResult === undefined ? "50vh" : "50vh"}
               theme="vs-dark"
               language={selectedLanguage?.value}
               value={
                 test?.questions[0].answer.length > 0
                   ? test?.questions[0].answer[codeArraylength]?.code
-                  : '//No code written by Candidate'
+                  : "//No code written by Candidate"
               }
               onChange={handleEditorChange}
               options={{
@@ -307,8 +337,12 @@ const SolutionsReview = () => {
                   enabled: false,
                 },
                 tabSize: 2,
-                wordWrap: 'on',
+                wordWrap: "on",
                 formatOnType: true,
+                padding: {
+                  top: 16,
+                  bottom: 16,
+                },
               }}
               className="border"
             />
@@ -322,10 +356,10 @@ const SolutionsReview = () => {
                   step={1}
                   handleStyle={{
                     borderWidth: 5,
-                    borderColor: 'gray',
+                    borderColor: "gray",
                   }}
-                  railStyle={{ backgroundColor: 'orange' }}
-                  trackStyle={{ backgroundColor: 'gray', height: 5 }}
+                  railStyle={{ backgroundColor: "orange" }}
+                  trackStyle={{ backgroundColor: "gray", height: 5 }}
                   onChange={setcodeArraylength}
                   handle={handle}
                 />

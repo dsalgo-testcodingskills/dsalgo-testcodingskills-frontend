@@ -1,14 +1,14 @@
-import Editor from '@monaco-editor/react';
-import React, { useEffect, useRef, useState } from 'react';
-import { Modal } from 'react-bootstrap';
-import { useSelector } from 'react-redux';
-import { useHistory, useParams } from 'react-router-dom';
-import Select from 'react-select';
-import { toast } from 'react-toastify';
-import { CountDownTimer } from '../../components/CountDownTimer/CountDownTimer';
-import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
-import CustomToast from '../../components/CustomToast/CustomToast';
-import QuestionInstructions from '../../components/QuestionInstructions/QuestionInstructions';
+import Editor from "@monaco-editor/react";
+import React, { useEffect, useRef, useState } from "react";
+import { Modal } from "react-bootstrap";
+import { useSelector } from "react-redux";
+import { useHistory, useParams } from "react-router-dom";
+import Select from "react-select";
+import { toast } from "react-toastify";
+import { CountDownTimer } from "../../components/CountDownTimer/CountDownTimer";
+import CustomLoadingAnimation from "../../components/CustomLoadingAnimation";
+import CustomToast from "../../components/CustomToast/CustomToast";
+import QuestionInstructions from "../../components/QuestionInstructions/QuestionInstructions";
 import {
   getPresignedURL,
   GetSampleQuestion,
@@ -17,9 +17,9 @@ import {
   savePerodicAnswer,
   submitTestAPI,
   uploadFileInS3,
-} from '../../Services/api';
-import { useQuery } from '../../Services/helperfunctions';
-import './AssessmentPage.scss';
+} from "../../Services/api";
+import { useQuery } from "../../Services/helperfunctions";
+import "./AssessmentPage.scss";
 
 const AssessmentPage = () => {
   const history = useHistory();
@@ -71,16 +71,18 @@ const AssessmentPage = () => {
     try {
       SetLoading(true);
 
-      const testCaseMetrics = (question?.question?.testCases || []).map((tc, index) => {
-        const res = testResult?.[index];
-        return {
-          input: tc.input,
-          output: tc.output,
-          hidden: tc.hidden,
-          runtime: res?.runtime || 0,
-          memory: res?.memory || 0,
-        };
-      });
+      const testCaseMetrics = (question?.question?.testCases || []).map(
+        (tc, index) => {
+          const res = testResult?.[index];
+          return {
+            input: tc.input,
+            output: tc.output,
+            hidden: tc.hidden,
+            runtime: res?.runtime || 0,
+            memory: res?.memory || 0,
+          };
+        },
+      );
 
       await submitTestAPI({
         testId: test._id,
@@ -90,7 +92,7 @@ const AssessmentPage = () => {
         language: selectedLanguage.value,
         testCases: testCaseMetrics,
       });
-      setResult('Saved successfully!!!');
+      setResult("Saved successfully!!!");
 
       history.push(`/student/question/${_id}`);
     } catch (error) {
@@ -116,12 +118,12 @@ const AssessmentPage = () => {
         sampleQuestion: question?.question.sampleQuestion,
       });
       setTestResult(resp.data);
-      
+
       if (resp.data && Array.isArray(resp.data)) {
         let maxMemory = 0;
         let totalRuntime = 0;
         let count = 0;
-        resp.data.forEach(res => {
+        resp.data.forEach((res) => {
           if (res.runtime != null) {
             totalRuntime += res.runtime;
             count++;
@@ -132,7 +134,7 @@ const AssessmentPage = () => {
         });
         metricsRef.current = {
           runtime: count ? parseFloat((totalRuntime / count).toFixed(3)) : 0,
-          memory: maxMemory
+          memory: maxMemory,
         };
       }
 
@@ -145,7 +147,7 @@ const AssessmentPage = () => {
   };
 
   const dataURLtoFile = (dataurl, filename) => {
-    var arr = dataurl.split(','),
+    var arr = dataurl.split(","),
       mime = arr[0].match(/:(.*?);/)[1],
       bstr = atob(arr[1]),
       n = bstr.length,
@@ -159,18 +161,23 @@ const AssessmentPage = () => {
 
   const submitPeriodicAnswerFunc = async (results = testResult) => {
     try {
-      let imgURL = '';
+      let imgURL = "";
       let signedUrlResponse;
 
       if (userImage) {
         signedUrlResponse = await getPresignedURL({
-          contentType: 'image/jpeg',
+          contentType: "image/jpeg",
           path: `tests/${_id}${new Date().getTime()}.jpg`,
         });
-        imgURL = signedUrlResponse.data.url + '/' + signedUrlResponse.data.fields['key'];
+        imgURL =
+          signedUrlResponse.data.url +
+          "/" +
+          signedUrlResponse.data.fields["key"];
       }
 
-      const testCaseMetrics = (questionDataRef.current?.question?.testCases || []).map((tc, index) => {
+      const testCaseMetrics = (
+        questionDataRef.current?.question?.testCases || []
+      ).map((tc, index) => {
         const res = results?.[index];
         return {
           input: tc.input,
@@ -197,9 +204,9 @@ const AssessmentPage = () => {
         Object.keys(signedUrlResponse.data.fields).forEach((key) => {
           formData.append(key, signedUrlResponse.data.fields[key]);
         });
-        const image = dataURLtoFile(userImage, 'item');
+        const image = dataURLtoFile(userImage, "item");
         // Actual file has to be appended last.
-        formData.append('file', image);
+        formData.append("file", image);
         await uploadFileInS3(signedUrlResponse.data.url, formData).catch(() => {
           // throw new Error('Error while uploading image');
         });
@@ -213,7 +220,7 @@ const AssessmentPage = () => {
     try {
       SetLoading(true);
       let result,
-        sq = query.get('samplequestion');
+        sq = query.get("samplequestion");
 
       if (sq) {
         result = await GetSampleQuestion();
@@ -224,7 +231,7 @@ const AssessmentPage = () => {
       const testLocal = result.data;
       setTest(testLocal);
       const questionLocalStorage = sq ? result.data[0] : testLocal.questions[0];
-      if (questionLocalStorage && questionLocalStorage.status === 'completed') {
+      if (questionLocalStorage && questionLocalStorage.status === "completed") {
         history.goBack();
       }
       questionDataRef.current = questionLocalStorage;
@@ -296,28 +303,28 @@ const AssessmentPage = () => {
   }, [userImage]);
 
   const onComplete = () => {
-    console.log('complete');
+    console.log("complete");
     submitTest();
   };
 
   const handleEditor = (editor) => {
     monacoRef.current = editor;
 
-     editor.onKeyDown((event) => {
-       const { keyCode, ctrlKey, metaKey } = event;
-       if ((keyCode === 33 || keyCode === 52) && (metaKey || ctrlKey)) {
-         event.preventDefault();
-       }
-     });
+    //  editor.onKeyDown((event) => {
+    //    const { keyCode, ctrlKey, metaKey } = event;
+    //    if ((keyCode === 33 || keyCode === 52) && (metaKey || ctrlKey)) {
+    //      event.preventDefault();
+    //    }
+    //  });
     editor.onKeyUp((event) => {
-      if (event.ctrlKey && event.code == 'Enter' && questionDataRef.current) {
+      if (event.ctrlKey && event.code == "Enter" && questionDataRef.current) {
         runTests(questionDataRef.current);
       }
     });
   };
 
   return (
-    <div className=" assessmentPage disable-copy my-4">
+    <div className="assessmentPage">
       <div className="d-flex justify-content-start align-items-center">
         <div className="flex-grow-1">
           <button
@@ -332,12 +339,9 @@ const AssessmentPage = () => {
           <CountDownTimer expiryTime={testExpiryTime} onComplete={onComplete} />
         </div>
       </div>
-      <div className="assessmentPage__card  m-3  ">
-        <div className="row">
-          <div
-            className="assessmentPage__left col-md-6 col-sm-12"
-            style={{ padding: '30px 35px' }}
-          >
+      <div className="assessmentPage__card">
+        <div className="row assessment-content-row mx-4">
+          <div className="assessmentPage__left col-md-6 col-sm-12">
             <div>
               <QuestionInstructions
                 question={questionData}
@@ -366,7 +370,11 @@ const AssessmentPage = () => {
                 {testCases.map((ele, index) => {
                   return (
                     <div className={`card p-3`} key={index}>
-                      {!ele.hidden && (
+                      {(!ele.hidden ||
+                        (ele.hidden &&
+                          testResult &&
+                          testResult[index] &&
+                          !testResult[index].result)) && (
                         <>
                           <div className="status-text">
                             <div>
@@ -374,7 +382,7 @@ const AssessmentPage = () => {
                             </div>
                             <div
                               className="assessmentPage__left--testCases"
-                              style={{ color: '#808081' }}
+                              style={{ color: "#808081" }}
                             >
                               <div>
                                 Input: <br />
@@ -382,7 +390,10 @@ const AssessmentPage = () => {
                                   ? ele.input.map((item, itemIndex) => {
                                       return (
                                         <span key={itemIndex}>
-                                          {item?.toString().split(',').join(' ') || ''}
+                                          {item
+                                            ?.toString()
+                                            .split(",")
+                                            .join(" ") || ""}
                                           <br />
                                         </span>
                                       );
@@ -391,19 +402,20 @@ const AssessmentPage = () => {
                               </div>
                               <div>
                                 Expected Output:
-                                <br />{' '}
-                                {ele.output?.toString().split(',').join(' ') || ''}
+                                <br />{" "}
+                                {ele.output?.toString().split(",").join(" ") ||
+                                  ""}
                               </div>
                               {testResult && (
                                 <div
                                   className={`${
                                     testResult && testResult[index]?.result
-                                      ? 'text-success'
-                                      : ''
+                                      ? "text-success"
+                                      : ""
                                   } ${
                                     testResult && !testResult[index]?.result
-                                      ? 'text-danger'
-                                      : ''
+                                      ? "text-danger"
+                                      : ""
                                   }`}
                                 >
                                   Output:
@@ -412,14 +424,14 @@ const AssessmentPage = () => {
                               )}
                               <textarea
                                 value={
-                                  typeof testResult === 'object'
+                                  typeof testResult === "object"
                                     ? testResult[index]?.logs
                                     : testResult
                                 }
                                 hidden={
                                   testResult === undefined
                                     ? true
-                                    : false || testResult[index]?.logs == ''
+                                    : false || testResult[index]?.logs == ""
                                     ? true
                                     : false
                                 }
@@ -430,30 +442,37 @@ const AssessmentPage = () => {
                         </>
                       )}
 
-                      {ele.hidden && (
-                        <div className="assessmentPage__hidden">
-                          <div>
-                            <h6>Test Case {index + 1}</h6>
+                      {ele.hidden &&
+                        (!testResult ||
+                          !testResult[index] ||
+                          testResult[index].result) && (
+                          <div className="assessmentPage__hidden">
+                            <div>
+                              <h6>Test Case {index + 1}</h6>
+                            </div>
+                            <div className="assessmentPage__hidden--btn  ">
+                              <span style={{ zIndex: "10" }}> Hidden</span>
+                            </div>
                           </div>
-                          <div className="assessmentPage__hidden--btn  ">
-                            <span style={{ zIndex: '10' }}> Hidden</span>
-                          </div>
-                        </div>
-                      )}
+                        )}
                       {testResult && testResult[index] && (
                         <div className="status-badge d-flex align-items-center">
                           <div
                             className={` text-uppercase  ${
                               testResult[index].result
-                                ? 'assessmentPage__pass--badge'
-                                : 'assessmentPage__fail--badge'
+                                ? "assessmentPage__pass--badge"
+                                : "assessmentPage__fail--badge"
                             }`}
                           >
-                            {testResult[index].result ? 'Pass' : 'Fail'}
+                            {testResult[index].result ? "Pass" : "Fail"}
                           </div>
                           {testResult[index].runtime != null && (
-                            <div className="ms-3 text-muted" style={{ fontSize: '0.85rem' }}>
-                              Time: {testResult[index].runtime} ms | Mem: {(testResult[index].memory / 1024).toFixed(2)}MB
+                            <div
+                              className="ms-3 text-muted"
+                              style={{ fontSize: "0.85rem" }}
+                            >
+                              Time: {testResult[index].runtime} ms | Mem:{" "}
+                              {(testResult[index].memory / 1024).toFixed(2)}MB
                             </div>
                           )}
                         </div>
@@ -464,7 +483,7 @@ const AssessmentPage = () => {
               </div>
             </div>
           </div>
-          <div className="col-md-6 col-sm-12" style={{ padding: '30px 35px' }}>
+          <div className="col-md-6 col-sm-12 scrollable-column">
             <div className="row d-flex mb-3 justify-content-between">
               <div className="mt-3 d-flex justify-content-center col-6">
                 <button
@@ -474,7 +493,7 @@ const AssessmentPage = () => {
                   Save test & Run
                 </button>
               </div>
-              <div className="col-6 mt-3 " style={{ paddingRight: '20px' }}>
+              <div className="col-6 mt-3 " style={{ paddingRight: "20px" }}>
                 <Select
                   placeholder="Select Language"
                   options={options}
@@ -491,7 +510,7 @@ const AssessmentPage = () => {
 
             <Editor
               onMount={handleEditor}
-              height={testResult === undefined ? '70vh' : '70vh'}
+              height={testResult === undefined ? "50vh" : "50vh"}
               theme="vs-dark"
               language={selectedLanguage?.value}
               value={code.current}
@@ -501,8 +520,12 @@ const AssessmentPage = () => {
                   enabled: false,
                 },
                 tabSize: 2,
-                wordWrap: 'on',
+                wordWrap: "on",
                 formatOnType: true,
+                padding: {
+                  top: 16,
+                  bottom: 16,
+                },
               }}
               className="border"
             />
