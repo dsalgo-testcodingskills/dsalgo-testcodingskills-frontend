@@ -20,31 +20,8 @@ import './PreviewModal.scss';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import Plans from '../MyPlans/Plans';
 import QuestionPreview from './QuestionPreview';
-const ALL_TAGS = [
-  { name: 'arrays', cat: 'data structures', n: '18.4k' },
-  { name: 'strings', cat: 'data structures', n: '14.2k' },
-  { name: 'linked-list', cat: 'data structures', n: '9.3k' },
-  { name: 'stack', cat: 'data structures', n: '7.8k' },
-  { name: 'queue', cat: 'data structures', n: '5.4k' },
-  { name: 'hash-map', cat: 'data structures', n: '11.2k' },
-  { name: 'trees', cat: 'data structures', n: '12.8k' },
-  { name: 'binary-tree', cat: 'data structures', n: '10.1k' },
-  { name: 'graph', cat: 'data structures', n: '9.6k' },
-  { name: 'dynamic-programming', cat: 'algorithms', n: '22.1k' },
-  { name: 'recursion', cat: 'algorithms', n: '15.3k' },
-  { name: 'sorting', cat: 'algorithms', n: '13.4k' },
-  { name: 'binary-search', cat: 'algorithms', n: '11.9k' },
-  { name: 'two-pointers', cat: 'algorithms', n: '8.7k' },
-  { name: 'greedy', cat: 'algorithms', n: '9.1k' },
-  { name: 'backtracking', cat: 'algorithms', n: '6.6k' },
-  { name: 'memoization', cat: 'algorithms', n: '4.8k' },
-  { name: 'time-complexity', cat: 'complexity', n: '8.2k' },
-  { name: 'space-complexity', cat: 'complexity', n: '5.6k' },
-  { name: 'javascript', cat: 'language', n: '31k' },
-  { name: 'python', cat: 'language', n: '28.5k' },
-  { name: 'java', cat: 'language', n: '22k' },
-  { name: 'c++', cat: 'language', n: '19.8k' },
-];
+import { ALL_TAGS } from '../../utils/constants';
+
 
 const SUGGESTED_TAGS = ['dynamic-programming', 'arrays', 'memoization', 'recursion', 'time-complexity'];
 
