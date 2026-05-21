@@ -22,11 +22,6 @@ import Plans from '../MyPlans/Plans';
 import QuestionPreview from './QuestionPreview';
 const ALL_TAGS = [
   { name: 'arrays', cat: 'data structures', n: '18.4k' },
-  { name: 'arrays', cat: 'data structures', n: '18.4k' },
-  { name: 'arrays', cat: 'data structures', n: '18.4k' },
-  { name: 'arrays', cat: 'data structures', n: '18.4k' },
-  { name: 'arrays', cat: 'data structures', n: '18.4k' },
-  { name: 'arrays', cat: 'data structures', n: '18.4k' },
   { name: 'strings', cat: 'data structures', n: '14.2k' },
   { name: 'linked-list', cat: 'data structures', n: '9.3k' },
   { name: 'stack', cat: 'data structures', n: '7.8k' },
