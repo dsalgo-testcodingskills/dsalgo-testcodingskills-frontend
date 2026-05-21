@@ -47,7 +47,7 @@ const responseHandler = (response) => {
 };
 
 const errorHandler = (error) => {
-  if (error.response.status === 401) {
+  if (error.response.status === 401 || error.response.status === 455) {
     store.dispatch(setLogout());
   }
   return Promise.reject(

@@ -17,6 +17,7 @@ import { Dialog } from '@material-ui/core';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import { toast } from 'react-toastify';
 import Plans from './Plans';
+import { subscriptionStatus } from '../../utils/constants';
 
 const MyPlans = () => {
   const dispatch = useDispatch();
@@ -29,12 +30,11 @@ const MyPlans = () => {
   const [Loading, SetLoading] = useState(false);
   const [open, setopen] = useState(false);
 
-  useEffect(async () => {
+  const fetchData = async () => {
     try {
       SetLoading(true);
       const subData = await getSubDetails();
       setSubDetails(subData.data.data);
-      console.log(subData.data.data);
       const result = await GetTotalTestsCount();
       dispatch(setTestsCount(result.data.totalTests));
       const resp = await getPaymentDetails();
@@ -44,6 +44,10 @@ const MyPlans = () => {
     } finally {
       SetLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   const handleClose = () => {
@@ -52,6 +56,25 @@ const MyPlans = () => {
 
   const handleOpen = () => {
     setopen(true);
+  };
+
+  const renderStatus = (sub) => {
+    if (!sub) return null;
+    const isCancelled = sub.status === 'cancelled';
+    const style = {
+      padding: '4px 10px',
+      borderRadius: '4px',
+      fontSize: '0.85rem',
+      fontWeight: '500',
+      display: 'inline-block',
+      // backgroundColor: isCancelled ? '#fff3cd' : '#e8f5e9',
+      color: isCancelled ? '#856404' : '#2e7d32',
+    };
+    return (
+      <span style={style}>
+        {sub.status === 'active' ? 'Active' : `Cancelled (Active until ${sub.endDateString})`}
+      </span>
+    );
   };
 
   //Display RazorPay Window
@@ -87,6 +110,7 @@ const MyPlans = () => {
   const cancelSubscription = async () => {
     await cancelSubscriptions();
     setopen(false);
+    await fetchData(); 
     toast(
       <CustomToast
         type="success"
@@ -218,29 +242,41 @@ const MyPlans = () => {
       </label>
 
       <div className="myPlans__content">
-        {subDetails && subDetails.length > 0 ? (
+        {subDetails && subDetails.length > 0 && ![subscriptionStatus.CREATED].includes(subDetails[0]?.status) ? (
         <div className="my-4">
           <div className="row">
               <div className=" myPlans__active col-9">
                 <h4>
-                  <label>Current Plan :</label>
-                  <span
-                    style={{ color: '#24C5DA', textTransform: 'capitalize' }}
-                  >
-                    {' '}
-                    {subDetails[0]?.status == 'active'
-                      ? 'Active'
-                      : subDetails[0]?.status == 'initiated'
-                      ? 'Pending'
-                      : '-'}{' '}
-                  </span>
+                  <label>Plan Status :</label>
+                  {renderStatus(subDetails[0])}
                 </h4>
                 <p>
                   <label>Remaining Test : </label> <span> {testsCount}</span>
                 </p>
                 <p>
-                  <label>Expire in : </label>
-                  {console.log(subDetails[0]?.end_at * 1000)}
+                  <label>Current Month Billing Date : </label>
+                  <span>
+                    {subDetails[0]?.current_start
+                      ? `${moment(subDetails[0]?.current_start * 1000).format(
+                          'DD/MM/YYYY',
+                        )}`
+                      : '-'}
+                  </span>
+                </p>
+                {subDetails[0]?.status === 'active' && (
+                  <p>
+                    <label>Next payment Date : </label>
+                    <span>
+                      {subDetails[0]?.current_end
+                        ? `${moment(subDetails[0]?.current_end * 1000).format(
+                          'DD/MM/YYYY',
+                        )}`
+                      : '-'}
+                  </span>
+                </p>
+                )}
+                {/* <p>
+                  <label>Renewal/Expiry Date : </label>
                   <span>
                     {subDetails[0]?.end_at
                       ? `${moment(subDetails[0]?.end_at * 1000).format(
@@ -248,12 +284,14 @@ const MyPlans = () => {
                         )}`
                       : '-'}
                   </span>
-                </p>
+                </p> */}
               </div>
             <div className="col-3">
-              <button className="btns" onClick={handleOpen}>
-                Cancel Plan
-              </button>
+              {subDetails[0]?.status !== 'cancelled' && (
+                <button className="btns" onClick={handleOpen}>
+                  Cancel Plan
+                </button>
+              )}
             </div>
           </div>
 

@@ -12,15 +12,36 @@ import {
 import './Plans.scss';
 import { useHistory } from 'react-router';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
+import { RAZOR_PAY_PLAN_ID } from '../../utils/constants';
+import Dialog from "@material-ui/core/Dialog";
+import IconButton from "@material-ui/core/IconButton";
+import CloseIcon from "@material-ui/icons/Close";
 
 function Plans() {
   const history = useHistory();
   const { testsCount } = useSelector((store) => store.dataReducer);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   const [planLimits, setPlanLimits] = useState(null);
   const [subDetails, setSubDetails] = useState(null);
+
+  const handleOpen = (planId) => {
+    setSelectedPlan(planId);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedPlan(null);
+  };
+
+  const confirmPurchase = () => {
+    setOpen(false);
+    displayRazorpay(selectedPlan);
+  };
 
   const fetchData = async () => {
     try {
@@ -95,13 +116,12 @@ function Plans() {
         handler: async function (response) {
           if (response) {
             toast(
-              <CustomToast type="success" message={'Payment Successfull'} />,
+              <CustomToast type="success" message={'Payment Successful'} />,
             );
+            await updatePaymentStatus();
+            await fetchData();
             history.push('/admin/myPlans');
-            window.location.reload();
           }
-
-          await updatePaymentStatus();
         },
         prefill: {
           name: user?.userInfo?.name,
@@ -119,11 +139,12 @@ function Plans() {
       paymentObject.on('payment.failed', function (response) {
         alert(response.error.description);
 
-        toast(<CustomToast type="error" message={'Fail Successfull'} />);
+        toast(<CustomToast type="error" message={'Fail Successful'} />);
       });
       paymentObject.open();
     } catch (error) {
       console.log('error :>> ', error);
+      setLoading(false);
     }
   };
   return (
@@ -164,17 +185,42 @@ function Plans() {
         <h6>
           Rs 1000 <span>/ Month</span>
         </h6>
-        <button
-          type="submit"
-          className="btns"
-          onClick={() => {
-            displayRazorpay('plan_KK6q6XSSFCRx0z');
+        <button type="submit" className="btns" onClick={() => handleOpen(RAZOR_PAY_PLAN_ID)}>Get Started</button>
+      </div>
+    <Dialog open={open} onClose={handleClose}>
+        <div
+          className="dialog-box"
+          style={{
+            padding: "20px",
+            textAlign: "center",
+            position: "relative",
           }}
         >
-          {' '}
-          Get Started
-        </button>
-      </div>
+          <IconButton
+            onClick={handleClose}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+
+          <h5>Confirm Subscription</h5>
+          <p>Are you sure you want to subscribe to this plan?</p>
+
+          <div style={{ marginTop: "20px" }}>
+            <button
+              className="btns"
+              onClick={confirmPurchase}
+              style={{ marginRight: "10px" }}
+            >
+              Yes, proceed
+            </button>
+          </div>
+        </div>
+      </Dialog>
       <CustomLoadingAnimation isLoading={loading} />
     </div>
   );

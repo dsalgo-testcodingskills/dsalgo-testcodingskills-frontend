@@ -32,6 +32,7 @@ jobs:
           REACT_APP_RAZORPAY_KEY_ID: ${{ secrets.REACT_APP_RAZORPAY_KEY_ID }}
           REACT_APP_AWS_USER_POOL_CLIENT_ID: ${{ secrets.REACT_APP_AWS_USER_POOL_CLIENT_ID }}
           REACT_APP_COGNITO_HOSTED_URL: ${{ secrets.REACT_APP_COGNITO_HOSTED_URL }}
+          REACT_APP_RAZORPAY_PLAN_ID: ${{ secrets.REACT_APP_RAZORPAY_PLAN_ID }}
         run: npm run build
 
       - name: Configure AWS credentials
