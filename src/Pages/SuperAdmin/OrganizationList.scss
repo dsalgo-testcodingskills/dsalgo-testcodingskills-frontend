@@ -112,6 +112,7 @@
   border: 0.5px solid var(--gray-200);
   border-radius: 10px;
   overflow: hidden;
+  max-height: calc(100vh - 200px);
 }
 
 .table-header {

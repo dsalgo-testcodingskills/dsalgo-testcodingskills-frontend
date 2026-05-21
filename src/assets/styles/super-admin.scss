@@ -6,7 +6,7 @@
 
 .sa-sidebar {
   width: 240px;
-  background-color: #1a202c; 
+  background-color: #1a202c;
   color: white;
   display: flex;
   flex-direction: column;
@@ -17,7 +17,7 @@
     padding: 0 20px 20px;
     font-weight: 700;
     font-size: 20px;
-    border-bottom: 1px solid #2d3748;
+    // border-bottom: 1px solid #2d3748;
     margin-bottom: 20px;
   }
 
@@ -25,13 +25,18 @@
     list-style: none;
     padding: 0;
 
+    a {
+      text-decoration: none;
+    }
+
     li {
       padding: 12px 20px;
       cursor: pointer;
       color: #a0aec0;
       transition: all 0.2s;
 
-      &:hover, &.active {
+      &:hover,
+      &.active {
         background-color: #2d3748;
         color: #ffffff;
       }

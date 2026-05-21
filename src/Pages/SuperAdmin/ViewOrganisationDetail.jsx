@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import ReactPaginate from "react-paginate";
 import PageContainer from "./PageContainer";
 import {
   organizationById,
   organizationByUser,
   organizationQuestions,
   organizationTests,
+  organisationSubscription,
 } from "../../Services/api";
 import "./OrganizationList.scss";
 
@@ -27,43 +29,99 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
       .slice(0, 2)
       .toUpperCase() || "?";
 
-  const getPlanClass = (plan) => {
-    const map = { Free: "free", paid: "paid" };
-    return map[plan] || "free";
-  };
-
   const [selectedOrg, setSelectedOrg] = useState(null);
   const [users, setUsers] = useState([]);
+  const [usersCount, setUsersCount] = useState(0);
+  const [usersPage, setUsersPage] = useState(1);
   const [questions, setQuestions] = useState([]);
   const [questionsCount, setQuestionsCount] = useState(0);
+  const [questionsPage, setQuestionsPage] = useState(1);
   const [tests, setTests] = useState([]);
   const [testsCount, setTestsCount] = useState(0);
+  const [testsPage, setTestsPage] = useState(1);
+  const [subscription, setSubscription] = useState([]);
+  const [subscriptionCount, setSubscriptionCount] = useState(0);
+  const [subscriptionPage, setSubscriptionPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("users");
 
+  const limit = 10;
+
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        await Promise.all([
-          organizationById(orgId).then((r) => setSelectedOrg(r.data)),
-          organizationByUser(orgId, 1, 10, {}).then((r) =>
-            setUsers(r.data?.data || []),
-          ),
-          organizationQuestions(orgId, 1, 10, {}).then((r) => {
-            setQuestions(r.data?.data || []);
-            setQuestionsCount(r.data?.count || 0);
-          }),
-          organizationTests(orgId, 1, 10, {}).then((r) => {
-            setTests(r.data?.data || []);
-            setTestsCount(r.data?.count || 0);
-          }),
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAll();
+    organizationById(orgId)
+      .then((r) => setSelectedOrg(r.data))
+      .finally(() => setLoading(false));
   }, [orgId]);
+
+  useEffect(() => {
+    organizationByUser(orgId, usersPage, limit, {}).then((r) => {
+      setUsers(r.data?.data || []);
+      setUsersCount(r.data?.count || 0);
+    });
+  }, [orgId, usersPage]);
+
+  useEffect(() => {
+    organizationQuestions(orgId, questionsPage, limit, {}).then((r) => {
+      setQuestions(r.data?.data || []);
+      setQuestionsCount(r.data?.count || 0);
+    });
+  }, [orgId, questionsPage]);
+
+  useEffect(() => {
+    organizationTests(orgId, testsPage, limit, {}).then((r) => {
+      setTests(r.data?.data || []);
+      setTestsCount(r.data?.count || 0);
+    });
+  }, [orgId, testsPage]);
+
+  useEffect(() => {
+    organisationSubscription(orgId, subscriptionPage, limit, {}).then((r) => {
+      setSubscription(r.data?.data || []);
+      setSubscriptionCount(r.data?.count || 0);
+    });
+  }, [orgId, subscriptionPage]);
+
+  const Pagination = ({ page, count, onPageChange }) => {
+    const totalPages = Math.ceil(count / limit) || 1;
+    return (
+      <div
+        className="org-pagination-container"
+        style={{
+          padding: "16px",
+          borderTop: "1px solid var(--gray-200)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <span className="org-page-info">
+          Page {page} of {totalPages}
+        </span>
+        <ReactPaginate
+          breakLabel="..."
+          nextLabel=">"
+          onPageChange={(e) => onPageChange(e.selected + 1)}
+          pageRangeDisplayed={3}
+          marginPagesDisplayed={1}
+          pageCount={totalPages}
+          previousLabel="<"
+          renderOnZeroPageCount={null}
+          containerClassName="org-pagination"
+          pageClassName="org-page-item"
+          pageLinkClassName="org-page-btn"
+          previousClassName="org-page-item"
+          previousLinkClassName="org-page-btn"
+          nextClassName="org-page-item"
+          nextLinkClassName="org-page-btn"
+          activeLinkClassName="active"
+          breakClassName="org-page-item"
+          breakLinkClassName="org-page-dots"
+          disabledClassName="disabled"
+          forcePage={page - 1}
+        />
+      </div>
+    );
+  };
 
   if (loading)
     return <div className="org-loading">Loading organisation details...</div>;
@@ -161,7 +219,7 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
             </div>
             <div className="stat-card">
               <div className="stat-label">TOTAL ACTIVE USERS</div>
-              <div className="stat-value">{users.length}</div>
+              <div className="stat-value">{usersCount}</div>
               <div className="stat-sub">Users in organisation</div>
             </div>
             <div className="stat-card">
@@ -205,6 +263,12 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
         >
           Tests
         </div>
+        <div
+          className={`tab ${activeTab === "subscription" ? "active" : ""}`}
+          onClick={() => setActiveTab("subscription")}
+        >
+          subscription
+        </div>
       </div>
 
       {/* Users */}
@@ -212,7 +276,7 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
         <div className="table-wrap">
           <div className="table-header">
             <span style={{ fontSize: "12px", fontWeight: 500 }}>
-              {users.length} Users
+              {usersCount} Users
             </span>
           </div>
           <table className="org-table">
@@ -264,6 +328,11 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
               )}
             </tbody>
           </table>
+          <Pagination
+            page={usersPage}
+            count={usersCount}
+            onPageChange={setUsersPage}
+          />
         </div>
       )}
 
@@ -278,7 +347,11 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
           <table className="org-table">
             <thead>
               <tr>
-                <th>Question (Preview)</th>
+                <th>Question</th>
+                <th>Level</th>
+                <th>Sample</th>
+                <th>Public</th>
+                <th>Created At</th>
               </tr>
             </thead>
             <tbody>
@@ -292,21 +365,52 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                         color: "var(--gray-700)",
+                        fontWeight: 500,
                       }}
                     >
                       {q.title || q.question || "N/A"}
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          q.level === "easy"
+                            ? "badge-green"
+                            : q.level === "medium"
+                            ? "badge-amber"
+                            : "badge-red"
+                        }`}
+                      >
+                        {q.level
+                          ? q.level.charAt(0).toUpperCase() + q.level.slice(1)
+                          : "N/A"}
+                      </span>
+                    </td>
+                    <td>{q.sampleQuestion ? "Yes" : "No"}</td>
+                    <td>{q.public ? "Yes" : "No"}</td>
+                    <td style={{ color: "var(--gray-600)" }}>
+                      {q.createdAt
+                        ? new Date(q.createdAt).toLocaleDateString()
+                        : "N/A"}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td style={{ textAlign: "center", color: "#9ca3af" }}>
+                  <td
+                    colSpan={5}
+                    style={{ textAlign: "center", color: "#9ca3af" }}
+                  >
                     No questions found
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+          <Pagination
+            page={questionsPage}
+            count={questionsCount}
+            onPageChange={setQuestionsPage}
+          />
         </div>
       )}
 
@@ -321,27 +425,154 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
           <table className="org-table">
             <thead>
               <tr>
-                <th>Test Name / Student</th>
+                <th>Student Details</th>
+                <th>Status</th>
+                <th>Test Type</th>
+                <th>Duration</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody>
               {tests.length > 0 ? (
                 tests.map((t) => (
                   <tr key={t._id}>
-                    <td style={{ fontWeight: 500 }}>
-                      {t?.studentName || "N/A"}
+                    <td>
+                      <div
+                        style={{ fontWeight: 500, color: "var(--gray-800)" }}
+                      >
+                        {t.studentName || "N/A"}
+                      </div>
+                      <div
+                        style={{ fontSize: "11px", color: "var(--gray-500)" }}
+                      >
+                        {t.emailId || "N/A"}
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          t.status === "completed"
+                            ? "badge-green"
+                            : t.status === "ongoing"
+                            ? "badge-blue"
+                            : "badge-amber"
+                        }`}
+                      >
+                        {t.status
+                          ? t.status.charAt(0).toUpperCase() + t.status.slice(1)
+                          : "N/A"}
+                      </span>
+                    </td>
+                    <td style={{ color: "var(--gray-600)" }}>
+                      {t.TestType || "N/A"}
+                    </td>
+                    <td style={{ color: "var(--gray-600)" }}>
+                      {t.testDuration ? `${t.testDuration} mins` : "N/A"}
+                    </td>
+                    <td style={{ color: "var(--gray-600)", fontSize: "12px" }}>
+                      {t.startDate
+                        ? new Date(t.startDate).toLocaleDateString()
+                        : "N/A"}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td style={{ textAlign: "center", color: "#9ca3af" }}>
+                  <td
+                    colSpan={5}
+                    style={{ textAlign: "center", color: "#9ca3af" }}
+                  >
                     No tests found
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+          <Pagination
+            page={testsPage}
+            count={testsCount}
+            onPageChange={setTestsPage}
+          />
+        </div>
+      )}
+
+      {activeTab === "subscription" && (
+        <div className="table-wrap">
+          <div className="table-header">
+            <span style={{ fontSize: "12px", fontWeight: 500 }}>
+              {subscriptionCount} Subscription
+            </span>
+          </div>
+          <table className="org-table">
+            <thead>
+              <tr>
+                <th>Subscription ID</th>
+                <th>Plan ID</th>
+                <th>Status</th>
+                <th>Payment Method</th>
+                <th>Counts (Total/Paid/Rem)</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subscription.length > 0 ? (
+                subscription.map((s) => (
+                  <tr key={s._id}>
+                    <td style={{ color: "var(--gray-700)", fontWeight: 500 }}>
+                      {s.id || "N/A"}
+                    </td>
+                    <td style={{ color: "var(--gray-600)" }}>
+                      {s.plan_id || "N/A"}
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          s.status === "active" ? "badge-green" : "badge-amber"
+                        }`}
+                      >
+                        {s.status ? s.status.toUpperCase() : "N/A"}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          textTransform: "uppercase",
+                          color: "var(--gray-600)",
+                          fontSize: "11px",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {s.payment_method || "N/A"}
+                      </span>
+                    </td>
+                    <td style={{ color: "var(--gray-600)" }}>
+                      {s.total_count ?? 0} / {s.paid_count ?? 0} /{" "}
+                      {s.remaining_count ?? 0}
+                    </td>
+                    <td style={{ color: "var(--gray-600)" }}>
+                      {s.createdAt
+                        ? new Date(s.createdAt).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    style={{ textAlign: "center", color: "#9ca3af" }}
+                  >
+                    No subscription found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          <Pagination
+            page={subscriptionPage}
+            count={subscriptionCount}
+            onPageChange={setSubscriptionPage}
+          />
         </div>
       )}
     </PageContainer>

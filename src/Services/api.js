@@ -250,3 +250,9 @@ export function organizationTests(id, page = 1, limit = 10, filter = {}) {
      { page, limit, filter }
   );
 }
+
+export function organisationSubscription(id, page = 1, limit = 10, filter = {}) {
+  return axios.post(`/super-admin/organization/${id}/subscription`,
+     { page, limit, filter }
+  );
+}

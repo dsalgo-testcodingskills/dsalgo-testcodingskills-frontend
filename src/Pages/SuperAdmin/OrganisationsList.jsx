@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import PageContainer from "./PageContainer";
 import { getAllOrganizations } from "../../Services/api";
 import ReactPaginate from "react-paginate";
@@ -24,17 +25,17 @@ const getInitials = (name) =>
     .slice(0, 2)
     .toUpperCase() || "?";
 
-const getPlanClass = (plan) => {
-  const map = { Free: "free", paid: "paid" };
-  return map[plan] || "free";
-};
-
 const OrganisationsList = () => {
   const [loading, setLoading] = useState(true);
   const [organizations, setOrganizations] = useState([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
   const [selectedOrgId, setSelectedOrgId] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    setSelectedOrgId(null);
+  }, [location.key]);
 
   const limit = 10;
   const totalPages = Math.ceil(count / limit);
