@@ -32,6 +32,7 @@ const AssessmentPage = () => {
   const { qid } = useParams();
   const [options, setOptions] = useState([]);
   const [testCases, setTestCases] = useState([]);
+  const [topics, setTopics] = useState([]);
 
   const selectedLanguageForAPI = useRef();
   const [selectedLanguage, setSelectedLanguage] = useState();
@@ -234,6 +235,8 @@ const AssessmentPage = () => {
       }
       questionDataRef.current = questionLocalStorage;
       setQuestion(questionLocalStorage);
+      const topics = questionLocalStorage?.question?.topics || [];
+      setTopics(topics); 
       const optionsList = (
         questionLocalStorage?.question.sampleQuestion
           ? questionLocalStorage?.question?.sampleCode
