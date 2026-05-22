@@ -177,7 +177,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
           <div className="assessmentPage__left col-md-6 col-sm-12">
             <div>
               <QuestionInstructions
-                question={question?.question}
+                question={questionData}
                 showInstructions={true}
               />
               <div className="mt-3 test-cases-scroll">
