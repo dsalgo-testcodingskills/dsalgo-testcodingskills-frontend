@@ -12,7 +12,8 @@ import {
 import { useParams, useHistory } from 'react-router-dom';
 import './CreateTest.scss';
 import Select from 'react-select';
-import { Checkbox } from '@material-ui/core';
+import { Checkbox, IconButton } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
 import * as Yup from 'yup';
 import { CloseButton, Modal } from 'react-bootstrap';
 import './CreateCustomQuestion.scss';
@@ -389,31 +390,20 @@ const CreateCustomQuestion = () => {
 
                   <div className="d-flex align-items-center flex-wrap gap-2">
                     <div style={{ width: '500px' }}>
-                      <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center gap-2" style={{ width: '500px', flexShrink: 0 }}>
                         <Field
                           name="topicInput"
                           type="text"
                           className="form-control"
                         />
-                        <button
-                          type="button"
+                        <IconButton
+                          color="primary"
                           onClick={addTopic}
                           disabled={values.topicInput.trim() === ''}
-                          style={{
-                            background: 'none',
-                            border: '2px solid green',
-                            borderRadius: '6px',
-                            cursor: values.topicInput.trim() === '' ? 'not-allowed' : 'pointer',
-                            color: 'green',
-                            fontWeight: 'bold',
-                            fontSize: '18px',
-                            padding: '4px 10px',
-                            lineHeight: '1',
-                            opacity: values.topicInput.trim() === '' ? 0.4 : 1,
-                          }}
+                          size="small"
                         >
-                          ✓
-                        </button>
+                          <AddIcon />
+                        </IconButton>
                       </div>
                       <ErrorMessage
                         name="topics"
