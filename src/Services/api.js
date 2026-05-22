@@ -281,3 +281,11 @@ export function organizationPayment(id, page = 1, limit = 10, filter = {}) {
     filter,
   });
 }
+
+export function getAllPayments(page = 1, limit = 10, filter = {}) {
+  return axios.post(`/super-admin/getAllPayments`, {
+    page,
+    limit,
+    filter,
+  });
+}
