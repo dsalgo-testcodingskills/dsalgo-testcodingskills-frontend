@@ -5,6 +5,8 @@ import {
   getPaymentDetails,
   getSubDetails,
   GetTotalTestsCount,
+  createTopUpOrder,
+  getPricing,
 } from '../../Services/api';
 import { useDispatch, useSelector } from 'react-redux';
 import { setTestsCount } from '../../Redux/Actions/dataAction';
@@ -29,16 +31,24 @@ const MyPlans = () => {
   const [paymentData, setpaymentData] = useState([]);
   const [Loading, SetLoading] = useState(false);
   const [open, setopen] = useState(false);
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [topUpType, setTopUpType] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [pricing, setPricing] = useState({ pricePerTest: 10, pricePerQuestion: 5 });
 
   const fetchData = async () => {
     try {
       SetLoading(true);
-      const subData = await getSubDetails();
+      const [subData, result, resp, priceRes] = await Promise.all([
+        getSubDetails(),
+        GetTotalTestsCount(),
+        getPaymentDetails(),
+        getPricing().catch(() => ({ data: { pricePerTest: 10, pricePerQuestion: 5 } }))
+      ]);
       setSubDetails(subData.data.data);
-      const result = await GetTotalTestsCount();
       dispatch(setTestsCount(result.data.totalTests));
-      const resp = await getPaymentDetails();
       setpaymentData(resp.data.data);
+      setPricing(priceRes.data);
     } catch (err) {
       console.log(err);
     } finally {
@@ -67,7 +77,6 @@ const MyPlans = () => {
       fontSize: '0.85rem',
       fontWeight: '500',
       display: 'inline-block',
-      // backgroundColor: isCancelled ? '#fff3cd' : '#e8f5e9',
       color: isCancelled ? '#856404' : '#2e7d32',
     };
     return (
@@ -90,6 +99,65 @@ const MyPlans = () => {
   const dateFormat = (cell) => {
     return cell.substring(0, 10);
   };
+
+  function loadScript(src) {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }
+
+  const handleTopUpOpen = (type) => {
+    setTopUpType(type);
+    setTopUpOpen(true);
+  };
+
+  const handleTopUpClose = () => {
+    setTopUpOpen(false);
+    setQuantity(1);
+    setTopUpType(null);
+  };
+
+  const executeTopUp = async () => {
+    if (!quantity || quantity < 1) return;
+    setTopUpOpen(false);
+    
+    try {
+      SetLoading(true);
+      const isLoaded = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+      if (!isLoaded) {
+        toast(<CustomToast type="error" message="Payment gateway failed to load." />);
+        return;
+      }
+
+      const res = await createTopUpOrder({ type: topUpType, quantity: parseInt(quantity) });
+      const { id, amount } = res.data;
+
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount: amount,
+        currency: 'INR',
+        name: `CODE B. Add-on (${topUpType})`,
+        order_id: id,
+        handler: async (response) => {
+          toast(<CustomToast type="success" message="Add-on successful!" />);
+          await fetchData();
+        },
+        theme: { color: '#61dafb' }
+      };
+      
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      toast(<CustomToast type="error" message="Add-on failed." />);
+    } finally {
+      SetLoading(false);
+    }
+  };
+
 
   const upiFunc = () => '-';
 
@@ -231,6 +299,26 @@ const MyPlans = () => {
           </button>
         </div>
       </Dialog>
+      <Dialog open={topUpOpen} onClose={handleTopUpClose}>
+        <div className="dialog-box" style={{ padding: '20px', textAlign: 'center', minWidth: '340px' }}>
+          <button aria-label="close" onClick={handleTopUpClose} style={{ position: 'absolute', right: '10px', top: '8px', background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+          <h5>Add {topUpType === 'test' ? 'Tests' : 'Questions'}</h5>
+          <div style={{ margin: '10px 0', color: '#333' }}>
+            <div>Unit price: ₹{topUpType === 'test' ? pricing.pricePerTest : pricing.pricePerQuestion}</div>
+            <div style={{ marginTop: '6px', fontWeight: 600 }}>Total: ₹{(topUpType === 'test' ? pricing.pricePerTest : pricing.pricePerQuestion) * quantity}</div>
+          </div>
+          <input 
+            type="number" 
+            min="1" 
+            value={quantity} 
+            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
+            style={{ padding: '8px', margin: '10px 0', width: '80%' }}
+          />
+          <div style={{ marginTop: '10px' }}>
+            <button className="btns" onClick={executeTopUp} style={{ background: '#24C5DA', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '4px' }}>Proceed to Pay</button>
+          </div>
+        </div>
+      </Dialog>
       <label className="head">
         <span
           onClick={() => history.push('/admin/testStatus')}
@@ -242,7 +330,7 @@ const MyPlans = () => {
       </label>
 
       <div className="myPlans__content">
-        {subDetails && subDetails.length > 0 && ![subscriptionStatus.CREATED].includes(subDetails[0]?.status) ? (
+        {subDetails && subDetails.length > 0 && ![subscriptionStatus.CREATED].includes(subDetails[0]?.status) && ![subscriptionStatus.CANCELLED].includes(subDetails[0]?.status) ? (
         <div className="my-4">
           <div className="row">
               <div className=" myPlans__active col-9">
@@ -287,12 +375,28 @@ const MyPlans = () => {
                 </p> */}
               </div>
             <div className="col-3">
-              {subDetails[0]?.status !== 'cancelled' && (
                 <button className="btns" onClick={handleOpen}>
                   Cancel Plan
                 </button>
-              )}
+              </div>
             </div>
+            
+            <div className="top-up-section" style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+              <h5 style={{ marginBottom: '15px' }}>Need more resources?</h5>
+              <button 
+                className="btns" 
+                onClick={() => handleTopUpOpen('test')} 
+                style={{ marginRight: '10px', background: '#24C5DA', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '4px' }}
+              >
+                Buy Extra Tests
+              </button>
+              <button 
+                className="btns" 
+                onClick={() => handleTopUpOpen('question')} 
+                style={{ background: '#24C5DA', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '4px' }}
+              >
+                Buy Extra Questions
+              </button>
           </div>
 
           <BootstrapTable
@@ -304,7 +408,7 @@ const MyPlans = () => {
         </div>
         ) : (
           <div className="my-4">
-            <Plans />
+            <Plans subDetails={subDetails} planLimits={null} onUpdate={fetchData} />
           </div>
         )}
       </div>

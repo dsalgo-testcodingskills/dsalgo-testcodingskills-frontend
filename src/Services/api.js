@@ -281,3 +281,12 @@ export function organizationPayment(id, page = 1, limit = 10, filter = {}) {
     filter,
   });
 }
+
+
+export function createTopUpOrder(body) {
+  return axios.post("/payment/createOrder", body);
+}
+
+export function getPricing() {
+  return axios.get('/super-admin/pricing');
+}
