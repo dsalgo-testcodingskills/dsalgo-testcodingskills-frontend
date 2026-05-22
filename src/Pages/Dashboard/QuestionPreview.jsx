@@ -184,6 +184,24 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
                 showInstructions={true}
               />
               <div className="mt-3">
+                <h5>Topics</h5>
+                {questionData?.topics?.length > 0 ? (
+                  <div className="d-flex flex-wrap gap-2" style={{ paddingBottom: '10px' }}>
+                    {questionData?.topics?.map((topic, index) => (
+                      <span
+                        key={index}
+                        className="badge bg-primary p-2"
+                        style={{ fontSize: '14px', fontFamily: 'Arial', color: 'black' }}
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted">No topics added</p>
+                )}
+              </div>
+              <div className="mt-3">
                 <h5 className=" mb-2">Test Cases</h5>
                 {testCases.map((ele, index) => {
                   return (

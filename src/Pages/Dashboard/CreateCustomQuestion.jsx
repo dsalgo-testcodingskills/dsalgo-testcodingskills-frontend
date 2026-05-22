@@ -43,6 +43,8 @@ const CreateCustomQuestion = () => {
     instructions: '',
     sampleQuestion: false,
     public: false,
+    topics: [],
+    topicInput: '',
     testCases: [
       {
         input: [],
@@ -96,6 +98,7 @@ const CreateCustomQuestion = () => {
     level: Yup.string().required('Level Required'),
     question: Yup.string().required('Question Title Required'),
     instructions: Yup.string().required('Question Description Required'),
+    topics: Yup.array().min(1, 'Topics Required').required('Topics Required'),
     inputType: Yup.array()
       .of(
         Yup.object().shape({
@@ -145,9 +148,15 @@ const CreateCustomQuestion = () => {
             res.data.data.testCases[i].output,
           );
         }
+        if (res.data.data.topics && typeof res.data.data.topics === 'string') {
+          res.data.data.topics = res.data.data.topics.split(',').filter(t => t.trim() !== '');
+        } else if (!res.data.data.topics) {
+          res.data.data.topics = [];
+        }
 
         setCustomCourseDetail({
           ...res?.data?.data,
+           topicInput: '',
         });
       }
     }
@@ -169,8 +178,9 @@ const CreateCustomQuestion = () => {
         }
         tempTestCase[i].input = JSON.stringify(tempTestCase[i].input);
       }
+      const { topicInput, ...otherValues } = values;
       const req = {
-        ...values,
+        ...otherValues,
         testCases: tempTestCase,
       };
 
@@ -306,8 +316,23 @@ const CreateCustomQuestion = () => {
             submitCustomQuestionForm(values, resetForm);
           }}
         >
-          {({ values, setFieldValue, handleSubmit }) => (
-            <Form className="px-5 d-flex flex-column my-3 ">
+          {({ values, setFieldValue, handleSubmit }) => {
+            const addTopic = () => {
+              if (values.topicInput.trim() !== '') {
+                const newTopic = values.topicInput.trim();
+                if (!values.topics.includes(newTopic)) {
+                  setFieldValue('topics', [...values.topics, newTopic]);
+                }
+                setFieldValue('topicInput', '');
+              }
+            };
+
+            const removeTopic = (index) => {
+              const updated = values.topics.filter((_, i) => i !== index);
+              setFieldValue('topics', updated);
+            };
+            return (
+          <Form className="px-5 d-flex flex-column my-3 ">
               <div className="row mt-3">
                 <div>
                   {' '}
@@ -353,7 +378,76 @@ const CreateCustomQuestion = () => {
                 </div>
               </div>
 
-              <div className="row mt-3"></div>
+                {/* tags/topics */}
+                <div className="row mt-3">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h5>Tags/Topics</h5>
+                    </div>
+                  </div>
+
+                  <div className="d-flex align-items-center flex-wrap gap-2">
+                    <div style={{ width: '500px' }}>
+                      <div className="d-flex align-items-center gap-2">
+                        <Field
+                          name="topicInput"
+                          type="text"
+                          className="form-control"
+                        />
+                        <button
+                          type="button"
+                          onClick={addTopic}
+                          disabled={values.topicInput.trim() === ''}
+                          style={{
+                            background: 'none',
+                            border: '2px solid green',
+                            borderRadius: '6px',
+                            cursor: values.topicInput.trim() === '' ? 'not-allowed' : 'pointer',
+                            color: 'green',
+                            fontWeight: 'bold',
+                            fontSize: '18px',
+                            padding: '4px 10px',
+                            lineHeight: '1',
+                            opacity: values.topicInput.trim() === '' ? 0.4 : 1,
+                          }}
+                        >
+                          ✓
+                        </button>
+                      </div>
+                      <ErrorMessage
+                        name="topics"
+                        render={(msg) => <div className="text-danger">{msg}</div>}
+                      />
+                    </div>
+
+                    {values.topics.map((topic, index) => (
+                      <div
+                        key={index}
+                        className="badge bg-primary text-dark d-flex align-items-center p-2"
+                        style={{ fontSize: '16px', fontFamily: 'Arial' }}
+                      >
+                        <span>{topic}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeTopic(index)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            marginLeft: '8px',
+                            color: 'red',
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            lineHeight: '1',
+                            padding: '0',
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
               {/* InputType */}
               <FieldArray name="inputType">
@@ -660,7 +754,8 @@ const CreateCustomQuestion = () => {
                   </button>
               </div>
             </Form>
-          )}
+            );
+          }}
         </Formik>
         <CustomLoadingAnimation isLoading={Loading} />
         <Modal

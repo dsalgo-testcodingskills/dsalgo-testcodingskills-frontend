@@ -32,6 +32,7 @@ const AssessmentPage = () => {
   const { qid } = useParams();
   const [options, setOptions] = useState([]);
   const [testCases, setTestCases] = useState([]);
+  const [topics, setTopics] = useState([]);
 
   const selectedLanguageForAPI = useRef();
   const [selectedLanguage, setSelectedLanguage] = useState();
@@ -227,6 +228,8 @@ const AssessmentPage = () => {
       }
       questionDataRef.current = questionLocalStorage;
       setQuestion(questionLocalStorage);
+      const topics = questionLocalStorage?.question?.topics || [];
+      setTopics(topics); 
       const optionsList = (
         questionLocalStorage?.question.sampleQuestion
           ? questionLocalStorage?.question?.sampleCode
@@ -337,6 +340,24 @@ const AssessmentPage = () => {
                 question={question?.question}
                 showInstructions={true}
               />
+              <div className="mt-3">
+                <h5>Topics</h5>
+                {question?.question?.topics?.length > 0 ? (
+                  <div className="d-flex flex-wrap gap-2" style={{ paddingBottom: '10px' }}>
+                    {question?.question?.topics?.map((topic, index) => (
+                      <span
+                        key={index}
+                        className="badge bg-primary p-2"
+                        style={{ fontSize: '14px', fontFamily: 'Arial', color: 'black' }}
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted">No topics added</p>
+                )}
+              </div>
               <div className="mt-3">
                 <h5 className=" mb-2">Test Cases</h5>
                 {testCases.map((ele, index) => {
