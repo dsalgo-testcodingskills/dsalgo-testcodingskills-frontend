@@ -218,8 +218,8 @@ const AssessmentPage = () => {
   const initTest = async () => {
     try {
       SetLoading(true);
-      let result,
-        sq = query.get("samplequestion");
+      let result;
+      const sq = query.get("samplequestion");
 
       if (sq) {
         result = await GetSampleQuestion();
@@ -227,29 +227,28 @@ const AssessmentPage = () => {
         result = await getTestByQuestionAPI(_id, { questionId: qid });
       }
 
-      const testLocal = result.data;
+      const testLocal = result?.data;
       setTest(testLocal);
-      const questionLocalStorage = sq ? result.data[0] : testLocal.questions[0];
-      if (questionLocalStorage && questionLocalStorage.status === "completed") {
+      const questionLocalStorage = sq ? result?.data?.[0] : testLocal?.questions?.[0];
+      if (questionLocalStorage?.status === "completed") {
         history.goBack();
+        return;
       }
       questionDataRef.current = questionLocalStorage;
       setQuestion(questionLocalStorage);
       const topics = questionLocalStorage?.question?.topics || [];
       setTopics(topics); 
-      const optionsList = (
+      const samples =
         questionLocalStorage?.question.sampleQuestion
           ? questionLocalStorage?.question?.sampleCode
-          : questionLocalStorage?.question?.solutionTemplates
-      ).map((sample) => {
-        return {
+          : questionLocalStorage?.question?.solutionTemplates;
+        const optionsList = (samples || []).map((sample) => ({
           value: sample.language,
           label: sample.language.toUpperCase(),
           code: sample.code,
-        };
-      });
+        }));
 
-      setTestCases(questionLocalStorage?.question?.testCases);
+      setTestCases(questionLocalStorage?.question?.testCases || []);
       setOptions(optionsList);
 
       const lastAnswer = questionLocalStorage.answer.pop();
