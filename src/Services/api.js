@@ -290,3 +290,10 @@ export function createTopUpOrder(body) {
 export function getPricing() {
   return axios.get('/super-admin/pricing');
 }
+export function getAllPayments(page = 1, limit = 10, filter = {}) {
+  return axios.post(`/super-admin/getAllPayments`, {
+    page,
+    limit,
+    filter,
+  });
+}

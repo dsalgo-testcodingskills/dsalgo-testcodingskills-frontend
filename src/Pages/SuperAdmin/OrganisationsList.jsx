@@ -30,6 +30,7 @@ const OrganisationsList = () => {
   const [organizations, setOrganizations] = useState([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState(null);
   const location = useLocation();
 
@@ -43,20 +44,24 @@ const OrganisationsList = () => {
   const fetchOrganizations = async () => {
     setLoading(true);
     try {
-      const response = await getAllOrganizations(page, limit, {});
+      const response = await getAllOrganizations(page, limit, { name: search });
       const { data, count } = response.data;
       setOrganizations(data);
       setCount(count);
     } catch (error) {
       console.error("Failed to fetch organizations:", error);
+      2;
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    fetchOrganizations();
-  }, [page]);
+    const delayDebounce = setTimeout(() => {
+      fetchOrganizations();
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [page, search]);
 
   if (selectedOrgId) {
     return (
@@ -78,7 +83,14 @@ const OrganisationsList = () => {
     >
       <div className="toolbar">
         <div className="search-box">
-          <input placeholder="Search by name or email..." />
+          <input
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+          />
         </div>
         <select className="input-field">
           <option>All Plans</option>
