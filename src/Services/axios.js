@@ -49,6 +49,7 @@ const responseHandler = (response) => {
 const errorHandler = (error) => {
   if (error.response.status === 401 || error.response.status === 455) {
     store.dispatch(setLogout());
+    window.location = '/login';
   }
   return Promise.reject(
     error?.response?.data?.message || error?.response?.data || error,

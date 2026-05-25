@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import {
   createSubscription,
-  getOrgDetails,
   updatePaymentStatus,
-  getPlanLimits,
-  getSubDetails,
 } from '../../Services/api';
 import './Plans.scss';
 import { useHistory } from 'react-router';
@@ -17,16 +14,13 @@ import Dialog from "@material-ui/core/Dialog";
 import IconButton from "@material-ui/core/IconButton";
 import CloseIcon from "@material-ui/icons/Close";
 
-function Plans() {
+function Plans({ subDetails, planLimits, onUpdate }) {
   const history = useHistory();
   const { testsCount } = useSelector((store) => store.dataReducer);
-  const [user, setUser] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-
-  const [planLimits, setPlanLimits] = useState(null);
-  const [subDetails, setSubDetails] = useState(null);
 
   const handleOpen = (planId) => {
     setSelectedPlan(planId);
@@ -43,29 +37,6 @@ function Plans() {
     displayRazorpay(selectedPlan);
   };
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [orgResp, limitsResp, subResp] = await Promise.all([
-        getOrgDetails(),
-        getPlanLimits(),
-        getSubDetails(),
-      ]);
-      setUser(orgResp.data);
-      setPlanLimits(limitsResp.data);
-      setSubDetails(subResp.data.data);
-    } catch (error) {
-      console.log('Error: while getting plans data', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  //Generic Load script function
   function loadScript(src) {
     return new Promise((resolve) => {
       const script = document.createElement('script');
@@ -119,14 +90,9 @@ function Plans() {
               <CustomToast type="success" message={'Payment Successful'} />,
             );
             await updatePaymentStatus();
-            await fetchData();
+            if (onUpdate) await onUpdate();
             history.push('/admin/myPlans');
           }
-        },
-        prefill: {
-          name: user?.userInfo?.name,
-          email: user?.userInfo?.emailId,
-          contact: user?.userInfo?.contact || '1234567890',
         },
 
         notes: notes,
@@ -139,7 +105,7 @@ function Plans() {
       paymentObject.on('payment.failed', function (response) {
         alert(response.error.description);
 
-        toast(<CustomToast type="error" message={'Fail Successful'} />);
+        toast(<CustomToast type="error" message={'Payment Failed'} />);
       });
       paymentObject.open();
     } catch (error) {
