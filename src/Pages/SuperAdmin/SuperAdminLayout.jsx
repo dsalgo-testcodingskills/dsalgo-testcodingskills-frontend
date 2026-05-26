@@ -25,6 +25,11 @@ const SuperAdminLayout = ({ children }) => {
               <i className="fas fa-receipt"></i> Global Orders
             </li>
           </NavLink>
+          <NavLink to="/super-admin/pricing" activeClassName="active">
+            <li>
+              <i className="fas fa-tags"></i> Pricing Settings
+            </li>
+          </NavLink>
           <li onClick={() => history.push("/")}>
             <i className="fas fa-arrow-left"></i> Back to Platform
           </li>

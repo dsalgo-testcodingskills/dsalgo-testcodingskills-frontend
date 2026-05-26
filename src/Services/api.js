@@ -292,6 +292,9 @@ export const createTopUpOrder = createAddOnOrder;
 export function getPricing() {
   return axios.get('/super-admin/pricing');
 }
+export function updatePricing(body) {
+  return axios.patch('/super-admin/pricing', body);
+}
 export function getAllPayments(page = 1, limit = 10, filter = {}) {
   return axios.post(`/super-admin/getAllPayments`, {
     page,

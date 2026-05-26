@@ -7,6 +7,7 @@ import SuperAdminLayout from '../Pages/SuperAdmin/SuperAdminLayout';
 import SuperAdminDashboard from '../Pages/SuperAdmin/SuperAdminDashboard';
 import OrganisationsList from '../Pages/SuperAdmin/OrganisationsList';
 import GlobalOrders from '../Pages/SuperAdmin/GlobalOrders';
+import PricingSettings from '../Pages/SuperAdmin/PricingSettings';
 
 function SuperAdminRoutes() {
   const { loginData } = useSelector((store) => store.dataReducer);
@@ -26,6 +27,9 @@ function SuperAdminRoutes() {
         </ProtectedRoute>
         <ProtectedRoute exact path="/super-admin/orders">
           <GlobalOrders />
+        </ProtectedRoute>
+        <ProtectedRoute exact path="/super-admin/pricing">
+          <PricingSettings />
         </ProtectedRoute>
         
         <Redirect from="/super-admin" to="/super-admin/dashboard" />
