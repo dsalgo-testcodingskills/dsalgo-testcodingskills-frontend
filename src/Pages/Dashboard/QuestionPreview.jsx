@@ -177,14 +177,14 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
           <div className="assessmentPage__left col-md-6 col-sm-12">
             <div>
               <QuestionInstructions
-                question={questionData}
+                question={question?.question}
                 showInstructions={true}
               />
               <div className="mt-3">
                 <h5>Topics</h5>
-                {questionData?.topics?.length > 0 ? (
+                {question?.topics?.length > 0 ? (
                   <div className="d-flex flex-wrap gap-2" style={{ paddingBottom: '10px' }}>
-                    {questionData?.topics?.map((topic, index) => (
+                    {question?.topics?.map((topic, index) => (
                       <span
                         key={index}
                         className="badge bg-primary p-2"

@@ -12,7 +12,8 @@ import {
 import { useParams, useHistory } from 'react-router-dom';
 import './CreateTest.scss';
 import Select from 'react-select';
-import { Checkbox } from '@material-ui/core';
+import { Checkbox, IconButton } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
 import * as Yup from 'yup';
 import { CloseButton, Modal } from 'react-bootstrap';
 import './CreateCustomQuestion.scss';
@@ -146,26 +147,25 @@ const CreateCustomQuestion = () => {
     if (params.id) {
       const res = await getCustomQuestionById(params.id);
       if (res?.data?.data) {
-        const questionData = res.data.data;
-        for (let i = 0; i < questionData.testCases.length; i++) {
-          for (let j = 0; j < questionData.testCases[i].input.length; j++) {
-            questionData.testCases[i].input[j] = JSON.stringify(
-              questionData.testCases[i].input[j],
+        for (let i = 0; i < res.data.data.testCases.length; i++) {
+          for (let j = 0; j < res.data.data.testCases[i].input.length; j++) {
+            res.data.data.testCases[i].input[j] = JSON.stringify(
+              res.data.data.testCases[i].input[j],
             );
           }
-          questionData.testCases[i].output = JSON.stringify(
-            questionData.testCases[i].output,
+          res.data.data.testCases[i].output = JSON.stringify(
+            res.data.data.testCases[i].output,
           );
         }
 
-        if (questionData.topics && typeof questionData.topics === 'string') {
-          questionData.topics = questionData.topics.split(',').filter(t => t.trim() !== '');
-        } else if (!questionData.topics) {
-          questionData.topics = [];
+        if (res.data.data.topics && typeof res.data.data.topics === 'string') {
+          res.data.data.topics = res.data.data.topics.split(',').filter(t => t.trim() !== '');
+        } else if (!res.data.data.topics) {
+          res.data.data.topics = [];
         }
 
         setCustomCourseDetail({
-          ...questionData,
+          ...res?.data?.data,
           topicInput: '',
         });
       }
@@ -191,6 +191,7 @@ const CreateCustomQuestion = () => {
 
       const { topicInput, ...otherValues } = values;
       const req = {
+        ...values,
         ...otherValues,
         // topics: values.topics.join(','), // Assuming backend expects comma separated string
         testCases: tempTestCase,
@@ -329,7 +330,6 @@ const CreateCustomQuestion = () => {
         >
           {({ values, setFieldValue, handleSubmit }) => {
             const addTopic = () => {
-              if (values.topics.length >= 5) return;
               if (values.topicInput.trim() !== '') {
                 const newTopic = values.topicInput.trim();
                 if (!values.topics.includes(newTopic)) {
@@ -433,9 +433,14 @@ const CreateCustomQuestion = () => {
                           }}
                           onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
                         />
-                        <button type="button" className="topic-tick-btn" onClick={() => { addTopic(); setShowDropdown(false); }} disabled={values.topicInput.trim() === '' || values.topics.length >= 5}>
-                          ✓
-                        </button>
+                        <IconButton
+                          color="primary"
+                          onClick={addTopic}
+                          disabled={values.topicInput.trim() === ''}
+                          size="small"
+                        >
+                          <AddIcon />
+                        </IconButton>
                       </div>
                     </div>
 
@@ -789,16 +794,11 @@ const CreateCustomQuestion = () => {
                     {editMode ? 'Update' : 'Create'}
                   </button>
                   <button
-                    type="button"
-                    className="btns mt-3"
-                    onClick={() => {
-                      history.push(`/admin/customQuestionnew/preview`, {
-                        question: {
-                          ...values,
-                          topics: values.topics || [],
-                        }
-                      });
-                    }}
+                  type="button"
+                  className="btns mt-3"
+                  onClick={() => {
+                    handlePreview(values);
+                  }}
                   >
                     Preview
                   </button>
