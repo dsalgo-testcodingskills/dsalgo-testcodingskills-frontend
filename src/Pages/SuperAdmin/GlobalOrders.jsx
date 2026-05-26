@@ -44,6 +44,8 @@ const GlobalOrders = () => {
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const limit = 10;
   const totalPages = Math.ceil(count / limit) || 1;
@@ -52,7 +54,7 @@ const GlobalOrders = () => {
     setLoading(true);
     try {
       // getAllPayments expects (page, limit, filter)
-      const response = await getAllPayments(page, limit, { search });
+      const response = await getAllPayments(page, limit, { name: search, fromDate, toDate });
       const { data, count } = response.data;
       setPayments(data || []);
       setCount(count || 0);
@@ -69,7 +71,7 @@ const GlobalOrders = () => {
     }, 500);
 
     return () => clearTimeout(delayDebounce);
-  }, [page, search]);
+  }, [page, search, fromDate, toDate]);
 
   const handlePageClick = (event) => {
     setPage(event.selected + 1);
@@ -80,9 +82,16 @@ const GlobalOrders = () => {
       title="Orders & Transactions"
       sub="All payments across the platform"
     >
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "12px",
+        }}
+      >
         <button className="btn btn-primary" style={{ height: "34px" }}>
-          <i className="ti ti-download" style={{ fontSize: "13px" }}></i>Export Report
+          <i className="ti ti-download" style={{ fontSize: "13px" }}></i>Export
+          Report
         </button>
       </div>
 
@@ -112,10 +121,21 @@ const GlobalOrders = () => {
       </div>
 
       <div className="toolbar">
-        <div className="search-box" style={{ width: "220px", background: "#fff", border: "0.5px solid var(--gray-200)" }}>
-          <i className="ti ti-search" style={{ color: "var(--gray-400)", fontSize: "14px" }} aria-hidden="true"></i>
+        <div
+          className="search-box"
+          style={{
+            width: "220px",
+            background: "#fff",
+            border: "0.5px solid var(--gray-200)",
+          }}
+        >
+          <i
+            className="ti ti-search"
+            style={{ color: "var(--gray-400)", fontSize: "14px" }}
+            aria-hidden="true"
+          ></i>
           <input
-            placeholder="Search order ID…"
+            placeholder="Search order"
             style={{ fontSize: "12px" }}
             value={search}
             onChange={(e) => {
@@ -124,25 +144,35 @@ const GlobalOrders = () => {
             }}
           />
         </div>
-        <select className="input-field" style={{ fontSize: "12px", color: "var(--gray-600)" }}>
-          <option>All Statuses</option>
-          <option>Captured</option>
-          <option>Failed</option>
-          <option>Refunded</option>
-          <option>In-Progress</option>
-        </select>
-        <select className="input-field" style={{ fontSize: "12px", color: "var(--gray-600)" }}>
-          <option>All Organisations</option>
-        </select>
-        <input type="date" className="input-field" style={{ fontSize: "12px" }} />
+        <input
+          type="date"
+          className="input-field"
+          style={{ fontSize: "12px" }}
+          value={fromDate}
+          onChange={(e) => {
+            setPage(1);
+            setFromDate(e.target.value);
+          }}
+        />
         <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>to</span>
-        <input type="date" className="input-field" style={{ fontSize: "12px" }} />
+        <input
+          type="date"
+          className="input-field"
+          style={{ fontSize: "12px" }}
+          value={toDate}
+          onChange={(e) => {
+            setPage(1);
+            setToDate(e.target.value);
+          }}
+        />
       </div>
 
       <div className="table-wrap">
         <div className="table-header">
           <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>
-            Showing {count > 0 ? (page - 1) * limit + 1 : 0}–{Math.min(page * limit, count)} of {count.toLocaleString()} transactions
+            Showing {count > 0 ? (page - 1) * limit + 1 : 0}–
+            {Math.min(page * limit, count)} of {count.toLocaleString()}{" "}
+            transactions
           </span>
         </div>
 
@@ -168,11 +198,17 @@ const GlobalOrders = () => {
                   if (p.notes?.type) desc.push(fmt.cap(p.notes.type));
                   if (p.notes?.itemType) desc.push(fmt.cap(p.notes.itemType));
                   if (desc.length === 0) desc.push("Payment");
-                  
+
                   return (
                     <tr key={p._id}>
                       <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
                           <div
                             className="org-logo"
                             style={{
@@ -184,17 +220,32 @@ const GlobalOrders = () => {
                           >
                             {getInitials(orgName)}
                           </div>
-                          <div style={{ fontWeight: 500, color: "var(--gray-900)", fontSize: "13px" }}>
+                          <div
+                            style={{
+                              fontWeight: 500,
+                              color: "var(--gray-900)",
+                              fontSize: "13px",
+                            }}
+                          >
                             {orgName}
                           </div>
                         </div>
                       </td>
-                      <td style={{ fontFamily: "monospace", fontSize: "11px", color: "var(--gray-500)" }}>
+                      <td
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "11px",
+                          color: "var(--gray-500)",
+                        }}
+                      >
                         {p.order_id || p.id || "N/A"}
                       </td>
-                      <td style={{ color: "var(--gray-600)" }}>{desc.join(" ")}</td>
+                      <td style={{ color: "var(--gray-600)" }}>
+                        {desc.join(" ")}
+                      </td>
                       <td style={{ fontWeight: 500 }}>
-                        {p.currency === "INR" ? "₹" : p.currency} {p.amount ? (p.amount / 100).toFixed(2) : "0.00"}
+                        {p.currency === "INR" ? "₹" : p.currency}{" "}
+                        {p.amount ? (p.amount / 100).toFixed(2) : "0.00"}
                       </td>
                       <td>
                         <span
@@ -209,7 +260,9 @@ const GlobalOrders = () => {
                           {fmt.cap(p.status)}
                         </span>
                       </td>
-                      <td style={{ color: "var(--gray-400)", fontSize: "11px" }}>
+                      <td
+                        style={{ color: "var(--gray-400)", fontSize: "11px" }}
+                      >
                         {fmt.date(p.createdAt)}
                       </td>
                     </tr>
@@ -217,7 +270,10 @@ const GlobalOrders = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: "center", color: "#9ca3af" }}>
+                  <td
+                    colSpan="6"
+                    style={{ textAlign: "center", color: "#9ca3af" }}
+                  >
                     No transactions found
                   </td>
                 </tr>
