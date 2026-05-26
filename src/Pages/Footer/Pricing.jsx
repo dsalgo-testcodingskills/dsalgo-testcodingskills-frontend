@@ -30,7 +30,7 @@ function Pricing() {
       Maximum {planLimits.paid.tests} test for 1 month<br></br>
       Maximum Users: {planLimits.paid.users}<br></br>
       {planLimits.paid.customQuestions} Custom Questions allowed.<br></br>
-      Price: Rs.1000 (INR) per month.<br></br>
+      Price: Rs.{planLimits.paid.amount} (INR) per month.<br></br>
       <br></br>
       <b>Note</b>: Users here means person who can create tests which include
       (admin and users).
