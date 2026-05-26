@@ -160,8 +160,8 @@ export function getSubDetails() {
   return axios.get("/payment/getSubscriptionDetails");
 }
 
-export function getPaymentDetails() {
-  return axios.get("/payment/getPaymentDetails");
+export function getPaymentDetails(page = 1, limit = 10) {
+  return axios.get("/payment/getPaymentDetails", { params: { page, limit } });
 }
 
 export function updatePaymentStatus() {
@@ -283,9 +283,11 @@ export function organizationPayment(id, page = 1, limit = 10, filter = {}) {
 }
 
 
-export function createTopUpOrder(body) {
+export function createAddOnOrder(body) {
   return axios.post("/payment/createOrder", body);
 }
+
+export const createTopUpOrder = createAddOnOrder;
 
 export function getPricing() {
   return axios.get('/super-admin/pricing');

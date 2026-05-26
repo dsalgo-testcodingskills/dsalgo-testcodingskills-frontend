@@ -12,6 +12,7 @@ import CustomQuestionList from '../Pages/Dashboard/CustomQuestionList';
 import CreateCustomQuestion from '../Pages/Dashboard/CreateCustomQuestion';
 import EditOrganization from '../Pages/OrganizationPage/EditOrganization';
 import MyPlans from '../Pages/MyPlans/MyPlans';
+import Subscription from '../Pages/Subscription/Subscription';
 import MultiTestStatus from '../Pages/Dashboard/MultiTestStatus';
 import UserManagement from '../Pages/UserManagement/UserManagement';
 import { UserRoleEnum } from '../utils/constants';
@@ -26,8 +27,12 @@ function AdminRoutes() {
         <Route path="/admin/question/:questionId">
           <QuestionPreview />
         </Route>
-        <ProtectedRoute exact={true} path="/admin/myPlans">
+        {/* replaced /admin/myPlans with /admin/subscription */}
+        {/* <ProtectedRoute exact={true} path="/admin/myPlans"> 
           <MyPlans />
+        </ProtectedRoute> */}
+        <ProtectedRoute exact={true} path="/admin/subscription">
+          <Subscription />
         </ProtectedRoute>
         <Route exact path="/admin/changepassword" component={ChangePassword} />
 

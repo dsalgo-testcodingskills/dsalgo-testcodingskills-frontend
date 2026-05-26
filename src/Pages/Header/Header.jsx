@@ -99,7 +99,7 @@ function Header() {
             className="login-option-block"
             onClick={() => {
               setToggleMenu(!toggleMenu);
-              history.push(`/admin/myPlans`);
+              history.push(`/admin/subscription`);
             }}
           >
             <div className="login-option-block--icon">
@@ -109,7 +109,7 @@ function Header() {
                 alt="..."
               />
             </div>
-            <div className="login-option-block--text">My Plans</div>
+            <div className="login-option-block--text">Subscription</div>
           </div>
         )}
 
@@ -375,7 +375,7 @@ function Header() {
                         <div
                           className="login-option-block"
                           onClick={() => {
-                            history.push(`/admin/myPlans`);
+                            history.push(`/admin/subscription`);
                           }}
                         >
                           <div className="login-option-block--icon">
@@ -386,7 +386,7 @@ function Header() {
                             />
                           </div>
                           <div className="login-option-block--text">
-                            My Plans
+                            Subscription
                           </div>
                         </div>
                       </NavDropdown.Item>
