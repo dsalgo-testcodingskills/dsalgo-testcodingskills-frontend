@@ -394,65 +394,6 @@ const CreateCustomQuestion = () => {
 
                 {/* tags/topics */}
                 <div className="row mt-3">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h5>Tags/Topics</h5>
-                    </div>
-                  </div>
-
-                  <div className="d-flex align-items-center flex-wrap gap-2">
-                    <div style={{ width: '500px' }}>
-                      <div className="d-flex align-items-center gap-2" style={{ width: '500px', flexShrink: 0 }}>
-                        <Field
-                          name="topicInput"
-                          type="text"
-                          className="form-control"
-                        />
-                        <IconButton
-                          color="primary"
-                          onClick={addTopic}
-                          disabled={values.topicInput.trim() === ''}
-                          size="small"
-                        >
-                          <AddIcon />
-                        </IconButton>
-                      </div>
-                      <ErrorMessage
-                        name="topics"
-                        render={(msg) => <div className="text-danger">{msg}</div>}
-                      />
-                    </div>
-
-                    {values.topics.map((topic, index) => (
-                      <div
-                        key={index}
-                        className="badge bg-primary text-dark d-flex align-items-center p-2"
-                        style={{ fontSize: '16px', fontFamily: 'Arial' }}
-                      >
-                        <span>{topic}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeTopic(index)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            marginLeft: '8px',
-                            color: 'red',
-                            fontWeight: 'bold',
-                            fontSize: '14px',
-                            lineHeight: '1',
-                            padding: '0',
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="row mt-3">
                   <div className="mb-1">
                     <h5>Tags / Topics</h5>
                     <label className="form-label createCustomQuestion__form-label">
