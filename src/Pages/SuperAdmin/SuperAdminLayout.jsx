@@ -27,7 +27,7 @@ const SuperAdminLayout = ({ children }) => {
           </NavLink>
           <NavLink to="/super-admin/pricing" activeClassName="active">
             <li>
-              <i className="fas fa-tags"></i> Pricing Settings
+              <i className="fas fa-tags"></i> Add On Settings
             </li>
           </NavLink>
           <li onClick={() => history.push("/")}>
