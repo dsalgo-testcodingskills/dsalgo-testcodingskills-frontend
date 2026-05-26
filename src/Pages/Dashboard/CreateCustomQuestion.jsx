@@ -21,6 +21,10 @@ import './PreviewModal.scss';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import Plans from '../MyPlans/Plans';
 import QuestionPreview from './QuestionPreview';
+import { ALL_TAGS } from '../../utils/constants';
+
+
+const SUGGESTED_TAGS = ['dynamic-programming', 'arrays', 'memoization', 'recursion', 'time-complexity'];
 
 const CreateCustomQuestion = () => {
   const inputOutputType = [
@@ -39,6 +43,7 @@ const CreateCustomQuestion = () => {
     { label: 'hard', value: 'hard' },
   ];
 
+  // defaultDetails
   const defaultDetails = {
     level: '',
     question: '',
@@ -73,6 +78,8 @@ const CreateCustomQuestion = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewQuestionData, setPreviewQuestionData] = useState(null);
   const [customCourseDetail, setCustomCourseDetail] = useState(defaultDetails);
+  const [filteredTags, setFilteredTags] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const handlePreview = (values) => {
     const tempTestCase = JSON.parse(JSON.stringify(values.testCases));
@@ -156,6 +163,12 @@ const CreateCustomQuestion = () => {
           res.data.data.topics = [];
         }
 
+        if (res.data.data.topics && typeof res.data.data.topics === 'string') {
+          res.data.data.topics = res.data.data.topics.split(',').filter(t => t.trim() !== '');
+        } else if (!res.data.data.topics) {
+          res.data.data.topics = [];
+        }
+
         setCustomCourseDetail({
           ...res?.data?.data,
            topicInput: '',
@@ -185,7 +198,6 @@ const CreateCustomQuestion = () => {
         ...otherValues,
         testCases: tempTestCase,
       };
-
       if (editMode) {
         const editCustomQuestons = await editCustomQuestions(params.id, req);
         if (editCustomQuestons && editCustomQuestons.data.code === 200) {
@@ -440,302 +452,411 @@ const CreateCustomQuestion = () => {
                   </div>
                 </div>
 
-              {/* InputType */}
-              <FieldArray name="inputType">
-                {({ remove, push }) => (
-                  <div className="align-items-center mt-4 mb-3">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        {' '}
-                        <h5>Input Details</h5>
-                      </div>
-                    </div>
-                    <div className="p-1 mt-1 border rounded-2 py-3">
-                      {values.inputType.map((type, index) => (
-                        <div
-                          className="selectQuestions-row row p-2"
-                          key={index}
-                        >
-                          <div className="createCustomQuestion__input ">
-                            <label>{index + 1}.</label>
+                <div className="row mt-3">
+                  <div className="mb-1">
+                    <h5>Tags / Topics</h5>
+                    <label className="form-label createCustomQuestion__form-label">
+                      Add up to 5 tags to describe what your question is about. Start typing to search.
+                    </label>
+                  </div>
 
-                            <div className="createCustomQuestion__type">
-                              <label className="mb-1 createCustomQuestion__form-label">
-                                Input Type
-                              </label>
-                              <Select
-                                options={questionTypeOptions}
-                                value={{
-                                  label: values.inputType[index].type,
-                                  value: values.inputType[index].type,
-                                }}
-                                onChange={(e) => {
-                                  setFieldValue(
-                                    `inputType[${index}].type`,
-                                    e.value,
-                                  );
-                                }}
-                              />
-                              <ErrorMessage
-                                name={`inputType[${index}].type`}
-                                render={(msg) => (
-                                  <div className="text-danger">{msg}</div>
-                                )}
-                              />
-                            </div>
-                            <div className="createCustomQuestion__name">
-                              <label className="mb-1  createCustomQuestion__form-label">
-                                Input Name
-                              </label>
-                              <Field
-                                name={`inputType[${index}].paramName`}
-                                type="string"
-                                className="form-control"
-                              />
-                              <ErrorMessage
-                                name={`inputType[${index}].paramName`}
-                                render={(msg) => (
-                                  <div className="text-danger">{msg}</div>
-                                )}
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              disabled={values.inputType.length === 1}
-                              className="btns btns--white createCustomQuestion__removeBtn"
-                              onClick={() => {
-                                remove(index);
-                                //Delete the element from testcase inuput array
-                                for (
-                                  let i = 0;
-                                  i < values.testCases.length;
-                                  i++
-                                ) {
-                                  values.testCases[i].input.splice(index, 1);
-                                }
-                              }}
-                            >
-                              Remove
-                            </button>
-                          </div>
+                  <div className="topic-wrapper">
+                    <div
+                      className="topic-input-box"
+                      onClick={() => document.getElementById('topicInputField').focus()}
+                    >
+                      {values.topics.map((topic, index) => (
+                        <div key={index} className="topic-chip">
+                          <span>{topic}</span>
+                          <button type="button" className="topic-chip__remove" onClick={() => removeTopic(index)}>
+                            ✕
+                          </button>
                         </div>
                       ))}
-                      <div className="d-flex justify-content-end">
-                        <button
-                          className="btns createCustomQuestion__addBtn"
-                          type="button"
-                          onClick={() => {
-                            push({
-                              type: '',
-                              paramName: '',
-                            });
+
+                      <div className="topic-input-inner">
+                        <Field
+                          id="topicInputField"
+                          name="topicInput"
+                          type="text"
+                          className="topic-input-field"
+                          placeholder={values.topics.length === 0 ? 'e.g. arrays, dynamic-programming…' : ''}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTopic(); setShowDropdown(false); } }}
+                          onChange={(e) => {
+                            setFieldValue('topicInput', e.target.value);
+                            const query = e.target.value.trim().toLowerCase();
+                            if (query) {
+                              const matches = ALL_TAGS.filter((t) => t.name.startsWith(query) && !values.topics.includes(t.name)).slice(0, 6);
+                              setFilteredTags(matches);
+                              setShowDropdown(true);
+                            } else {
+                              setShowDropdown(false);
+                            }
                           }}
+                          onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                        />
+                        <IconButton
+                          color="primary"
+                          onClick={addTopic}
+                          disabled={values.topicInput.trim() === ''}
+                          size="small"
                         >
-                          <i className="fas fa-plus"></i> Add
-                        </button>
+                          <AddIcon />
+                        </IconButton>
                       </div>
                     </div>
-                  </div>
-                )}
-              </FieldArray>
 
-              {/* Output Type */}
-              <div className="row mt-3">
-                <div className="col-6">
-                  <h5>Output Details</h5>
-                  <label className="form-label createCustomQuestion__form-label">
-                    Select Output type
-                  </label>
-                  <Select
-                    options={questionTypeOptions}
-                    value={{
-                      label: values.outputType,
-                      value: values.outputType,
-                    }}
-                    onChange={(e) => {
-                      setFieldValue('outputType', e.value);
-                    }}
-                  />
-                  <ErrorMessage
-                    name="outputType"
-                    render={(msg) => <div className="text-danger">{msg}</div>}
-                  />
-                </div>
+                    {/* Dropdown */}
+                    {showDropdown && filteredTags.length > 0 && (
+                      <div className="topic-dropdown">
+                        {filteredTags.map((tag, i) => (
+                          <div
+                            key={i}
+                            className="topic-dropdown__item"
+                            onMouseDown={() => {
+                              if (!values.topics.includes(tag.name) && values.topics.length < 5) {
+                                setFieldValue('topics', [...values.topics, tag.name]);
+                                setFieldValue('topicInput', '');
+                                setShowDropdown(false);
+                              }
+                            }}
+                          >
+                            <span>
+                              <strong>{tag.name.slice(0, values.topicInput.length)}</strong>
+                              {tag.name.slice(values.topicInput.length)}
+                            </span>
+                            <span style={{ display: 'flex', gap: '10px' }}>
+                              <span className="topic-dropdown__cat">{tag.cat}</span>
+                              <span className="topic-dropdown__count">{tag.n}q</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                {/* level */}
-                <div className="col-6">
-                  <h5>Difficulties</h5>
-                  <label className="form-label createCustomQuestion__form-label">
-                    Level
-                  </label>
-                  <Select
-                    options={questionsLevelOptions}
-                    value={{ label: values.level, value: values.level }}
-                    onChange={(e) => {
-                      setFieldValue('level', e.value);
-                    }}
-                  />
-                  <ErrorMessage
-                    name="level"
-                    render={(msg) => <div className="text-danger">{msg}</div>}
-                  />
-                </div>
-
-                {/* public */}
-                <div className="col-12 mt-3">
-                  <span className="me-2">
-                    <Checkbox
-                      onChange={(e) => {
-                        setFieldValue('public', e.target.checked);
-                      }}
-                      checked={values.public}
-                    />
-                    <label className="form-label createCustomQuestion__form-label" style={{ marginBottom: 0 }}>
-                      Is Public Question
-                    </label>
-                  </span>
-                </div>
-              </div>
-
-              {/* testCases */}
-              <FieldArray name="testCases">
-                {({ remove, push }) => (
-                  <div className="align-items-center mt-4 mb-3">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h5>Test Cases</h5>{' '}
+                    {/* Suggested tags */}
+                    <div style={{ marginTop: '4px' }}>
+                      <p className="topic-suggested-label">suggested for this question</p>
+                      <div className="topic-suggested-chips">
+                        {SUGGESTED_TAGS.map((tag) => (
+                          <span
+                            key={tag}
+                            className={`topic-suggested-chip ${values.topics.includes(tag) ? 'topic-suggested-chip--used' : ''}`}
+                            onClick={() => {
+                              if (!values.topics.includes(tag) && values.topics.length < 5) {
+                                setFieldValue('topics', [...values.topics, tag]);
+                              }
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
 
-                    <span className="test-case-note">
-                      Note: String or character must be in double quotes ex.
-                      [&quot;h&quot;,&quot;i&quot;,&quot;i&quot;]
-                    </span>
+                    <div className="topic-count">Tags added: <strong>{values.topics.length}</strong> / 5</div>
 
-                    <div className="p-1 mt-1 border rounded-2 py-3">
-                      {values.testCases.map((test, index) => (
-                        <div
-                          className="selectQuestions-row row p-2"
-                          key={index}
-                        >
-                          <div className="d-flex align-items-center">
-                            <label className="">{index + 1} . &nbsp;</label>
-                            <div className="createCustomQuestion__testCases createCustomQuestion__border py-3">
-                              <div className="createCustomQuestion__name">
-                                {values.inputType.map((type, inputIndex) => (
-                                  <div key={inputIndex}>
-                                    <label className="createCustomQuestion__form-label">
-                                      Input
-                                    </label>
-                                    <label className="col-5">
-                                      &nbsp; <b>{type.paramName}</b> &nbsp;
-                                      <span
-                                        className="badge text-uppercase mb-1"
-                                        style={{
-                                          background: 'orange',
-                                          fontSize: '12px',
-                                        }}
-                                      >
-                                        {type.type}
-                                      </span>
-                                    </label>
+                    {values.topics.length >= 5 && (
+                      <small className="text-danger">Maximum 5 topics allowed.</small>
+                    )}
 
-                                    <Field
-                                      name={`testCases[${index}].input[${inputIndex}]`}
-                                      type="string"
-                                      className="col-2 form-control"
-                                      onChange={(e) => {
-                                        setFieldValue(
-                                          `testCases[${index}].input[${inputIndex}]`,
-                                          e.target.value,
-                                        );
-                                      }}
-                                    />
-                                    <ErrorMessage
-                                      name={`testCases[${index}].input`}
-                                      render={(msg) => (
-                                        <div className="text-danger">{msg}</div>
-                                      )}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
+                    <ErrorMessage name="topics" render={(msg) => <div className="text-danger" style={{ fontSize: '12px', marginTop: '4px' }}>{msg}</div>} />
+                  </div>
+                </div>
+                {/* InputType */}
+                <FieldArray name="inputType">
+                  {({ remove, push }) => (
+                    <div className="align-items-center mt-4 mb-3">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                          {' '}
+                          <h5>Input Details</h5>
+                        </div>
+                      </div>
+                      <div className="p-1 mt-1 border rounded-2 py-3">
+                        {values.inputType.map((type, index) => (
+                          <div
+                            className="selectQuestions-row row p-2"
+                            key={index}
+                          >
+                            <div className="createCustomQuestion__input ">
+                              <label>{index + 1}.</label>
 
-                              <div className="createCustomQuestion__name">
-                                <label className="createCustomQuestion__form-label">
-                                  Output
+                              <div className="createCustomQuestion__type">
+                                <label className="mb-1 createCustomQuestion__form-label">
+                                  Input Type
                                 </label>
-                                <Field
-                                  name={`testCases[${index}].output`}
-                                  type="string"
-                                  className="form-control"
+                                <Select
+                                  options={questionTypeOptions}
+                                  value={{
+                                    label: values.inputType[index].type,
+                                    value: values.inputType[index].type,
+                                  }}
+                                  onChange={(e) => {
+                                    setFieldValue(
+                                      `inputType[${index}].type`,
+                                      e.value,
+                                    );
+                                  }}
                                 />
                                 <ErrorMessage
-                                  name={`testCases[${index}].output`}
+                                  name={`inputType[${index}].type`}
                                   render={(msg) => (
                                     <div className="text-danger">{msg}</div>
                                   )}
                                 />
                               </div>
-
-                              <div className=" text-end">
-                                <span className="me-2">
-                                  <Checkbox
-                                    onChange={(e) => {
-                                      setFieldValue(
-                                        `testCases[${index}].hidden`,
-                                        e.target.checked,
-                                      );
-                                    }}
-                                    checked={values.testCases[index].hidden}
-                                  />
-                                  <label className=""> Hidden</label>
-                                </span>
+                              <div className="createCustomQuestion__name">
+                                <label className="mb-1  createCustomQuestion__form-label">
+                                  Input Name
+                                </label>
+                                <Field
+                                  name={`inputType[${index}].paramName`}
+                                  type="string"
+                                  className="form-control"
+                                />
+                                <ErrorMessage
+                                  name={`inputType[${index}].paramName`}
+                                  render={(msg) => (
+                                    <div className="text-danger">{msg}</div>
+                                  )}
+                                />
                               </div>
-                              <div>
-                                <button
-                                  type="button"
-                                  disabled={values.testCases.length === 1}
-                                  className="btns btns--white createCustomQuestion__removeBtn"
-                                  onClick={() => {
-                                    remove(index);
-                                  }}
-                                >
-                                  Remove
-                                </button>
+                              <button
+                                type="button"
+                                disabled={values.inputType.length === 1}
+                                className="btns btns--white createCustomQuestion__removeBtn"
+                                onClick={() => {
+                                  remove(index);
+                                  for (
+                                    let i = 0;
+                                    i < values.testCases.length;
+                                    i++
+                                  ) {
+                                    values.testCases[i].input.splice(index, 1);
+                                  }
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="d-flex justify-content-end">
+                          <button
+                            className="btns createCustomQuestion__addBtn"
+                            type="button"
+                            onClick={() => {
+                              push({
+                                type: '',
+                                paramName: '',
+                              });
+                            }}
+                          >
+                            <i className="fas fa-plus"></i> Add
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </FieldArray>
+
+                <div className="row mt-3">
+                  <div className="col-6">
+                    <h5>Output Details</h5>
+                    <label className="form-label createCustomQuestion__form-label">
+                      Select Output type
+                    </label>
+                    <Select
+                      options={questionTypeOptions}
+                      value={{
+                        label: values.outputType,
+                        value: values.outputType,
+                      }}
+                      onChange={(e) => {
+                        setFieldValue('outputType', e.value);
+                      }}
+                    />
+                    <ErrorMessage
+                      name="outputType"
+                      render={(msg) => <div className="text-danger">{msg}</div>}
+                    />
+                  </div>
+
+                  {/* level */}
+                  <div className="col-6">
+                    <h5>Difficulties</h5>
+                    <label className="form-label createCustomQuestion__form-label">
+                      Level
+                    </label>
+                    <Select
+                      options={questionsLevelOptions}
+                      value={{ label: values.level, value: values.level }}
+                      onChange={(e) => {
+                        setFieldValue('level', e.value);
+                      }}
+                    />
+                    <ErrorMessage
+                      name="level"
+                      render={(msg) => <div className="text-danger">{msg}</div>}
+                    />
+                  </div>
+
+                  {/* public */}
+                  <div className="col-12 mt-3">
+                    <span className="me-2">
+                      <Checkbox
+                        onChange={(e) => {
+                          setFieldValue('public', e.target.checked);
+                        }}
+                        checked={values.public}
+                      />
+                      <label className="form-label createCustomQuestion__form-label" style={{ marginBottom: 0 }}>
+                        Is Public Question
+                      </label>
+                    </span>
+                  </div>
+                </div>
+
+                {/* testCases */}
+                <FieldArray name="testCases">
+                  {({ remove, push }) => (
+                    <div className="align-items-center mt-4 mb-3">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <h5>Test Cases</h5>{' '}
+                      </div>
+
+                      <span className="test-case-note">
+                        Note: String or character must be in double quotes ex.
+                        [&quot;h&quot;,&quot;i&quot;,&quot;i&quot;]
+                      </span>
+
+                      <div className="p-1 mt-1 border rounded-2 py-3">
+                        {values.testCases.map((test, index) => (
+                          <div
+                            className="selectQuestions-row row p-2"
+                            key={index}
+                          >
+                            <div className="d-flex align-items-center">
+                              <label className="">{index + 1} . &nbsp;</label>
+                              <div className="createCustomQuestion__testCases createCustomQuestion__border py-3">
+                                <div className="createCustomQuestion__name">
+                                  {values.inputType.map((type, inputIndex) => (
+                                    <div key={inputIndex}>
+                                      <label className="createCustomQuestion__form-label">
+                                        Input
+                                      </label>
+                                      <label className="col-5">
+                                        &nbsp; <b>{type.paramName}</b> &nbsp;
+                                        <span
+                                          className="badge text-uppercase mb-1"
+                                          style={{
+                                            background: 'orange',
+                                            fontSize: '12px',
+                                          }}
+                                        >
+                                          {type.type}
+                                        </span>
+                                      </label>
+
+                                      <Field
+                                        name={`testCases[${index}].input[${inputIndex}]`}
+                                        type="string"
+                                        className="col-2 form-control"
+                                        onChange={(e) => {
+                                          setFieldValue(
+                                            `testCases[${index}].input[${inputIndex}]`,
+                                            e.target.value,
+                                          );
+                                        }}
+                                      />
+                                      <ErrorMessage
+                                        name={`testCases[${index}].input`}
+                                        render={(msg) => (
+                                          <div className="text-danger">{msg}</div>
+                                        )}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="createCustomQuestion__name">
+                                  <label className="createCustomQuestion__form-label">
+                                    Output
+                                  </label>
+                                  <Field
+                                    name={`testCases[${index}].output`}
+                                    type="string"
+                                    className="form-control"
+                                  />
+                                  <ErrorMessage
+                                    name={`testCases[${index}].output`}
+                                    render={(msg) => (
+                                      <div className="text-danger">{msg}</div>
+                                    )}
+                                  />
+                                </div>
+
+                                <div className=" text-end">
+                                  <span className="me-2">
+                                    <Checkbox
+                                      onChange={(e) => {
+                                        setFieldValue(
+                                          `testCases[${index}].hidden`,
+                                          e.target.checked,
+                                        );
+                                      }}
+                                      checked={values.testCases[index].hidden}
+                                    />
+                                    <label className=""> Hidden</label>
+                                  </span>
+                                </div>
+                                <div>
+                                  <button
+                                    type="button"
+                                    disabled={values.testCases.length === 1}
+                                    className="btns btns--white createCustomQuestion__removeBtn"
+                                    onClick={() => {
+                                      remove(index);
+                                    }}
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
+                        ))}
+                        <div className="d-flex justify-content-end">
+                          <button
+                            className="btns createCustomQuestion__addBtn"
+                            type="button"
+                            onClick={() => {
+                              push({
+                                input: [],
+                                output: '',
+                                hidden: false,
+                              });
+                            }}
+                          >
+                            <i className="fas fa-plus"></i>Add
+                          </button>
                         </div>
-                      ))}
-                      <div className="d-flex justify-content-end">
-                        <button
-                          className="btns createCustomQuestion__addBtn"
-                          type="button"
-                          onClick={() => {
-                            push({
-                              input: [],
-                              output: '',
-                              hidden: false,
-                            });
-                          }}
-                        >
-                          <i className="fas fa-plus"></i>Add
-                        </button>
                       </div>
                     </div>
-                  </div>
-                )}
-              </FieldArray>
+                  )}
+                </FieldArray>
 
-              <div className="d-flex justify-content-center gap-3">
-                <button
-                  type="submit"
-                  className="btns mt-3"
-                  onClick={handleSubmit}
-                >
-                  {editMode ? 'Update' : 'Create'}
-                </button>
-                <button
-                type="button"
+                <div className="d-flex justify-content-center gap-3">
+                  <button
+                    type="submit"
+                    className="btns mt-3"
+                    onClick={handleSubmit}
+                  >
+                    {editMode ? 'Update' : 'Create'}
+                  </button>
+                  <button
+                  type="button"
                   className="btns mt-3"
                   onClick={() => {
                     handlePreview(values);
