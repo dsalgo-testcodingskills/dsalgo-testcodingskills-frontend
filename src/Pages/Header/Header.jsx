@@ -313,25 +313,26 @@ function Header() {
                 )}
 
                 {user?.userInfo?.role === UserRoleEnum.SUPER_ADMIN && (
-                  <div className="d-flex align-items-center ms-lg-auto me-3 super-admin-toggle-wrapper">
-                    <span className="me-2 toggle-label">Super Admin View</span>
-                    <label className="sa-switch">
-                      <input
-                        type="checkbox"
-                        checked={isSuperAdminView}
-                        onChange={(e) => {
-                          const val = e.target.checked;
-                          dispatch(superAdminViewToggle(val));
-                          if (val) {
-                            history.push('/super-admin/dashboard');
-                          } else {
-                            history.push('/admin/dashboard');
-                          }
-                        }}
-                      />
-                      <span className="sa-slider round"></span>
-                    </label>
-                  </div>
+                  <Nav.Link eventKey="1" className="navbar-list-border">
+                    <div
+                      onClick={() => history.push('/super-admin/dashboard')}
+                      className={`navbar-list  ${
+                        location.pathname.startsWith('/super-admin')
+                          ? 'card-active'
+                          : ''
+                      }`}
+                    >
+                      <>
+                        <p
+                          className=" ml-2 mr-3  mb-0  ml-3 nav__link"
+                          style={{ cursor: 'pointer', padding: '11px 0px' }}
+                        >
+                          <i className="fas fa-user-shield nav__link--icon"></i>
+                          Super Admin
+                        </p>
+                      </>
+                    </div>
+                  </Nav.Link>
                 )}
 
                 {/* navbar dropdown */}
@@ -370,7 +371,7 @@ function Header() {
                       </NavDropdown.Item>
                     ) : null}
 
-                    {[UserRoleEnum.ADMIN, UserRoleEnum.SUPER_ADMIN].includes(user?.userInfo?.role) && (
+                    {user?.userInfo?.role === UserRoleEnum.ADMIN && (
                       <NavDropdown.Item eventKey="2">
                         <div
                           className="login-option-block"
