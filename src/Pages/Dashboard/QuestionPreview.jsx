@@ -38,6 +38,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
 
       const questionLocalStorage = {
         question: data,
+        topics: data.topics || [],
         answer: [],
       };
 
