@@ -47,7 +47,7 @@ const AssessmentPage = () => {
   const { testExpiryTime } = useSelector((store) => store.dataReducer);
   const questionDataRef = useRef(null);
   const monacoRef = useRef(null);
-  const metricsRef = useRef({ runtime: 0, memory: 0 });
+
 
   const [show, setShow] = useState(false);
 
@@ -77,8 +77,6 @@ const AssessmentPage = () => {
             input: tc.input,
             output: tc.output,
             hidden: tc.hidden,
-            runtime: res?.runtime || 0,
-            memory: res?.memory || 0,
           };
         },
       );
@@ -118,24 +116,7 @@ const AssessmentPage = () => {
       });
       setTestResult(resp.data);
 
-      if (resp.data && Array.isArray(resp.data)) {
-        let maxMemory = 0;
-        let totalRuntime = 0;
-        let count = 0;
-        resp.data.forEach((res) => {
-          if (res.runtime != null) {
-            totalRuntime += res.runtime;
-            count++;
-          }
-          if (res.memory != null) {
-            maxMemory = Math.max(maxMemory, res.memory);
-          }
-        });
-        metricsRef.current = {
-          runtime: count ? parseFloat((totalRuntime / count).toFixed(3)) : 0,
-          memory: maxMemory,
-        };
-      }
+
 
       submitPeriodicAnswerFunc(resp.data);
     } catch (error) {
@@ -182,8 +163,6 @@ const AssessmentPage = () => {
           input: tc.input,
           output: tc.output,
           hidden: tc.hidden,
-          runtime: res?.runtime || 0,
-          memory: res?.memory || 0,
         };
       });
 
@@ -462,15 +441,7 @@ const AssessmentPage = () => {
                           >
                             {testResult[index].result ? "Pass" : "Fail"}
                           </div>
-                          {testResult[index].runtime != null && (
-                            <div
-                              className="ms-3 text-muted"
-                              style={{ fontSize: "0.85rem" }}
-                            >
-                              Time: {testResult[index].runtime} ms | Mem:{" "}
-                              {(testResult[index].memory / 1024).toFixed(2)}MB
-                            </div>
-                          )}
+
                         </div>
                       )}
                     </div>
