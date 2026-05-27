@@ -18,9 +18,9 @@ import {
   getOrgDetails,
 } from '../../Services/api';
 import { setTestsCount } from '../../Redux/Actions/dataAction';
-import UILoader from '../../components/UI/UILoader';
 import { toast } from 'react-toastify';
 import CustomToast from '../../components/CustomToast/CustomToast';
+import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 
 const Subscription = () => {
   const dispatch = useDispatch();
@@ -154,7 +154,7 @@ const Subscription = () => {
         {renderActiveTab()}
       </div>
 
-      <UILoader isLoading={loading} />
+      <CustomLoadingAnimation isLoading={loading} />
     </div>
   );
 };

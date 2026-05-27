@@ -8,9 +8,9 @@ import CustomToast from '../../components/CustomToast/CustomToast';
 import UITooltip from '../../components/UI/UITooltip';
 import UICallout from '../../components/UI/UICallout';
 import UITermsModal from '../../components/UI/UITermsModal';
-import UILoader from '../../components/UI/UILoader';
 import { Dialog } from '@material-ui/core';
 import moment from 'moment';
+import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 
 const PlansTab = ({ subDetails, onUpdate, planLimits }) => {
   const [loading, setLoading] = useState(false);
@@ -193,7 +193,7 @@ const PlansTab = ({ subDetails, onUpdate, planLimits }) => {
           </button>
         </div>
       </Dialog>
-      <UILoader isLoading={loading} />
+      <CustomLoadingAnimation isLoading={loading} />
     </div>
   );
 };

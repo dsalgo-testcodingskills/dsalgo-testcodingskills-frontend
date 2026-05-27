@@ -6,7 +6,7 @@ import { SUBSCRIPTION_STRINGS, COLORS, SUBSCRIPTION_STATUS } from './subscriptio
 import { createAddOnOrder } from '../../Services/api';
 import { toast } from 'react-toastify';
 import CustomToast from '../../components/CustomToast/CustomToast';
-import UILoader from '../../components/UI/UILoader';
+import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 
 const AddOnsTab = ({ subDetails, pricing, onUpdate }) => {
   const [testQty, setTestQty] = useState(5);
@@ -138,7 +138,7 @@ const AddOnsTab = ({ subDetails, pricing, onUpdate }) => {
             Add-ons require an active Pro subscription. They are non-refundable and expire at the end of your billing period.
         </UICallout>
       </UICard>
-      <UILoader isLoading={loading} />
+      <CustomLoadingAnimation isLoading={loading} />
     </div>
   );
 };
