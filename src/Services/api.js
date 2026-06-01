@@ -213,6 +213,14 @@ export function editCustomQuestions(id, request) {
   return axios.patch(`/questions/updateCustomQuestion/${id}`, request);
 }
 
+export function validateReferenceSolution(body) {
+  return axios.post("/questions/validateReferenceSolution", body);
+}
+
+export function publishQuestion(body) {
+  return axios.post("/questions/publishQuestion", body);
+}
+
 export function getCustomQuestionById(id) {
   return axios.get(`/questions/${id}`);
 }
