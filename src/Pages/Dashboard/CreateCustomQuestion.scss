@@ -174,62 +174,6 @@
   color: #6c757d;
 }
 
-.ccq-mode-toggle {
-  display: flex;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.ccq-mode-btn {
-  padding: 4px 12px;
-  font-size: 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #6c757d;
-  transition: background 0.15s, color 0.15s;
-}
-
-.ccq-mode-btn--active {
-  background: #ff6b35;
-  color: #fff;
-}
-
-.ccq-preset-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px 16px;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  min-width: 90px;
-}
-
-.ccq-preset-btn:hover {
-  border-color: #ff6b35;
-}
-
-.ccq-preset-btn--active {
-  border-color: #ff6b35;
-  background: #fff5f1;
-}
-
-.ccq-preset-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #212529;
-}
-
-.ccq-preset-desc {
-  font-size: 11px;
-  color: #6c757d;
-  margin-top: 2px;
-}
-
 
 .ccq-time-btn {
   padding: 6px 16px;
@@ -260,21 +204,6 @@
   background: #fff;
 }
 
-.ccq-testcase-card--edge {
-  border-left: 3px solid #f5a623;
-  background: #fffdf5;
-}
-
-.ccq-testcase-card--stress {
-  border-left: 3px solid #e74c3c;
-  background: #fff5f5;
-}
-
-.ccq-testcase-card--failed {
-  border-left: 3px solid #e74c3c;
-  background: #fff5f5;
-}
-
 .ccq-testcase-card__header {
   display: flex;
   justify-content: space-between;
@@ -296,16 +225,6 @@
   text-transform: uppercase;
 }
 
-.ccq-badge--edge {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.ccq-badge--stress {
-  background: #f8d7da;
-  color: #842029;
-}
-
 .ccq-type-badge {
   font-size: 10px;
   background: #e9ecef;
@@ -315,13 +234,7 @@
   font-weight: 500;
 }
 
-.ccq-testcase-hint {
-  font-size: 12px;
-  color: #6c757d;
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 8px 12px;
-}
+/* ─── Add / Remove buttons ─────────────────────────────────────────────────── */
 
 .ccq-add-btn {
   padding: 8px 16px;
@@ -338,24 +251,6 @@
 .ccq-add-btn:hover {
   border-color: #ff6b35;
   color: #ff6b35;
-}
-
-.ccq-add-btn--edge {
-  border-color: #f5a623;
-  color: #856404;
-}
-
-.ccq-add-btn--edge:hover {
-  background: #fffdf5;
-}
-
-.ccq-add-btn--stress {
-  border-color: #e74c3c;
-  color: #842029;
-}
-
-.ccq-add-btn--stress:hover {
-  background: #fff5f5;
 }
 
 .ccq-remove-btn {
@@ -517,4 +412,69 @@
 
 .btns--success:hover {
   background: #009e4f !important;
+}
+
+
+.ccq-toggle-field {
+  user-select: none;
+}
+
+.ccq-toggle {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: #dee2e6;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.ccq-toggle--on {
+  background: #ff6b35;
+}
+
+.ccq-toggle__knob {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.ccq-toggle--on .ccq-toggle__knob {
+  transform: translateX(16px);
+}
+
+
+.ccq-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #dee2e6;
+  color: #6c757d;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: help;
+  flex-shrink: 0;
+}
+
+
+.ccq-preview__constraint-list {
+  padding-left: 16px;
+  margin: 0;
+  color: #495057;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.ccq-preview__constraint-list li {
+  margin-bottom: 4px;
 }

@@ -1,6 +1,6 @@
 import Editor from '@monaco-editor/react';
 import { ErrorMessage, Field, FieldArray, Form, Formik } from 'formik';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactQuill from 'react-quill';
 import { toast } from 'react-toastify';
 import Select from 'react-select';
@@ -10,6 +10,7 @@ import * as Yup from 'yup';
 import { Modal, CloseButton } from 'react-bootstrap';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
+import QuestionInstructions from '../../components/QuestionInstructions/QuestionInstructions';
 import Plans from '../MyPlans/Plans';
 import {
   submitCustomQuestion,
@@ -21,6 +22,7 @@ import {
 import { ALL_TAGS } from '../../utils/constants';
 import './CreateCustomQuestion.scss';
 
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const INPUT_OUTPUT_TYPES = [
   '2d_array_int', '2d_array_char', 'array_int',
@@ -33,13 +35,15 @@ const DIFFICULTY_OPTIONS = [
   { label: 'Hard',   value: 'hard'   },
 ];
 
+// Default time/memory recommendations per difficulty
 const DIFFICULTY_DEFAULTS = {
   easy:   { timeLimit: 1, memoryLimit: 256 },
   medium: { timeLimit: 2, memoryLimit: 256 },
   hard:   { timeLimit: 3, memoryLimit: 512 },
 };
 
-
+// Human readable constraint presets
+// Behind the scenes these map to exact numbers
 const SIZE_PRESETS = [
   { label: 'Small',  value: 'small',  size: 100,      desc: 'up to 100 elements'       },
   { label: 'Medium', value: 'medium', size: 10000,     desc: 'up to 10,000 elements'    },
@@ -68,16 +72,20 @@ const DEFAULT_VALUES = {
   inputType: [{ type: '', paramName: '', constraints: {} }],
   outputType: '',
   constraints: { timeLimit: 2, memoryLimit: 256 },
+  outputConstraints: { isOrdered: true, tolerance: 0, caseSensitive: true },
 };
 
+// ─── Validation Schema ────────────────────────────────────────────────────────
 
 const validationSchemas = [
+  // Step 1
   Yup.object().shape({
     level:        Yup.string().required('Difficulty is required'),
     question:     Yup.string().required('Question title is required'),
     instructions: Yup.string().required('Description is required'),
     topics:       Yup.array().min(1, 'At least one topic is required'),
   }),
+  // Step 2
   Yup.object().shape({
     inputType: Yup.array().of(
       Yup.object().shape({
@@ -87,6 +95,7 @@ const validationSchemas = [
     ).required(),
     outputType: Yup.string().required('Output type is required'),
   }),
+  // Step 3
   Yup.object().shape({
     testCases: Yup.array().of(
       Yup.object().shape({
@@ -95,10 +104,11 @@ const validationSchemas = [
       }),
     ).required(),
   }),
+  // Step 4 — no required fields, publish is optional action
   Yup.object().shape({}),
 ];
 
-// returns which constraint UI to show based on the selected input type
+// Returns which constraint UI to show based on the selected input type
 function getConstraintFields(type) {
   if (!type) return null;
   if (type.includes('2d_array')) return '2d_array';
@@ -108,68 +118,6 @@ function getConstraintFields(type) {
   if (type === 'boolean')        return 'boolean';
   return null;
 }
-
-//auto generate edge cases from inputType + constraints
-function generateEdgeCases(inputType) {
-  const edgeCases = [];
-
-  for (const param of inputType) {
-    const { type, constraints = {} } = param;
-    const fields = getConstraintFields(type);
-
-    if (fields === 'array' || fields === '2d_array') {
-      // Empty array
-      edgeCases.push({ label: `Empty ${param.paramName}`, input: JSON.stringify([]) });
-      // Single element
-      edgeCases.push({ label: `Single element ${param.paramName}`, input: JSON.stringify([constraints.minValue ?? 0]) });
-      // All same values
-      edgeCases.push({ label: `All same values`, input: JSON.stringify([1, 1, 1, 1, 1]) });
-      // Negatives (if range allows)
-      if ((constraints.minValue ?? -1) < 0) {
-        edgeCases.push({ label: `All negatives`, input: JSON.stringify([-1, -2, -3, -4, -5]) });
-      }
-    }
-
-    if (fields === 'number') {
-      edgeCases.push({ label: `Zero`, input: '0' });
-      edgeCases.push({ label: `Min value`, input: String(constraints.minValue ?? -1000000000) });
-      edgeCases.push({ label: `Max value`, input: String(constraints.maxValue ?? 1000000000) });
-    }
-
-    if (fields === 'string') {
-      edgeCases.push({ label: `Empty string`, input: '""' });
-      edgeCases.push({ label: `Single char`, input: '"a"' });
-    }
-  }
-
-  return edgeCases;
-}
-
-// generate stress test from constraints
-function generateStressTest(inputType) {
-  const stressInputs = [];
-  for (const param of inputType) {
-    const { type, constraints = {} } = param;
-    const fields = getConstraintFields(type);
-    if (fields === 'array') {
-      const size = constraints.maxSize ?? 10000;
-      const maxVal = constraints.maxValue ?? 10000;
-      const arr = Array.from({ length: size }, () =>
-        Math.floor(Math.random() * maxVal * 2) - maxVal
-      );
-      stressInputs.push(JSON.stringify(arr));
-    } else if (fields === 'number') {
-      stressInputs.push(String(constraints.maxValue ?? 1000000000));
-    } else if (fields === 'string') {
-      const len = constraints.maxLength ?? 1000;
-      stressInputs.push('"' + 'a'.repeat(len) + '"');
-    } else {
-      stressInputs.push('[]');
-    }
-  }
-  return stressInputs;
-}
-
 
 const StepIndicator = ({ currentStep, onStepClick }) => (
   <div className="ccq-steps d-flex align-items-center gap-2 mb-4">
@@ -191,178 +139,282 @@ const StepIndicator = ({ currentStep, onStepClick }) => (
   </div>
 );
 
-// Simple/Advanced toggle per parameter
-const ConstraintInput = ({ paramIndex, param, values, setFieldValue }) => {
-  const [advancedMode, setAdvancedMode] = useState(false);
-  const fields = getConstraintFields(param.type);
+const ALLOWED_CHARS_PRESETS = [
+  { label: 'Lowercase a-z',      value: 'lowercase',        desc: 'a-z only'      },
+  { label: 'Uppercase A-Z',      value: 'uppercase',        desc: 'A-Z only'      },
+  { label: 'Digits 0-9',         value: 'digits',           desc: '0-9 only'      },
+  { label: 'Alphanumeric',       value: 'alphanumeric',     desc: 'a-z, A-Z, 0-9' },
+  { label: 'Lowercase + Digits', value: 'lowercase_digits', desc: 'a-z, 0-9'      },
+  { label: 'All characters',     value: 'all',              desc: 'any character'  },
+];
+
+const ToggleField = ({ label, fieldKey, value, setConstraint, tooltip }) => (
+  <div className="ccq-toggle-field">
+    <label className="d-flex align-items-center gap-2 mb-0 cursor-pointer">
+      <div
+        className={`ccq-toggle ${value ? 'ccq-toggle--on' : ''}`}
+        onClick={() => setConstraint(fieldKey, !value)}
+      >
+        <div className="ccq-toggle__knob" />
+      </div>
+      <span className="ccq-label mb-0">{label}</span>
+      {tooltip && <span className="ccq-tooltip" title={tooltip}>?</span>}
+    </label>
+  </div>
+);
+
+const NumberField = ({ label, fieldKey, value, setConstraint, placeholder }) => (
+  <div>
+    <label className="ccq-label">{label}</label>
+    <input
+      type="number"
+      className="form-control form-control-sm"
+      value={value ?? ''}
+      placeholder={placeholder}
+      onChange={e => setConstraint(fieldKey, e.target.value === '' ? undefined : Number(e.target.value))}
+    />
+  </div>
+);
+
+const AllowedCharsSection = ({ constraints, setConstraint }) => (
+  <div className="col-12 mt-2">
+    <label className="ccq-label">Allowed characters</label>
+    <div className="row g-2">
+      <div className="col-md-6">
+        <label className="ccq-label">Preset</label>
+        <select
+          className="form-select form-select-sm"
+          value={constraints.allowedChars?.preset ?? ''}
+          onChange={e => setConstraint('allowedChars', { ...constraints.allowedChars, preset: e.target.value || undefined })}
+        >
+          <option value="">None</option>
+          {ALLOWED_CHARS_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label} — {p.desc}</option>)}
+        </select>
+      </div>
+      <div className="col-md-6">
+        <label className="ccq-label">Custom regex <span className="ccq-type-badge">optional</span></label>
+        <input
+          type="text"
+          className="form-control form-control-sm font-monospace"
+          placeholder="e.g. ^[a-z0-9_]+$"
+          value={constraints.allowedChars?.customRegex ?? ''}
+          onChange={e => setConstraint('allowedChars', { ...constraints.allowedChars, customRegex: e.target.value || undefined })}
+        />
+      </div>
+    </div>
+  </div>
+);
+
+// Shows exact number inputs for all constraint fields.
+// Covers all types: array_int, array_char, 2d_array_int, 2d_array_char,
+// int, float, string, boolean.
+const ConstraintInput = ({ paramIndex, param, setFieldValue }) => {
+  const fields      = getConstraintFields(param.type);
   const constraints = param.constraints || {};
+  const isFloat     = param.type === 'float';
 
   if (!fields || fields === 'boolean') {
     return <p className="text-muted small mt-1">No constraints needed for boolean type.</p>;
   }
 
-  const setConstraint = (key, value) => {
-    setFieldValue(`inputType[${paramIndex}].constraints.${key}`, value);
-  };
+  const set = (key, value) => setFieldValue(`inputType[${paramIndex}].constraints.${key}`, value);
 
   return (
-    <div className="ccq-constraints mt-2">
-      <div className="d-flex align-items-center justify-content-between mb-2">
-        <span className="ccq-constraints__title">Constraints for <b>{param.paramName || 'this parameter'}</b></span>
-        <div className="ccq-mode-toggle">
-          <button
-            type="button"
-            className={`ccq-mode-btn ${!advancedMode ? 'ccq-mode-btn--active' : ''}`}
-            onClick={() => setAdvancedMode(false)}
-          >Simple</button>
-          <button
-            type="button"
-            className={`ccq-mode-btn ${advancedMode ? 'ccq-mode-btn--active' : ''}`}
-            onClick={() => setAdvancedMode(true)}
-          >Advanced</button>
+    <div className="ccq-constraints mt-3">
+      <span className="ccq-constraints__title">
+        Constraints for <b>{param.paramName || 'this parameter'}</b>
+        <span className="ccq-type-badge ms-2">{param.type}</span>
+      </span>
+
+      <div className="row g-2 mt-2">
+        {fields === 'array' && <>
+          <div className="col-6 col-md-3"><NumberField label="Min size"    fieldKey="minSize"    value={constraints.minSize}    setConstraint={set} placeholder="1"     /></div>
+          <div className="col-6 col-md-3"><NumberField label="Max size"    fieldKey="maxSize"    value={constraints.maxSize}    setConstraint={set} placeholder="10000" /></div>
+          <div className="col-6 col-md-3"><NumberField label="Min element" fieldKey="minElement" value={constraints.minElement} setConstraint={set} placeholder="-10⁹"  /></div>
+          <div className="col-6 col-md-3"><NumberField label="Max element" fieldKey="maxElement" value={constraints.maxElement} setConstraint={set} placeholder="10⁹"   /></div>
+        </>}
+
+        {fields === '2d_array' && <>
+          <div className="col-6 col-md-3"><NumberField label="Min rows"    fieldKey="minRows"    value={constraints.minRows}    setConstraint={set} placeholder="1"   /></div>
+          <div className="col-6 col-md-3"><NumberField label="Max rows"    fieldKey="maxRows"    value={constraints.maxRows}    setConstraint={set} placeholder="100" /></div>
+          <div className="col-6 col-md-3"><NumberField label="Min cols"    fieldKey="minCols"    value={constraints.minCols}    setConstraint={set} placeholder="1"   /></div>
+          <div className="col-6 col-md-3"><NumberField label="Max cols"    fieldKey="maxCols"    value={constraints.maxCols}    setConstraint={set} placeholder="100" /></div>
+          <div className="col-6 col-md-3"><NumberField label="Min element" fieldKey="minElement" value={constraints.minElement} setConstraint={set} placeholder="-10⁹"/></div>
+          <div className="col-6 col-md-3"><NumberField label="Max element" fieldKey="maxElement" value={constraints.maxElement} setConstraint={set} placeholder="10⁹" /></div>
+        </>}
+
+        {fields === 'number' && <>
+          <div className="col-6"><NumberField label="Min value" fieldKey="minValue" value={constraints.minValue} setConstraint={set} placeholder="-10⁹" /></div>
+          <div className="col-6"><NumberField label="Max value" fieldKey="maxValue" value={constraints.maxValue} setConstraint={set} placeholder="10⁹"  /></div>
+        </>}
+
+        {isFloat && (
+          <div className="col-6"><NumberField label="Decimal precision" fieldKey="decimalPrecision" value={constraints.decimalPrecision} setConstraint={set} placeholder="2" /></div>
+        )}
+
+        {fields === 'string' && <>
+          <div className="col-6"><NumberField label="Min length" fieldKey="minLength" value={constraints.minLength} setConstraint={set} placeholder="0"     /></div>
+          <div className="col-6"><NumberField label="Max length" fieldKey="maxLength" value={constraints.maxLength} setConstraint={set} placeholder="10000" /></div>
+        </>}
+
+        {(fields === 'string' || param.type === 'array_char' || param.type === '2d_array_char') && (
+          <AllowedCharsSection constraints={constraints} setConstraint={set} />
+        )}
+
+        <div className="col-12 mt-1">
+          <label className="ccq-label">Structural properties</label>
+          <div className="d-flex flex-wrap gap-3 mt-1">
+            {fields === 'array' && <>
+              <ToggleField label="Sorted"         fieldKey="isSorted"       value={constraints.isSorted}       setConstraint={set} tooltip="Array is always pre-sorted"  />
+              <ToggleField label="Unique values"  fieldKey="isUnique"       value={constraints.isUnique}       setConstraint={set} tooltip="No duplicate elements"        />
+              <ToggleField label="Can be empty"   fieldKey="canBeEmpty"     value={constraints.canBeEmpty}     setConstraint={set} tooltip="Array length can be 0"        />
+              <ToggleField label="Positive only"  fieldKey="isPositiveOnly" value={constraints.isPositiveOnly} setConstraint={set} tooltip="All elements > 0"             />
+              <ToggleField label="Non-negative"   fieldKey="isNonNegative"  value={constraints.isNonNegative}  setConstraint={set} tooltip="All elements >= 0"            />
+            </>}
+            {fields === '2d_array' && <>
+              <ToggleField label="Square matrix"  fieldKey="isSquare"       value={constraints.isSquare}       setConstraint={set} tooltip="rows always equal cols"       />
+              <ToggleField label="Symmetric"      fieldKey="isSymmetric"    value={constraints.isSymmetric}    setConstraint={set} tooltip="matrix[i][j] === matrix[j][i]"/>
+              <ToggleField label="Rows sorted"    fieldKey="isSorted"       value={constraints.isSorted}       setConstraint={set} tooltip="Each row is sorted"           />
+              <ToggleField label="Can be empty"   fieldKey="canBeEmpty"     value={constraints.canBeEmpty}     setConstraint={set}                                        />
+              <ToggleField label="Positive only"  fieldKey="isPositiveOnly" value={constraints.isPositiveOnly} setConstraint={set} tooltip="All elements > 0"             />
+              <ToggleField label="Non-negative"   fieldKey="isNonNegative"  value={constraints.isNonNegative}  setConstraint={set} tooltip="All elements >= 0"            />
+            </>}
+            {fields === 'number' && <>
+              <ToggleField label="Positive only"  fieldKey="isPositiveOnly" value={constraints.isPositiveOnly} setConstraint={set} tooltip="Always > 0"  />
+              <ToggleField label="Non-negative"   fieldKey="isNonNegative"  value={constraints.isNonNegative}  setConstraint={set} tooltip="Always >= 0" />
+              <ToggleField label="Non-zero"       fieldKey="isNonZero"      value={constraints.isNonZero}      setConstraint={set} tooltip="Never 0"     />
+            </>}
+            {fields === 'string' && <>
+              <ToggleField label="Can be empty"    fieldKey="canBeEmpty"    value={constraints.canBeEmpty}    setConstraint={set}                                      />
+              <ToggleField label="Unique chars"    fieldKey="isUnique"      value={constraints.isUnique}      setConstraint={set} tooltip="No duplicate characters"    />
+              <ToggleField label="Has spaces"      fieldKey="hasSpaces"     value={constraints.hasSpaces}     setConstraint={set}                                      />
+              <ToggleField label="Is palindrome"   fieldKey="isPalindrome"  value={constraints.isPalindrome}  setConstraint={set}                                      />
+              <ToggleField label="Case sensitive"  fieldKey="caseSensitive" value={constraints.caseSensitive} setConstraint={set}                                      />
+            </>}
+          </div>
         </div>
+
+        {constraints.isSorted && (fields === 'array' || fields === '2d_array') && (
+          <div className="col-12">
+            <label className="ccq-label">Sort order</label>
+            <div className="d-flex gap-2">
+              {['asc', 'desc'].map(order => (
+                <button key={order} type="button"
+                  className={`ccq-time-btn ${constraints.sortOrder === order ? 'ccq-time-btn--active' : ''}`}
+                  onClick={() => set('sortOrder', order)}>
+                  {order === 'asc' ? '↑ Ascending' : '↓ Descending'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
+const PresetButtons = ({ label, presets, activeValue, onSelect }) => (
+  <div className="col-12">
+    <label className="ccq-label">{label}</label>
+    <div className="d-flex gap-2 flex-wrap">
+      {presets.map(preset => (
+        <button
+          key={preset.value}
+          type="button"
+          className={`ccq-preset-btn ${activeValue === preset.value || activeValue === preset.size || activeValue === preset.max ? 'ccq-preset-btn--active' : ''}`}
+          onClick={() => onSelect(preset)}
+        >
+          <span className="ccq-preset-label">{preset.label}</span>
+          <span className="ccq-preset-desc">{preset.desc}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+
+
+const OutputConstraintsSection = ({ values, setFieldValue }) => {
+  const outputConstraints = values.outputConstraints || {};
+  const outputType = values.outputType;
+
+  const set = (key, value) => setFieldValue(`outputConstraints.${key}`, value);
+
+  const isArrayOutput  = outputType === 'array_int' || outputType === 'array_char' || outputType === '2d_array_int' || outputType === '2d_array_char';
+  const isFloatOutput  = outputType === 'float';
+  const isStringOutput = outputType === 'string';
+
+  if (!outputType) return null;
+
+  return (
+    <div className="ccq-param-card mt-3">
+      <div className="ccq-param-card__header">
+        <span className="ccq-param-card__title">Output comparison rules</span>
+        <span className="ccq-type-badge">{outputType}</span>
       </div>
 
-      {!advancedMode ? (
-        <div className="row g-2">
-          {(fields === 'array' || fields === '2d_array') && (
-            <div className="col-12">
-              <label className="ccq-label">How large can the input be?</label>
-              <div className="d-flex gap-2 flex-wrap">
-                {SIZE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    className={`ccq-preset-btn ${constraints.maxSize === preset.size ? 'ccq-preset-btn--active' : ''}`}
-                    onClick={() => {
-                      setConstraint('minSize', 1);
-                      setConstraint('maxSize', preset.size);
-                    }}
-                  >
-                    <span className="ccq-preset-label">{preset.label}</span>
-                    <span className="ccq-preset-desc">{preset.desc}</span>
-                  </button>
-                ))}
-              </div>
+      <div className="d-flex flex-wrap gap-3 mt-2">
+        {isArrayOutput && (
+          <ToggleField
+            label="Order matters"
+            fieldKey="isOrdered"
+            value={outputConstraints.isOrdered ?? true}
+            setConstraint={set}
+            tooltip="Turn OFF for problems like Two Sum where [0,1] and [1,0] are both valid"
+          />
+        )}
+        {isStringOutput && (
+          <ToggleField
+            label="Case sensitive"
+            fieldKey="caseSensitive"
+            value={outputConstraints.caseSensitive ?? true}
+            setConstraint={set}
+            tooltip="Turn OFF to accept 'Hello' and 'hello' as equal"
+          />
+        )}
+        {isFloatOutput && (
+          <div>
+            <label className="ccq-label">
+              Float tolerance
+              <span className="ccq-tooltip ms-1" title="Acceptable difference between actual and expected. e.g. 0.001 means ±0.001 is accepted">?</span>
+            </label>
+            <div className="d-flex gap-2">
+              {[0, 0.001, 0.0001, 0.00001].map(t => (
+                <button key={t} type="button"
+                  className={`ccq-time-btn ${(outputConstraints.tolerance ?? 0) === t ? 'ccq-time-btn--active' : ''}`}
+                  onClick={() => set('tolerance', t)}>
+                  {t === 0 ? 'Exact' : `±${t}`}
+                </button>
+              ))}
+              <input
+                type="number"
+                step="0.00001"
+                className="form-control form-control-sm"
+                style={{ width: '100px' }}
+                placeholder="custom"
+                value={[0, 0.001, 0.0001, 0.00001].includes(outputConstraints.tolerance ?? 0) ? '' : (outputConstraints.tolerance ?? '')}
+                onChange={e => set('tolerance', parseFloat(e.target.value) || 0)}
+              />
             </div>
-          )}
+          </div>
+        )}
+      </div>
 
-          {(fields === 'array' || fields === 'number' || fields === '2d_array') && (
-            <div className="col-12 mt-2">
-              <label className="ccq-label">What range can values be in?</label>
-              <div className="d-flex gap-2 flex-wrap">
-                {VALUE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    className={`ccq-preset-btn ${constraints.maxValue === preset.max ? 'ccq-preset-btn--active' : ''}`}
-                    onClick={() => {
-                      setConstraint('minValue', preset.min);
-                      setConstraint('maxValue', preset.max);
-                    }}
-                  >
-                    <span className="ccq-preset-label">{preset.label}</span>
-                    <span className="ccq-preset-desc">{preset.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {fields === 'string' && (
-            <div className="col-12">
-              <label className="ccq-label">How long can the string be?</label>
-              <div className="d-flex gap-2 flex-wrap">
-                {SIZE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    className={`ccq-preset-btn ${constraints.maxLength === preset.size ? 'ccq-preset-btn--active' : ''}`}
-                    onClick={() => {
-                      setConstraint('minLength', 0);
-                      setConstraint('maxLength', preset.size);
-                    }}
-                  >
-                    <span className="ccq-preset-label">{preset.label}</span>
-                    <span className="ccq-preset-desc">{preset.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+      {isArrayOutput && (outputConstraints.isOrdered === false) && (
+        <div className="ccq-testcase-hint mt-2">
+          💡 Both <code>[0,1]</code> and <code>[1,0]</code> will be accepted as correct answers
         </div>
-      ) : (
-        // advanced mode: exact number inputs
-        <div className="row g-2">
-          {(fields === 'array' || fields === '2d_array') && (
-            <>
-              <div className="col-6">
-                <label className="ccq-label">Min size</label>
-                <input type="number" className="form-control form-control-sm"
-                  value={constraints.minSize ?? ''}
-                  onChange={e => setConstraint('minSize', Number(e.target.value))} />
-              </div>
-              <div className="col-6">
-                <label className="ccq-label">Max size</label>
-                <input type="number" className="form-control form-control-sm"
-                  value={constraints.maxSize ?? ''}
-                  onChange={e => setConstraint('maxSize', Number(e.target.value))} />
-              </div>
-            </>
-          )}
-          {fields === '2d_array' && (
-            <>
-              <div className="col-6">
-                <label className="ccq-label">Max rows</label>
-                <input type="number" className="form-control form-control-sm"
-                  value={constraints.maxRows ?? ''}
-                  onChange={e => setConstraint('maxRows', Number(e.target.value))} />
-              </div>
-              <div className="col-6">
-                <label className="ccq-label">Max cols</label>
-                <input type="number" className="form-control form-control-sm"
-                  value={constraints.maxCols ?? ''}
-                  onChange={e => setConstraint('maxCols', Number(e.target.value))} />
-              </div>
-            </>
-          )}
-          {(fields === 'array' || fields === 'number' || fields === '2d_array') && (
-            <>
-              <div className="col-6">
-                <label className="ccq-label">Min value</label>
-                <input type="number" className="form-control form-control-sm"
-                  value={constraints.minValue ?? ''}
-                  onChange={e => setConstraint('minValue', Number(e.target.value))} />
-              </div>
-              <div className="col-6">
-                <label className="ccq-label">Max value</label>
-                <input type="number" className="form-control form-control-sm"
-                  value={constraints.maxValue ?? ''}
-                  onChange={e => setConstraint('maxValue', Number(e.target.value))} />
-              </div>
-            </>
-          )}
-          {fields === 'string' && (
-            <>
-              <div className="col-6">
-                <label className="ccq-label">Min length</label>
-                <input type="number" className="form-control form-control-sm"
-                  value={constraints.minLength ?? ''}
-                  onChange={e => setConstraint('minLength', Number(e.target.value))} />
-              </div>
-              <div className="col-6">
-                <label className="ccq-label">Max length</label>
-                <input type="number" className="form-control form-control-sm"
-                  value={constraints.maxLength ?? ''}
-                  onChange={e => setConstraint('maxLength', Number(e.target.value))} />
-              </div>
-            </>
-          )}
+      )}
+      {isFloatOutput && (outputConstraints.tolerance ?? 0) > 0 && (
+        <div className="ccq-testcase-hint mt-2">
+          💡 Answers within ±{outputConstraints.tolerance} of the expected value will be accepted
         </div>
       )}
     </div>
   );
 };
+
 
 const LivePreview = ({ values }) => {
   const difficultyColor = {
@@ -387,6 +439,7 @@ const LivePreview = ({ values }) => {
             </span>
           )}
         </div>
+
         {values.topics?.length > 0 && (
           <div className="d-flex flex-wrap gap-1 mb-3">
             {values.topics.map((t, i) => (
@@ -394,33 +447,62 @@ const LivePreview = ({ values }) => {
             ))}
           </div>
         )}
+
         {values.instructions ? (
           <div className="ccq-preview__instructions"
             dangerouslySetInnerHTML={{ __html: values.instructions }} />
         ) : (
           <p className="text-muted small">Description will appear here...</p>
         )}
+
         {(values.constraints?.timeLimit || values.constraints?.memoryLimit) && (
           <div className="ccq-preview__constraints mt-3">
             <b>Constraints</b>
-            <ul className="mb-0 mt-1">
+            <ul className="ccq-preview__constraint-list mt-1">
               {values.inputType?.map((p, i) => {
                 const c = p.constraints || {};
                 const fields = getConstraintFields(p.type);
                 if (!p.paramName || !fields || fields === 'boolean') return null;
                 return (
-                  <li key={i} className="small">
-                    {fields === 'array' && c.maxSize && `${c.minSize ?? 1} ≤ ${p.paramName}.length ≤ ${c.maxSize}`}
-                    {fields === 'number' && c.maxValue && `${c.minValue ?? -1e9} ≤ ${p.paramName} ≤ ${c.maxValue}`}
-                    {fields === 'string' && c.maxLength && `${c.minLength ?? 0} ≤ ${p.paramName}.length ≤ ${c.maxLength}`}
-                  </li>
+                  <React.Fragment key={i}>
+                    
+                    {(fields === 'array') && c.maxSize &&
+                      <li>{c.minSize ?? 1} ≤ {p.paramName}.length ≤ {c.maxSize.toLocaleString()}</li>}
+                    
+                    {(fields === 'array') && c.maxElement !== undefined &&
+                      <li>{c.minElement ?? '-10⁹'} ≤ {p.paramName}[i] ≤ {c.maxElement.toLocaleString()}</li>}
+                    
+                    {fields === '2d_array' && c.maxRows &&
+                      <li>{c.minRows ?? 1} ≤ {p.paramName}.rows ≤ {c.maxRows.toLocaleString()}</li>}
+                    {fields === '2d_array' && c.maxCols &&
+                      <li>{c.minCols ?? 1} ≤ {p.paramName}.cols ≤ {c.maxCols.toLocaleString()}</li>}
+                    {fields === '2d_array' && c.maxElement !== undefined &&
+                      <li>{c.minElement ?? '-10⁹'} ≤ {p.paramName}[i][j] ≤ {c.maxElement.toLocaleString()}</li>}
+                    
+                    {fields === 'number' && c.maxValue !== undefined &&
+                      <li>{c.minValue ?? '-10⁹'} ≤ {p.paramName} ≤ {c.maxValue.toLocaleString()}</li>}
+                     {fields=== 'string' && c.maxLength &&
+                      <li>{c.minLength ?? 0} ≤ {p.paramName}.length ≤ {c.maxLength.toLocaleString()}</li>}
+                    
+                    {c.isSorted     && <li>{p.paramName} is sorted {c.sortOrder === 'desc' ? 'descending' : 'ascending'}</li>}
+                    {c.isUnique     && <li>All elements in {p.paramName} are unique</li>}
+                    {c.isSquare     && <li>{p.paramName} is always a square matrix</li>}
+                    {c.isSymmetric  && <li>{p.paramName} is symmetric</li>}
+                    {c.isPositiveOnly && <li>All values in {p.paramName} are positive</li>}
+                    {c.isPalindrome && <li>{p.paramName} is always a palindrome</li>}
+                    {c.allowedChars?.preset && <li>{p.paramName} contains only {c.allowedChars.preset} characters</li>}
+                  </React.Fragment>
                 );
               })}
-              <li className="small">Time limit: {values.constraints.timeLimit}s</li>
-              <li className="small">Memory limit: {values.constraints.memoryLimit}MB</li>
+              <li>Time limit: {values.constraints.timeLimit}s</li>
+              <li>Memory limit: {values.constraints.memoryLimit}MB</li>
+              {values.outputConstraints?.isOrdered === false && <li>Output order does not matter</li>}
+              {values.outputConstraints?.tolerance > 0 && <li>Float tolerance: ±{values.outputConstraints.tolerance}</li>}
+              {values.outputConstraints?.caseSensitive === false && <li>Output comparison is case insensitive</li>}
             </ul>
           </div>
         )}
+
         {values.testCases?.filter(tc => !tc.hidden && tc.output).length > 0 && (
           <div className="mt-3">
             <b>Examples</b>
@@ -439,6 +521,7 @@ const LivePreview = ({ values }) => {
   );
 };
 
+
 const CreateCustomQuestion = () => {
   const params = useParams();
   const history = useHistory();
@@ -449,6 +532,7 @@ const CreateCustomQuestion = () => {
   const [paymentPlan, setPaymentPlan] = useState(false);
   const [initialValues, setInitialValues] = useState(DEFAULT_VALUES);
   const [savedQuestionId, setSavedQuestionId] = useState(null);
+
   const [refLanguage, setRefLanguage] = useState(null);
   const [refCode, setRefCode] = useState('');
   const [validateResults, setValidateResults] = useState(null);
@@ -456,6 +540,7 @@ const CreateCustomQuestion = () => {
   const [publishLoading, setPublishLoading] = useState(false);
   const [validateLoading, setValidateLoading] = useState(false);
   const [languageOptions, setLanguageOptions] = useState([]);
+
   const [filteredTags, setFilteredTags] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -501,10 +586,12 @@ const CreateCustomQuestion = () => {
         }
         setInitialValues({ ...DEFAULT_VALUES, ...data, topicInput: '' });
         setSavedQuestionId(id);
+
+        // Set up language options for step 4
         if (data.solutionTemplates?.length) {
           const opts = data.solutionTemplates.map(s => ({
-            value: s.language || s.langauge,
-            label: (s.language || s.langauge).toUpperCase(),
+            value: s.language,
+            label: s.language.toUpperCase(),
             code: s.code,
           }));
           setLanguageOptions(opts);
@@ -516,14 +603,14 @@ const CreateCustomQuestion = () => {
       toast(<CustomToast type="error" message={err.message} />);
     } finally {
       setLoading(false);
-          }
-        };
+    }
+  };
 
-      // Transform the testCase Input
-        const transformTestCases = (testCases) => {
-                const temp = JSON.parse(JSON.stringify(testCases));
-                for (let i = 0; i < temp.length; i++) {
-            for (let j = 0; j < temp[i].input.length; j++) {
+  // ── Transform test cases before API call ──
+  const transformTestCases = (testCases) => {
+    const temp = JSON.parse(JSON.stringify(testCases));
+    for (let i = 0; i < temp.length; i++) {
+      for (let j = 0; j < temp[i].input.length; j++) {
         if (typeof temp[i].input[j] === 'string' && temp[i].input[j].trim()) {
           temp[i].input.splice(j, 1, JSON.parse(temp[i].input[j]));
         }
@@ -533,6 +620,7 @@ const CreateCustomQuestion = () => {
     return temp;
   };
 
+  // ── Save question (create or update) ──
   const saveQuestion = async (values) => {
     try {
       setLoading(true);
@@ -562,15 +650,15 @@ const CreateCustomQuestion = () => {
 
       setSavedQuestionId(questionId);
 
-      // build language options from solutionTemplates
+      // Build language options for step 4 from solutionTemplates
       const opts = values.inputType.map((_, i) => null).filter(Boolean);
-      // fetch updated question to get generated solution templates
+      // Fetch updated question to get generated solution templates
       if (questionId) {
         const updated = await getCustomQuestionById(questionId);
         if (updated?.data?.data?.solutionTemplates) {
           const langOpts = updated.data.data.solutionTemplates.map(s => ({
-            value: s.language || s.langauge,
-            label: (s.language || s.langauge).toUpperCase(),
+            value: s.language,
+            label: s.language.toUpperCase(),
             code: s.code,
           }));
           setLanguageOptions(langOpts);
@@ -588,7 +676,6 @@ const CreateCustomQuestion = () => {
     }
   };
 
-  //validate reference solution via Judge0
   const handleValidate = async () => {
     if (!savedQuestionId) {
       toast(<CustomToast type="error" message="Please save the question first (complete steps 1-3)" />);
@@ -637,6 +724,7 @@ const CreateCustomQuestion = () => {
     }
   };
 
+
   const renderStep1 = (values, setFieldValue) => (
     <div className="ccq-step-content">
       <h5 className="ccq-section-title">Question Details</h5>
@@ -655,7 +743,7 @@ const CreateCustomQuestion = () => {
             value={DIFFICULTY_OPTIONS.find(o => o.value === values.level) || null}
             onChange={e => {
               setFieldValue('level', e.value);
-              // auto-apply recommended time/memory limits based on difficulty
+              // Auto-apply recommended time/memory limits based on difficulty
               const defaults = DIFFICULTY_DEFAULTS[e.value];
               setFieldValue('constraints.timeLimit', defaults.timeLimit);
               setFieldValue('constraints.memoryLimit', defaults.memoryLimit);
@@ -689,51 +777,51 @@ const CreateCustomQuestion = () => {
 
         <div className="col-12">
           <label className="ccq-label">Description *</label>
-            <Field name="instructions">
-              {({ field }) => (
-                <ReactQuill
-                  modules={quillModules}
-                  formats={quillFormats}
-                  onChange={field.onChange(field.name)}
-                  value={field.value}
-                  placeholder="Describe the problem clearly..."
-                />
-              )}
-            </Field>
-            <ErrorMessage name="instructions" render={msg => <div className="ccq-error">{msg}</div>} />
-          </div>
+          <Field name="instructions">
+            {({ field }) => (
+              <ReactQuill
+                modules={quillModules}
+                formats={quillFormats}
+                onChange={field.onChange(field.name)}
+                value={field.value}
+                placeholder="Describe the problem clearly..."
+              />
+            )}
+          </Field>
+          <ErrorMessage name="instructions" render={msg => <div className="ccq-error">{msg}</div>} />
+        </div>
 
-          {/* Tags */}
-          <div className="col-12">
-            <label className="ccq-label">Topics / Tags *</label>
-            <p className="text-muted small mb-2">Add up to 5 tags. Start typing to search.</p>
-            <div className="topic-wrapper">
-              <div className="topic-input-box" onClick={() => document.getElementById('topicInputField')?.focus()}>
-                {values.topics.map((topic, i) => (
-                  <div key={i} className="topic-chip">
-                    <span>{topic}</span>
-                    <button type="button" className="topic-chip__remove"
-                      onClick={() => setFieldValue('topics', values.topics.filter((_, idx) => idx !== i))}>✕</button>
-                  </div>
-                ))}
-                <input
-                  id="topicInputField"
-                  className="topic-chip-input"
-                  value={values.topicInput}
-                  placeholder={values.topics.length === 0 ? 'e.g. arrays' : ''}
-                  disabled={values.topics.length >= 5}
-                  onChange={e => {
-                    setFieldValue('topicInput', e.target.value);
-                    if (e.target.value.trim()) {
-                      const filtered = ALL_TAGS.filter(tag =>
-                        tag.name.toLowerCase().includes(e.target.value.toLowerCase())
-                      ).slice(0, 8);
-                      setFilteredTags(filtered);
-                      setShowDropdown(true);
-                    } else {
-                      setShowDropdown(false);
-                    }
-                  }}
+        {/* Tags */}
+        <div className="col-12">
+          <label className="ccq-label">Topics / Tags *</label>
+          <p className="text-muted small mb-2">Add up to 5 tags. Start typing to search.</p>
+          <div className="topic-wrapper">
+            <div className="topic-input-box" onClick={() => document.getElementById('topicInputField')?.focus()}>
+              {values.topics.map((topic, i) => (
+                <div key={i} className="topic-chip">
+                  <span>{topic}</span>
+                  <button type="button" className="topic-chip__remove"
+                    onClick={() => setFieldValue('topics', values.topics.filter((_, idx) => idx !== i))}>✕</button>
+                </div>
+              ))}
+              <input
+                id="topicInputField"
+                className="topic-chip-input"
+                value={values.topicInput}
+                placeholder={values.topics.length === 0 ? 'e.g. arrays' : ''}
+                disabled={values.topics.length >= 5}
+                onChange={e => {
+                  setFieldValue('topicInput', e.target.value);
+                  if (e.target.value.trim()) {
+                    const filtered = ALL_TAGS.filter(tag =>
+                      tag.name.toLowerCase().includes(e.target.value.toLowerCase())
+                    ).slice(0, 8);
+                    setFilteredTags(filtered);
+                    setShowDropdown(true);
+                  } else {
+                    setShowDropdown(false);
+                  }
+                }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && values.topicInput.trim()) {
                     e.preventDefault();
@@ -781,6 +869,7 @@ const CreateCustomQuestion = () => {
     </div>
   );
 
+  // ─── Step 2: Function Signature + Constraints ─────────────────────────────
 
   const renderStep2 = (values, setFieldValue) => (
     <div className="ccq-step-content">
@@ -825,6 +914,8 @@ const CreateCustomQuestion = () => {
                     <ErrorMessage name={`inputType[${i}].paramName`} render={msg => <div className="ccq-error">{msg}</div>} />
                   </div>
                 </div>
+
+                {/* Constraints per parameter */}
                 {param.type && (
                   <ConstraintInput
                     paramIndex={i}
@@ -843,6 +934,7 @@ const CreateCustomQuestion = () => {
         )}
       </FieldArray>
 
+      {/* Output type */}
       <div className="mt-4">
         <h5 className="ccq-section-title">Output</h5>
         <div className="col-md-6">
@@ -855,8 +947,12 @@ const CreateCustomQuestion = () => {
           />
           <ErrorMessage name="outputType" render={msg => <div className="ccq-error">{msg}</div>} />
         </div>
+
+        {/* Output comparison rules — shown as soon as output type is selected */}
+        <OutputConstraintsSection values={values} setFieldValue={setFieldValue} />
       </div>
 
+      {/* Question-level constraints */}
       <div className="mt-4">
         <h5 className="ccq-section-title">Execution Limits</h5>
         <p className="text-muted small mb-3">
@@ -894,6 +990,7 @@ const CreateCustomQuestion = () => {
     </div>
   );
 
+  // ─── Step 3: Test Cases ───────────────────────────────────────────────────
 
   const renderStep3 = (values, setFieldValue) => (
     <div className="ccq-step-content">
@@ -906,12 +1003,10 @@ const CreateCustomQuestion = () => {
         {({ remove, push }) => (
           <div>
             {values.testCases.map((tc, index) => (
-              <div key={index} className={`ccq-testcase-card mb-3 ${tc.type === 'edge' ? 'ccq-testcase-card--edge' : ''} ${tc.type === 'stress' ? 'ccq-testcase-card--stress' : ''}`}>
+              <div key={index} className={"ccq-testcase-card mb-3"}>
                 <div className="ccq-testcase-card__header">
                   <span className="ccq-testcase-card__num">
                     Test Case {index + 1}
-                    {tc.type === 'edge' && <span className="ccq-badge ccq-badge--edge ms-2">Edge</span>}
-                    {tc.type === 'stress' && <span className="ccq-badge ccq-badge--stress ms-2">Stress</span>}
                   </span>
                   <div className="d-flex align-items-center gap-2">
                     <label className="d-flex align-items-center gap-1 ccq-checkbox-label small">
@@ -959,53 +1054,20 @@ const CreateCustomQuestion = () => {
               </div>
             ))}
 
+            {/* Add buttons */}
             <div className="d-flex gap-2 flex-wrap mt-3">
               <button type="button" className="ccq-add-btn"
-                onClick={() => push({ input: values.inputType.map(() => ''), output: '', hidden: false, type: 'manual' })}>
+                onClick={() => push({ input: values.inputType.map(() => ''), output: '', hidden: false })}>
                 + Add Test Case
               </button>
-              {values.inputType.some(p => p.type && p.type !== 'boolean') && (
-                <button type="button" className="ccq-add-btn ccq-add-btn--edge"
-                  onClick={() => {
-                    const edgeCases = generateEdgeCases(values.inputType);
-                    edgeCases.forEach(ec => {
-                      push({
-                        input: [ec.input],
-                        output: '',
-                        hidden: true,
-                        type: 'edge',
-                      });
-                    });
-                    toast(<CustomToast type="success" message={`${edgeCases.length} edge cases generated! Add expected outputs.`} />);
-                  }}>
-                  Generate Edge Cases
-                </button>
-              )}
-              {values.inputType.some(p => p.constraints?.maxSize || p.constraints?.maxValue || p.constraints?.maxLength) && (
-                <button type="button" className="ccq-add-btn ccq-add-btn--stress"
-                  onClick={() => {
-                    const stressInputs = generateStressTest(values.inputType);
-                    push({
-                      input: stressInputs,
-                      output: '',
-                      hidden: true,
-                      type: 'stress',
-                    });
-                    toast(<CustomToast type="success" message="Stress test generated! Run reference solution to get expected output." />);
-                  }}>
-                  Generate Stress Test
-                </button>
-              )}
-            </div>
-
-            <div className="ccq-testcase-hint mt-2">
-              <span>💡 Edge and stress test outputs will be auto-filled when you run your reference solution in Step 4</span>
             </div>
           </div>
         )}
       </FieldArray>
     </div>
   );
+
+  // ─── Step 4: Reference Solution + Publish ────────────────────────────────
 
   const renderStep4 = () => (
     <div className="ccq-step-content">
@@ -1017,7 +1079,7 @@ const CreateCustomQuestion = () => {
 
       {!savedQuestionId && (
         <div className="alert alert-warning">
-          Question not yet saved. Complete Steps 1–3 and click &quot;Save & Continue&quot;.
+          ⚠️ Question not yet saved. Complete Steps 1–3 and click &quot;Save &amp; Continue&quot;.
         </div>
       )}
 
@@ -1071,7 +1133,7 @@ const CreateCustomQuestion = () => {
             onClick={handlePublish}
             disabled={publishLoading}
           >
-            {publishLoading ? 'Publishing...' : 'Publish Question'}
+            {publishLoading ? 'Publishing...' : '🚀 Publish Question'}
           </button>
         )}
 
@@ -1095,6 +1157,8 @@ const CreateCustomQuestion = () => {
               </span>
             )}
           </div>
+
+          {/* Execution stats (time + memory per test case) */}
           {validateResults.data?.executionStats && (
             <div className="ccq-exec-stats">
               <b className="small">Execution stats (use to fine-tune time/memory limits)</b>
@@ -1108,6 +1172,8 @@ const CreateCustomQuestion = () => {
               </div>
             </div>
           )}
+
+          {/* Failed test cases */}
           {validateResults.data?.failedCases?.map((f, i) => (
             <div key={i} className="ccq-testcase-card ccq-testcase-card--failed mt-2 p-3">
               <b className="small text-danger">Test Case {f.index + 1} Failed</b>
@@ -1126,6 +1192,8 @@ const CreateCustomQuestion = () => {
       )}
     </div>
   );
+
+  // ─── Main render ──────────────────────────────────────────────────────────
 
   return (
     <>
@@ -1155,6 +1223,7 @@ const CreateCustomQuestion = () => {
           {({ values, setFieldValue, validateForm, setTouched }) => (
             <Form>
               <div className="ccq-layout mt-3">
+                {/* ── Left: form ── */}
                 <div className="ccq-layout__form">
                   <StepIndicator currentStep={currentStep} onStepClick={setCurrentStep} />
 
@@ -1163,6 +1232,7 @@ const CreateCustomQuestion = () => {
                   {currentStep === 2 && renderStep3(values, setFieldValue)}
                   {currentStep === 3 && renderStep4()}
 
+                  {/* Navigation */}
                   <div className="d-flex justify-content-between mt-4 pt-3 border-top">
                     <button
                       type="button"
@@ -1186,7 +1256,7 @@ const CreateCustomQuestion = () => {
                             setTouched(touched);
                             return;
                           }
-                          // on step 2→3 transition, save question to backend
+                          // On step 2→3 transition, save question to backend
                           if (currentStep === 2) {
                             const saved = await saveQuestion(values);
                             if (!saved) return;
@@ -1200,6 +1270,7 @@ const CreateCustomQuestion = () => {
                   </div>
                 </div>
 
+                {/* ── Right: live preview ── */}
                 <div className="ccq-layout__preview">
                   <LivePreview values={values} />
                 </div>
@@ -1210,6 +1281,8 @@ const CreateCustomQuestion = () => {
 
         <CustomLoadingAnimation isLoading={loading} />
       </div>
+
+      {/* Subscription modal */}
       <Modal show={paymentPlan} size="lg" centered>
         <Modal.Header>
           <Modal.Title>Upgrade your plan</Modal.Title>

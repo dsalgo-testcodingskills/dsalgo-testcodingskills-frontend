@@ -42,7 +42,7 @@ const CustomQuestionList = () => {
           <a
             className="actionIcon mx-2"
             style={
-              row.organizationId !== loginData.organisationId
+              row.organizationId !== (loginData?.organisationId || null)
                 ? { pointerEvents: 'none', opacity: 0.2 }
                 : { pointerEvents: 'all' }
             }
