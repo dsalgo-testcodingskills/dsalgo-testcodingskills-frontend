@@ -7,6 +7,7 @@ import {
   submitCustomQuestion,
   getCustomQuestionById,
   editCustomQuestions,
+  saveDraftQuestion,
 } from '../../Services/api';
 import { useParams, useHistory } from 'react-router-dom';
 import './CreateTest.scss';
@@ -193,7 +194,7 @@ const CreateCustomQuestion = () => {
     }
   };
 
-  const submitCustomQuestionForm = async (values) => {
+ const submitCustomQuestionForm = async (values) => {
     try {
       SetLoading(true);
       const tempTestCase = JSON.parse(JSON.stringify(values.testCases));
@@ -208,34 +209,53 @@ const CreateCustomQuestion = () => {
         tempTestCase[i].input = JSON.stringify(tempTestCase[i].input);
       }
       const { topicInput, ...otherValues } = values;
-      
-      // Convert ms back to seconds for backend
-      const finalConstraints = {
-        ...otherValues.constraints,
-        timeLimit: otherValues.constraints.timeLimit / 1000,
+      const req = {
+        ...otherValues,
+        testCases: tempTestCase,
       };
-
-      const req = { ...otherValues, constraints: finalConstraints, testCases: tempTestCase };
-      
       if (editMode) {
-        const editRes = await editCustomQuestions(params.id, req);
-        if (editRes && editRes.data.code === 200) {
-          toast(<CustomToast type="success" message={'Custom Question Updated Successfully'} />);
-          history.push('/admin/customQuestion');
+        const editCustomQuestons = await editCustomQuestions(params.id, req);
+        if (editCustomQuestons && editCustomQuestons.data.code === 200) {
+          toast(
+            <CustomToast
+              type="success"
+              message={
+                "Custom Question Updated! Redirecting to verification..."
+              }
+            />,
+          );
+          history.push(`/admin/customQuestion/verify/${params.id}`);
         } else {
-          toast(<CustomToast type="error" message={editRes && editRes.data.message} />);
+          toast(
+            <CustomToast
+              type="error"
+              message={editCustomQuestons && editCustomQuestons.data.message}
+            />,
+          );
         }
       } else {
-        const createRes = await submitCustomQuestion(req);
-        if (createRes.data.statusCode === 402) {
+        // Save as draft and redirect to verify page
+        const draftResult = await saveDraftQuestion(req);
+        if (draftResult.data.statusCode === 402) {
           setPaymentPlan(true);
           return;
         }
-        if (createRes && createRes.data.statusCode === 200) {
-          toast(<CustomToast type="success" message={'Custom Question Created Successfully'} />);
-          history.push('/admin/customQuestion');
+        if (draftResult && draftResult.data.statusCode === 200) {
+          toast(
+            <CustomToast
+              type="success"
+              message={"Draft saved! Redirecting to verification..."}
+            />,
+          );
+          const draftId = draftResult.data.data._id;
+          history.push(`/admin/customQuestion/verify/${draftId}`);
         } else {
-          toast(<CustomToast type="error" message={createRes && createRes.data.message} />);
+          toast(
+            <CustomToast
+              type="error"
+              message={draftResult && draftResult.data.message}
+            />,
+          );
         }
       }
     } catch (error) {
@@ -276,7 +296,7 @@ const CreateCustomQuestion = () => {
             submitCustomQuestionForm(values, resetForm);
           }}
         >
-          {({ values, setFieldValue, handleSubmit }) => {
+          {({ values, setFieldValue, handleSubmit,dirty }) => {
             const addTopic = () => {
               if (values.topicInput.trim() !== '') {
                 const newTopic = values.topicInput.trim();
@@ -576,14 +596,31 @@ const CreateCustomQuestion = () => {
                       </div>
                     </div>
 
-                    <div className="d-flex justify-content-center gap-3 py-4">
-                      <button type="submit" className="btns px-5 py-2 rounded-pill" onClick={handleSubmit}>
-                        {editMode ? 'Update Question' : 'Create Question'}
-                      </button>
-                      <button type="button" className="btns btns--white px-5 py-2 rounded-pill border" onClick={() => handlePreview(values)}>
-                        Full Screen Preview
-                      </button>
-                    </div>
+                    <div className="d-flex justify-content-center gap-3">
+                  {editMode && (
+                    <button
+                      type="button"
+                      className={`btns mt-3 ${
+                        !dirty ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={!dirty}
+                      onClick={() => handleSubmit()}
+                    >
+                      <i className="fas fa-save me-2"></i>
+                      Update & Verify
+                    </button>
+                  )}
+                  {!editMode && (
+                    <button
+                      type="button"
+                      className="btns mt-3"
+                      onClick={() => handleSubmit()}
+                    >
+                      <i className="fas fa-save me-2"></i>
+                      Save & Verify
+                    </button>
+                  )}
+                </div>
                   </div>
 
                   <div className="question-builder__preview">

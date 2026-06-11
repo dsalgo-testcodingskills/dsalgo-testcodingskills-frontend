@@ -183,6 +183,14 @@ export function previewCustomQuestion(body) {
   return axios.post("/questions/previewCustomQuestion", body);
 }
 
+export function saveDraftQuestion(body) {
+  return axios.post("/questions/saveDraft", body);
+}
+
+export function finalizeDraftQuestion(id) {
+  return axios.patch(`/questions/finalizeDraft/${id}`);
+}
+
 export function checkEmail(body) {
   return axios.post("/authentication/checkEmail", body);
 }
