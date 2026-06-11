@@ -17,6 +17,7 @@ import MultiTestStatus from '../Pages/Dashboard/MultiTestStatus';
 import UserManagement from '../Pages/UserManagement/UserManagement';
 import { UserRoleEnum } from '../utils/constants';
 import QuestionPreview from '../Pages/Dashboard/QuestionPreview';
+import VerifyQuestion from '../Pages/Dashboard/VerifyQuestion';
 
 function AdminRoutes() {
   const { loginData } = useSelector((store) => store.dataReducer);
@@ -59,6 +60,9 @@ function AdminRoutes() {
         </ProtectedRoute>
         <ProtectedRoute path="/admin/customQuestionnew/preview">
           <QuestionPreview />
+        </ProtectedRoute>
+        <ProtectedRoute path="/admin/customQuestion/verify/:draftId">
+          <VerifyQuestion />
         </ProtectedRoute>
         <ProtectedRoute path="/admin/customQuestionnew/:id?">
           <CreateCustomQuestion />

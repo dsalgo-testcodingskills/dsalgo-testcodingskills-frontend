@@ -1,0 +1,57 @@
+.verifyQuestion {
+  padding: 0;
+
+  &__header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  &__header-title {
+    h5 {
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  &__create-btn {
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    padding: 8px 24px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3) !important;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4) !important;
+    }
+
+    &.btns--disabled {
+      background: #636e72 !important;
+      cursor: not-allowed;
+      opacity: 0.6;
+      box-shadow: none !important;
+    }
+  }
+
+  &__info-banner {
+    background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);
+    color: #fff;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 0.3px;
+
+    i {
+      font-size: 16px;
+    }
+  }
+}

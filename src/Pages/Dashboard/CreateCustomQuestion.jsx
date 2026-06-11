@@ -1,71 +1,74 @@
-import { ErrorMessage, Field, FieldArray, Form, Formik } from 'formik';
-import React, { useEffect, useState } from 'react';
-import ReactQuill from 'react-quill';
+import { ErrorMessage, Field, FieldArray, Form, Formik } from "formik";
+import React, { useEffect, useState } from "react";
+import ReactQuill from "react-quill";
 
-import { toast } from 'react-toastify';
-import CustomToast from '../../components/CustomToast/CustomToast';
+import { toast } from "react-toastify";
+import CustomToast from "../../components/CustomToast/CustomToast";
 import {
-  submitCustomQuestion,
+  saveDraftQuestion,
   getCustomQuestionById,
   editCustomQuestions,
-} from '../../Services/api';
-import { useParams, useHistory } from 'react-router-dom';
-import './CreateTest.scss';
-import Select from 'react-select';
-import { Checkbox, IconButton } from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
-import * as Yup from 'yup';
-import { CloseButton, Modal } from 'react-bootstrap';
-import './CreateCustomQuestion.scss';
-import './PreviewModal.scss';
-import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
-import Plans from '../MyPlans/Plans';
-import QuestionPreview from './QuestionPreview';
-import { ALL_TAGS } from '../../utils/constants';
+} from "../../Services/api";
+import { useParams, useHistory } from "react-router-dom";
+import "./CreateTest.scss";
+import Select from "react-select";
+import { Checkbox, IconButton } from "@material-ui/core";
+import AddIcon from "@material-ui/icons/Add";
+import * as Yup from "yup";
+import { CloseButton, Modal } from "react-bootstrap";
+import "./CreateCustomQuestion.scss";
+import CustomLoadingAnimation from "../../components/CustomLoadingAnimation";
+import Plans from "../MyPlans/Plans";
+import { ALL_TAGS } from "../../utils/constants";
 
-
-const SUGGESTED_TAGS = ['dynamic-programming', 'arrays', 'memoization', 'recursion', 'time-complexity'];
+const SUGGESTED_TAGS = [
+  "dynamic-programming",
+  "arrays",
+  "memoization",
+  "recursion",
+  "time-complexity",
+];
 
 const CreateCustomQuestion = () => {
   const inputOutputType = [
-    '2d_array_int',
-    '2d_array_char',
-    'array_int',
-    'array_char',
-    'int',
-    'boolean',
-    'string',
+    "2d_array_int",
+    "2d_array_char",
+    "array_int",
+    "array_char",
+    "int",
+    "boolean",
+    "string",
   ];
 
   const questionsLevelOptions = [
-    { label: 'easy', value: 'easy' },
-    { label: 'medium', value: 'medium' },
-    { label: 'hard', value: 'hard' },
+    { label: "easy", value: "easy" },
+    { label: "medium", value: "medium" },
+    { label: "hard", value: "hard" },
   ];
 
   // defaultDetails
   const defaultDetails = {
-    level: '',
-    question: '',
-    instructions: '',
+    level: "",
+    question: "",
+    instructions: "",
     sampleQuestion: false,
     public: false,
     topics: [],
-    topicInput: '',
+    topicInput: "",
     testCases: [
       {
         input: [],
-        output: '',
+        output: "",
         hidden: false,
       },
     ],
     inputType: [
       {
-        type: '',
-        paramName: '',
+        type: "",
+        paramName: "",
       },
     ],
-    outputType: '',
+    outputType: "",
   };
 
   const params = useParams();
@@ -75,59 +78,35 @@ const CreateCustomQuestion = () => {
   const [Loading, SetLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [paymentPlan, setPaymentPlan] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewQuestionData, setPreviewQuestionData] = useState(null);
   const [customCourseDetail, setCustomCourseDetail] = useState(defaultDetails);
   const [filteredTags, setFilteredTags] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const handlePreview = (values) => {
-    const tempTestCase = JSON.parse(JSON.stringify(values.testCases));
-    for (let i = 0; i < tempTestCase.length; i++) {
-      for (let j = 0; j < tempTestCase[i].input.length; j++) {
-        try {
-          if (typeof tempTestCase[i].input[j] === 'string' && tempTestCase[i].input[j].trim() !== '') {
-            tempTestCase[i].input.splice(
-              j,
-              1,
-              JSON.parse(tempTestCase[i].input[j]),
-            );
-          }
-        } catch (e) {
-          console.error("Error parsing test case input", e);
-        }
-      }
-      tempTestCase[i].input = JSON.stringify(tempTestCase[i].input);
-    }
-    setPreviewQuestionData({ ...values, testCases: tempTestCase });
-    setShowPreviewModal(true);
-  };
-
   const CustomQuestionSchema = Yup.object().shape({
-    level: Yup.string().required('Level Required'),
-    question: Yup.string().required('Question Title Required'),
-    instructions: Yup.string().required('Question Description Required'),
-    topics: Yup.array().min(1, 'Topics Required').required('Topics Required'),
+    level: Yup.string().required("Level Required"),
+    question: Yup.string().required("Question Title Required"),
+    instructions: Yup.string().required("Question Description Required"),
+    topics: Yup.array().min(1, "Topics Required").required("Topics Required"),
     inputType: Yup.array()
       .of(
         Yup.object().shape({
-          type: Yup.string().required('Input Type is required'),
-          paramName: Yup.string().required('Input Name is required'),
+          type: Yup.string().required("Input Type is required"),
+          paramName: Yup.string().required("Input Name is required"),
         }),
       )
-      .required('InputType Required'),
-    outputType: Yup.string().required('OutputType Required'),
+      .required("InputType Required"),
+    outputType: Yup.string().required("OutputType Required"),
     public: Yup.boolean(),
     testCases: Yup.array()
       .of(
         Yup.object().shape({
           input: Yup.array()
-            .of(Yup.string().required('Input is required'))
-            .required('Input is required'),
-          output: Yup.string().required('Output is required'),
+            .of(Yup.string().required("Input is required"))
+            .required("Input is required"),
+          output: Yup.string().required("Output is required"),
         }),
       )
-      .required('TestCases Required'),
+      .required("TestCases Required"),
   });
 
   useEffect(() => {
@@ -157,21 +136,25 @@ const CreateCustomQuestion = () => {
             res.data.data.testCases[i].output,
           );
         }
-        if (res.data.data.topics && typeof res.data.data.topics === 'string') {
-          res.data.data.topics = res.data.data.topics.split(',').filter(t => t.trim() !== '');
+        if (res.data.data.topics && typeof res.data.data.topics === "string") {
+          res.data.data.topics = res.data.data.topics
+            .split(",")
+            .filter((t) => t.trim() !== "");
         } else if (!res.data.data.topics) {
           res.data.data.topics = [];
         }
 
-        if (res.data.data.topics && typeof res.data.data.topics === 'string') {
-          res.data.data.topics = res.data.data.topics.split(',').filter(t => t.trim() !== '');
+        if (res.data.data.topics && typeof res.data.data.topics === "string") {
+          res.data.data.topics = res.data.data.topics
+            .split(",")
+            .filter((t) => t.trim() !== "");
         } else if (!res.data.data.topics) {
           res.data.data.topics = [];
         }
 
         setCustomCourseDetail({
           ...res?.data?.data,
-           topicInput: '',
+          topicInput: "",
         });
       }
     }
@@ -204,10 +187,12 @@ const CreateCustomQuestion = () => {
           toast(
             <CustomToast
               type="success"
-              message={'Custom Question Updated Successfully'}
+              message={
+                "Custom Question Updated! Redirecting to verification..."
+              }
             />,
           );
-          history.push('/admin/customQuestion');
+          history.push(`/admin/customQuestion/verify/${params.id}`);
         } else {
           toast(
             <CustomToast
@@ -217,29 +202,26 @@ const CreateCustomQuestion = () => {
           );
         }
       } else {
-        const newCreatordetailResult = await submitCustomQuestion(req);
-        if (newCreatordetailResult.data.statusCode === 402) {
+        // Save as draft and redirect to verify page
+        const draftResult = await saveDraftQuestion(req);
+        if (draftResult.data.statusCode === 402) {
           setPaymentPlan(true);
           return;
         }
-        if (
-          newCreatordetailResult &&
-          newCreatordetailResult.data.statusCode === 200
-        ) {
+        if (draftResult && draftResult.data.statusCode === 200) {
           toast(
             <CustomToast
               type="success"
-              message={'Custom Question Created Successfully'}
+              message={"Draft saved! Redirecting to verification..."}
             />,
           );
-          history.push('/admin/customQuestion');
+          const draftId = draftResult.data.data._id;
+          history.push(`/admin/customQuestion/verify/${draftId}`);
         } else {
           toast(
             <CustomToast
               type="error"
-              message={
-                newCreatordetailResult && newCreatordetailResult.data.message
-              }
+              message={draftResult && draftResult.data.message}
             />,
           );
         }
@@ -261,47 +243,47 @@ const CreateCustomQuestion = () => {
   const modules = {
     toolbar: [
       [
-        { header: '1' },
-        { header: '2' },
+        { header: "1" },
+        { header: "2" },
         { header: [3, 4, 5, 6] },
         { font: [] },
       ],
       [{ size: [] }],
-      ['bold', 'italic', 'underline', 'strike', 'bockquote'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
+      ["bold", "italic", "underline", "strike", "bockquote"],
+      [{ list: "ordered" }, { list: "bullet" }],
 
-      ['clean'],
-      ['code-block'],
+      ["clean"],
+      ["code-block"],
     ],
   };
 
   const formats = [
-    'header',
-    'font',
-    'size',
-    'bold',
-    'italic',
-    'underline',
-    'strike',
-    'blockquote',
-    'list',
-    'bullet',
+    "header",
+    "font",
+    "size",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "blockquote",
+    "list",
+    "bullet",
 
-    'code-block',
+    "code-block",
   ];
 
   return (
     <>
       <label className="head">
         <span
-          onClick={() => history.push('/admin/testStatus')}
-          style={{ cursor: 'pointer' }}
+          onClick={() => history.push("/admin/testStatus")}
+          style={{ cursor: "pointer" }}
         >
           Dashboard
         </span>
         <span
-          onClick={() => history.push('/admin/customQuestion')}
-          style={{ cursor: 'pointer' }}
+          onClick={() => history.push("/admin/customQuestion")}
+          style={{ cursor: "pointer" }}
         >
           &nbsp; / Custom Questions
         </span>
@@ -318,9 +300,9 @@ const CreateCustomQuestion = () => {
         </div>
         <div
           className="card-title mt-4 card-header-text"
-          style={{ marginLeft: '20px' }}
+          style={{ marginLeft: "20px" }}
         >
-          {editMode ? 'Edit Custom Question' : 'Create Custom Question'}
+          {editMode ? "Edit Custom Question" : "Create Custom Question"}
         </div>
         <Formik
           enableReinitialize={true}
@@ -330,86 +312,93 @@ const CreateCustomQuestion = () => {
             submitCustomQuestionForm(values, resetForm);
           }}
         >
-          {({ values, setFieldValue, handleSubmit }) => {
+          {({ values, setFieldValue, handleSubmit, dirty }) => {
             const addTopic = () => {
-              if (values.topicInput.trim() !== '') {
+              if (values.topicInput.trim() !== "") {
                 const newTopic = values.topicInput.trim();
                 if (!values.topics.includes(newTopic)) {
-                  setFieldValue('topics', [...values.topics, newTopic]);
+                  setFieldValue("topics", [...values.topics, newTopic]);
                 }
-                setFieldValue('topicInput', '');
+                setFieldValue("topicInput", "");
               }
             };
 
             const removeTopic = (index) => {
               const updated = values.topics.filter((_, i) => i !== index);
-              setFieldValue('topics', updated);
+              setFieldValue("topics", updated);
             };
             return (
-          <Form className="px-5 d-flex flex-column my-3 ">
-              <div className="row mt-3">
-                <div>
-                  {' '}
-                  <h5>Question Details</h5>
+              <Form className="px-5 d-flex flex-column my-3 ">
+                <div className="row mt-3">
+                  <div>
+                    {" "}
+                    <h5>Question Details</h5>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label createCustomQuestion__form-label">
+                      Question Title
+                    </label>
+                    <Field
+                      name="question"
+                      type="string"
+                      className="form-control"
+                    />
+                    <ErrorMessage
+                      name="question"
+                      render={(msg) => <div className="text-danger">{msg}</div>}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label createCustomQuestion__form-label">
+                      Question Description
+                    </label>
+                    <Field
+                      name="instructions"
+                      type="text"
+                      className="form-control"
+                    >
+                      {({ field }) => (
+                        <ReactQuill
+                          placeholder="Write Something..."
+                          modules={modules}
+                          formats={formats}
+                          onChange={field.onChange(field.name)}
+                          value={field.value}
+                        />
+                      )}
+                    </Field>
+                    <ErrorMessage
+                      name="instructions"
+                      render={(msg) => <div className="text-danger">{msg}</div>}
+                    />
+                  </div>
                 </div>
-                <div className="col-6">
-                  <label className="form-label createCustomQuestion__form-label">
-                    Question Title
-                  </label>
-                  <Field
-                    name="question"
-                    type="string"
-                    className="form-control"
-                  />
-                  <ErrorMessage
-                    name="question"
-                    render={(msg) => <div className="text-danger">{msg}</div>}
-                  />
-                </div>
-                <div className="col-6">
-                  <label className="form-label createCustomQuestion__form-label">
-                    Question Description
-                  </label>
-                  <Field
-                    name="instructions"
-                    type="text"
-                    className="form-control"
-                  >
-                    {({ field }) => (
-                      <ReactQuill
-                        placeholder="Write Something..."
-                        modules={modules}
-                        formats={formats}
-                        onChange={field.onChange(field.name)}
-                        value={field.value}
-                      />
-                    )}
-                  </Field>
-                  <ErrorMessage
-                    name="instructions"
-                    render={(msg) => <div className="text-danger">{msg}</div>}
-                  />
-                </div>
-              </div>
 
                 {/* tags/topics */}
                 <div className="row mt-3">
                   <div className="mb-1">
                     <h5>Tags / Topics</h5>
                     <label className="form-label createCustomQuestion__form-label">
-                      Add up to 5 tags to describe what your question is about. Start typing to search.
+                      Add up to 5 tags to describe what your question is about.
+                      Start typing to search.
                     </label>
                   </div>
 
                   <div className="topic-wrapper">
                     <div
                       className="topic-input-box"
-                      onClick={() => document.getElementById('topicInputField').focus()}
+                      onClick={() =>
+                        document.getElementById("topicInputField").focus()
+                      }
                     >
                       {values.topics.map((topic, index) => (
                         <div key={index} className="topic-chip">
                           <span>{topic}</span>
-                          <button type="button" className="topic-chip__remove" onClick={() => removeTopic(index)}>
+                          <button
+                            type="button"
+                            className="topic-chip__remove"
+                            onClick={() => removeTopic(index)}
+                          >
                             ✕
                           </button>
                         </div>
@@ -421,25 +410,41 @@ const CreateCustomQuestion = () => {
                           name="topicInput"
                           type="text"
                           className="topic-input-field"
-                          placeholder={values.topics.length === 0 ? 'e.g. arrays, dynamic-programming…' : ''}
-                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTopic(); setShowDropdown(false); } }}
+                          placeholder={
+                            values.topics.length === 0
+                              ? "e.g. arrays, dynamic-programming…"
+                              : ""
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addTopic();
+                              setShowDropdown(false);
+                            }
+                          }}
                           onChange={(e) => {
-                            setFieldValue('topicInput', e.target.value);
+                            setFieldValue("topicInput", e.target.value);
                             const query = e.target.value.trim().toLowerCase();
                             if (query) {
-                              const matches = ALL_TAGS.filter((t) => t.name.startsWith(query) && !values.topics.includes(t.name)).slice(0, 6);
+                              const matches = ALL_TAGS.filter(
+                                (t) =>
+                                  t.name.startsWith(query) &&
+                                  !values.topics.includes(t.name),
+                              ).slice(0, 6);
                               setFilteredTags(matches);
                               setShowDropdown(true);
                             } else {
                               setShowDropdown(false);
                             }
                           }}
-                          onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                          onBlur={() =>
+                            setTimeout(() => setShowDropdown(false), 150)
+                          }
                         />
                         <IconButton
                           color="primary"
                           onClick={addTopic}
-                          disabled={values.topicInput.trim() === ''}
+                          disabled={values.topicInput.trim() === ""}
                           size="small"
                         >
                           <AddIcon />
@@ -455,20 +460,32 @@ const CreateCustomQuestion = () => {
                             key={i}
                             className="topic-dropdown__item"
                             onMouseDown={() => {
-                              if (!values.topics.includes(tag.name) && values.topics.length < 5) {
-                                setFieldValue('topics', [...values.topics, tag.name]);
-                                setFieldValue('topicInput', '');
+                              if (
+                                !values.topics.includes(tag.name) &&
+                                values.topics.length < 5
+                              ) {
+                                setFieldValue("topics", [
+                                  ...values.topics,
+                                  tag.name,
+                                ]);
+                                setFieldValue("topicInput", "");
                                 setShowDropdown(false);
                               }
                             }}
                           >
                             <span>
-                              <strong>{tag.name.slice(0, values.topicInput.length)}</strong>
+                              <strong>
+                                {tag.name.slice(0, values.topicInput.length)}
+                              </strong>
                               {tag.name.slice(values.topicInput.length)}
                             </span>
-                            <span style={{ display: 'flex', gap: '10px' }}>
-                              <span className="topic-dropdown__cat">{tag.cat}</span>
-                              <span className="topic-dropdown__count">{tag.n}q</span>
+                            <span style={{ display: "flex", gap: "10px" }}>
+                              <span className="topic-dropdown__cat">
+                                {tag.cat}
+                              </span>
+                              <span className="topic-dropdown__count">
+                                {tag.n}q
+                              </span>
                             </span>
                           </div>
                         ))}
@@ -476,16 +493,28 @@ const CreateCustomQuestion = () => {
                     )}
 
                     {/* Suggested tags */}
-                    <div style={{ marginTop: '4px' }}>
-                      <p className="topic-suggested-label">suggested for this question</p>
+                    <div style={{ marginTop: "4px" }}>
+                      <p className="topic-suggested-label">
+                        suggested for this question
+                      </p>
                       <div className="topic-suggested-chips">
                         {SUGGESTED_TAGS.map((tag) => (
                           <span
                             key={tag}
-                            className={`topic-suggested-chip ${values.topics.includes(tag) ? 'topic-suggested-chip--used' : ''}`}
+                            className={`topic-suggested-chip ${
+                              values.topics.includes(tag)
+                                ? "topic-suggested-chip--used"
+                                : ""
+                            }`}
                             onClick={() => {
-                              if (!values.topics.includes(tag) && values.topics.length < 5) {
-                                setFieldValue('topics', [...values.topics, tag]);
+                              if (
+                                !values.topics.includes(tag) &&
+                                values.topics.length < 5
+                              ) {
+                                setFieldValue("topics", [
+                                  ...values.topics,
+                                  tag,
+                                ]);
                               }
                             }}
                           >
@@ -495,13 +524,27 @@ const CreateCustomQuestion = () => {
                       </div>
                     </div>
 
-                    <div className="topic-count">Tags added: <strong>{values.topics.length}</strong> / 5</div>
+                    <div className="topic-count">
+                      Tags added: <strong>{values.topics.length}</strong> / 5
+                    </div>
 
                     {values.topics.length >= 5 && (
-                      <small className="text-danger">Maximum 5 topics allowed.</small>
+                      <small className="text-danger">
+                        Maximum 5 topics allowed.
+                      </small>
                     )}
 
-                    <ErrorMessage name="topics" render={(msg) => <div className="text-danger" style={{ fontSize: '12px', marginTop: '4px' }}>{msg}</div>} />
+                    <ErrorMessage
+                      name="topics"
+                      render={(msg) => (
+                        <div
+                          className="text-danger"
+                          style={{ fontSize: "12px", marginTop: "4px" }}
+                        >
+                          {msg}
+                        </div>
+                      )}
+                    />
                   </div>
                 </div>
                 {/* InputType */}
@@ -510,7 +553,7 @@ const CreateCustomQuestion = () => {
                     <div className="align-items-center mt-4 mb-3">
                       <div className="d-flex justify-content-between align-items-center">
                         <div>
-                          {' '}
+                          {" "}
                           <h5>Input Details</h5>
                         </div>
                       </div>
@@ -589,8 +632,8 @@ const CreateCustomQuestion = () => {
                             type="button"
                             onClick={() => {
                               push({
-                                type: '',
-                                paramName: '',
+                                type: "",
+                                paramName: "",
                               });
                             }}
                           >
@@ -615,7 +658,7 @@ const CreateCustomQuestion = () => {
                         value: values.outputType,
                       }}
                       onChange={(e) => {
-                        setFieldValue('outputType', e.value);
+                        setFieldValue("outputType", e.value);
                       }}
                     />
                     <ErrorMessage
@@ -634,7 +677,7 @@ const CreateCustomQuestion = () => {
                       options={questionsLevelOptions}
                       value={{ label: values.level, value: values.level }}
                       onChange={(e) => {
-                        setFieldValue('level', e.value);
+                        setFieldValue("level", e.value);
                       }}
                     />
                     <ErrorMessage
@@ -648,11 +691,14 @@ const CreateCustomQuestion = () => {
                     <span className="me-2">
                       <Checkbox
                         onChange={(e) => {
-                          setFieldValue('public', e.target.checked);
+                          setFieldValue("public", e.target.checked);
                         }}
                         checked={values.public}
                       />
-                      <label className="form-label createCustomQuestion__form-label" style={{ marginBottom: 0 }}>
+                      <label
+                        className="form-label createCustomQuestion__form-label"
+                        style={{ marginBottom: 0 }}
+                      >
                         Is Public Question
                       </label>
                     </span>
@@ -664,7 +710,7 @@ const CreateCustomQuestion = () => {
                   {({ remove, push }) => (
                     <div className="align-items-center mt-4 mb-3">
                       <div className="d-flex justify-content-between align-items-center">
-                        <h5>Test Cases</h5>{' '}
+                        <h5>Test Cases</h5>{" "}
                       </div>
 
                       <span className="test-case-note">
@@ -692,8 +738,8 @@ const CreateCustomQuestion = () => {
                                         <span
                                           className="badge text-uppercase mb-1"
                                           style={{
-                                            background: 'orange',
-                                            fontSize: '12px',
+                                            background: "orange",
+                                            fontSize: "12px",
                                           }}
                                         >
                                           {type.type}
@@ -714,7 +760,9 @@ const CreateCustomQuestion = () => {
                                       <ErrorMessage
                                         name={`testCases[${index}].input`}
                                         render={(msg) => (
-                                          <div className="text-danger">{msg}</div>
+                                          <div className="text-danger">
+                                            {msg}
+                                          </div>
                                         )}
                                       />
                                     </div>
@@ -775,7 +823,7 @@ const CreateCustomQuestion = () => {
                             onClick={() => {
                               push({
                                 input: [],
-                                output: '',
+                                output: "",
                                 hidden: false,
                               });
                             }}
@@ -789,44 +837,35 @@ const CreateCustomQuestion = () => {
                 </FieldArray>
 
                 <div className="d-flex justify-content-center gap-3">
-                  <button
-                    type="submit"
-                    className="btns mt-3"
-                    onClick={handleSubmit}
-                  >
-                    {editMode ? 'Update' : 'Create'}
-                  </button>
-                  <button
-                  type="button"
-                  className="btns mt-3"
-                  onClick={() => {
-                    handlePreview(values);
-                  }}
-                  >
-                    Preview
-                  </button>
-              </div>
-            </Form>
+                  {editMode && (
+                    <button
+                      type="button"
+                      className={`btns mt-3 ${
+                        !dirty ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={!dirty}
+                      onClick={() => handleSubmit()}
+                    >
+                      <i className="fas fa-save me-2"></i>
+                      Update & Verify
+                    </button>
+                  )}
+                  {!editMode && (
+                    <button
+                      type="button"
+                      className="btns mt-3"
+                      onClick={() => handleSubmit()}
+                    >
+                      <i className="fas fa-save me-2"></i>
+                      Save & Verify
+                    </button>
+                  )}
+                </div>
+              </Form>
             );
           }}
         </Formik>
         <CustomLoadingAnimation isLoading={Loading} />
-        <Modal
-          show={showPreviewModal}
-          onHide={() => setShowPreviewModal(false)}
-          size="xl"
-          centered
-          className="preview-modal"
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Question Preview</Modal.Title>
-          </Modal.Header>
-          <Modal.Body style={{ backgroundColor: '#f4f7f9', padding: '0' }}>
-            {previewQuestionData && (
-              <QuestionPreview questionData={previewQuestionData} isModal={true} />
-            )}
-          </Modal.Body>
-        </Modal>
 
         {/* subscription payment modal */}
         <Modal
@@ -842,12 +881,12 @@ const CreateCustomQuestion = () => {
             >
               <h4
                 style={{
-                  fontWeight: '500',
-                  fontSize: '21px',
-                  lineHeight: '25px',
-                  textAlign: 'left',
+                  fontWeight: "500",
+                  fontSize: "21px",
+                  lineHeight: "25px",
+                  textAlign: "left",
                 }}
-              ></h4>{' '}
+              ></h4>{" "}
               Upgrade your plan
             </Modal.Title>
             <CloseButton
