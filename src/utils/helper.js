@@ -75,3 +75,15 @@ export const createImageFromInitials = (size, name, color) => {
 
   return canvas.toDataURL()
 };
+
+export const getConstraintFields = (type) => {
+  if (!type) return null;
+
+  if (type.includes('2d_array')) return '2d_array';
+  if (type.includes('array')) return 'array';
+  if (type === 'int') return 'number';
+  if (type === 'string') return 'string';
+  if (type === 'boolean') return 'boolean';
+
+  return null;
+};

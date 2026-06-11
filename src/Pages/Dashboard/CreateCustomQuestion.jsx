@@ -1,6 +1,5 @@
 import { ErrorMessage, Field, FieldArray, Form, Formik } from 'formik';
-import React, { useEffect, useState } from 'react';
-import ReactQuill from 'react-quill';
+import { useEffect, useState } from 'react';
 
 import { toast } from 'react-toastify';
 import CustomToast from '../../components/CustomToast/CustomToast';
@@ -22,6 +21,9 @@ import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import Plans from '../MyPlans/Plans';
 import QuestionPreview from './QuestionPreview';
 import { ALL_TAGS } from '../../utils/constants';
+import LivePreview from './LivePreview';
+import OutputConstraintsSection from './OutputConstraintsSection';
+import ParameterConstraints from './ParameterConstraints';
 
 
 const SUGGESTED_TAGS = ['dynamic-programming', 'arrays', 'memoization', 'recursion', 'time-complexity'];
@@ -43,7 +45,6 @@ const CreateCustomQuestion = () => {
     { label: 'hard', value: 'hard' },
   ];
 
-  // defaultDetails
   const defaultDetails = {
     level: '',
     question: '',
@@ -52,6 +53,10 @@ const CreateCustomQuestion = () => {
     public: false,
     topics: [],
     topicInput: '',
+    constraints: {
+      timeLimit: 2000,
+      memoryLimit: 256
+    },
     testCases: [
       {
         input: [],
@@ -63,9 +68,15 @@ const CreateCustomQuestion = () => {
       {
         type: '',
         paramName: '',
+         constraints: {},
       },
     ],
     outputType: '',
+    outputConstraints: {
+      isOrdered: true,
+      tolerance: 0,
+      caseSensitive: true
+    },
   };
 
   const params = useParams();
@@ -118,6 +129,10 @@ const CreateCustomQuestion = () => {
       .required('InputType Required'),
     outputType: Yup.string().required('OutputType Required'),
     public: Yup.boolean(),
+    constraints: Yup.object().shape({
+      timeLimit: Yup.number().min(100).max(10000).required(),
+      memoryLimit: Yup.number().min(1).max(1024).required()
+    }),
     testCases: Yup.array()
       .of(
         Yup.object().shape({
@@ -162,15 +177,16 @@ const CreateCustomQuestion = () => {
         } else if (!res.data.data.topics) {
           res.data.data.topics = [];
         }
-
-        if (res.data.data.topics && typeof res.data.data.topics === 'string') {
-          res.data.data.topics = res.data.data.topics.split(',').filter(t => t.trim() !== '');
-        } else if (!res.data.data.topics) {
-          res.data.data.topics = [];
+        
+        // Handle time limit conversion if stored as seconds in backend
+        const questionData = res.data.data;
+        if (questionData.constraints && questionData.constraints.timeLimit < 100) {
+           questionData.constraints.timeLimit = questionData.constraints.timeLimit * 1000;
         }
 
         setCustomCourseDetail({
-          ...res?.data?.data,
+          ...defaultDetails,
+          ...questionData,
            topicInput: '',
         });
       }
@@ -180,8 +196,6 @@ const CreateCustomQuestion = () => {
   const submitCustomQuestionForm = async (values) => {
     try {
       SetLoading(true);
-
-      // Transform the testCase Input
       const tempTestCase = JSON.parse(JSON.stringify(values.testCases));
       for (let i = 0; i < tempTestCase.length; i++) {
         for (let j = 0; j < tempTestCase[i].input.length; j++) {
@@ -194,54 +208,34 @@ const CreateCustomQuestion = () => {
         tempTestCase[i].input = JSON.stringify(tempTestCase[i].input);
       }
       const { topicInput, ...otherValues } = values;
-      const req = {
-        ...otherValues,
-        testCases: tempTestCase,
+      
+      // Convert ms back to seconds for backend
+      const finalConstraints = {
+        ...otherValues.constraints,
+        timeLimit: otherValues.constraints.timeLimit / 1000,
       };
+
+      const req = { ...otherValues, constraints: finalConstraints, testCases: tempTestCase };
+      
       if (editMode) {
-        const editCustomQuestons = await editCustomQuestions(params.id, req);
-        if (editCustomQuestons && editCustomQuestons.data.code === 200) {
-          toast(
-            <CustomToast
-              type="success"
-              message={'Custom Question Updated Successfully'}
-            />,
-          );
+        const editRes = await editCustomQuestions(params.id, req);
+        if (editRes && editRes.data.code === 200) {
+          toast(<CustomToast type="success" message={'Custom Question Updated Successfully'} />);
           history.push('/admin/customQuestion');
         } else {
-          toast(
-            <CustomToast
-              type="error"
-              message={editCustomQuestons && editCustomQuestons.data.message}
-            />,
-          );
+          toast(<CustomToast type="error" message={editRes && editRes.data.message} />);
         }
       } else {
-        const newCreatordetailResult = await submitCustomQuestion(req);
-        if (newCreatordetailResult.data.statusCode === 402) {
+        const createRes = await submitCustomQuestion(req);
+        if (createRes.data.statusCode === 402) {
           setPaymentPlan(true);
           return;
         }
-        if (
-          newCreatordetailResult &&
-          newCreatordetailResult.data.statusCode === 200
-        ) {
-          toast(
-            <CustomToast
-              type="success"
-              message={'Custom Question Created Successfully'}
-            />,
-          );
+        if (createRes && createRes.data.statusCode === 200) {
+          toast(<CustomToast type="success" message={'Custom Question Created Successfully'} />);
           history.push('/admin/customQuestion');
         } else {
-          toast(
-            <CustomToast
-              type="error"
-              message={
-                newCreatordetailResult && newCreatordetailResult.data.message
-              }
-            />,
-          );
+          toast(<CustomToast type="error" message={createRes && createRes.data.message} />);
         }
       }
     } catch (error) {
@@ -258,68 +252,20 @@ const CreateCustomQuestion = () => {
     }
   };
 
-  const modules = {
-    toolbar: [
-      [
-        { header: '1' },
-        { header: '2' },
-        { header: [3, 4, 5, 6] },
-        { font: [] },
-      ],
-      [{ size: [] }],
-      ['bold', 'italic', 'underline', 'strike', 'bockquote'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-
-      ['clean'],
-      ['code-block'],
-    ],
-  };
-
-  const formats = [
-    'header',
-    'font',
-    'size',
-    'bold',
-    'italic',
-    'underline',
-    'strike',
-    'blockquote',
-    'list',
-    'bullet',
-
-    'code-block',
-  ];
-
   return (
     <>
       <label className="head">
-        <span
-          onClick={() => history.push('/admin/testStatus')}
-          style={{ cursor: 'pointer' }}
-        >
-          Dashboard
-        </span>
-        <span
-          onClick={() => history.push('/admin/customQuestion')}
-          style={{ cursor: 'pointer' }}
-        >
-          &nbsp; / Custom Questions
-        </span>
+        <span onClick={() => history.push('/admin/testStatus')} style={{ cursor: 'pointer' }}>Dashboard</span>
+        <span onClick={() => history.push('/admin/customQuestion')} style={{ cursor: 'pointer' }}>&nbsp; / Custom Questions</span>
         &nbsp; / Create Custom Question
       </label>
       <div className=" createCustomQuestion py-3 mt-4">
         <div className="d-flex mb-4 mx-2">
-          <button
-            className="btn btn-secondary rounded-pill px-4"
-            onClick={() => history.goBack()}
-          >
+          <button className="btn btn-secondary rounded-pill px-4" onClick={() => history.goBack()}>
             <i className="fas fa-arrow-left"></i>&nbsp;&nbsp;Go Back
           </button>
         </div>
-        <div
-          className="card-title mt-4 card-header-text"
-          style={{ marginLeft: '20px' }}
-        >
+        <div className="card-title mt-4 card-header-text" style={{ marginLeft: '20px' }}>
           {editMode ? 'Edit Custom Question' : 'Create Custom Question'}
         </div>
         <Formik
@@ -345,63 +291,72 @@ const CreateCustomQuestion = () => {
               const updated = values.topics.filter((_, i) => i !== index);
               setFieldValue('topics', updated);
             };
-            return (
-          <Form className="px-5 d-flex flex-column my-3 ">
-              <div className="row mt-3">
-                <div>
-                  {' '}
-                  <h5>Question Details</h5>
-                </div>
-                <div className="col-6">
-                  <label className="form-label createCustomQuestion__form-label">
-                    Question Title
-                  </label>
-                  <Field
-                    name="question"
-                    type="string"
-                    className="form-control"
-                  />
-                  <ErrorMessage
-                    name="question"
-                    render={(msg) => <div className="text-danger">{msg}</div>}
-                  />
-                </div>
-                <div className="col-6">
-                  <label className="form-label createCustomQuestion__form-label">
-                    Question Description
-                  </label>
-                  <Field
-                    name="instructions"
-                    type="text"
-                    className="form-control"
-                  >
-                    {({ field }) => (
-                      <ReactQuill
-                        placeholder="Write Something..."
-                        modules={modules}
-                        formats={formats}
-                        onChange={field.onChange(field.name)}
-                        value={field.value}
-                      />
-                    )}
-                  </Field>
-                  <ErrorMessage
-                    name="instructions"
-                    render={(msg) => <div className="text-danger">{msg}</div>}
-                  />
-                </div>
-              </div>
 
-                {/* tags/topics */}
-                <div className="row mt-3">
-                  <div className="mb-1">
+            return (
+              <Form className="question-builder">
+                <div className="question-builder__layout">
+                  <div className="question-builder__main">
+                    <div className="builder-card">
+                      <div className="builder-card__header">
+                        <h5>Question Details</h5>
+                        <p className="builder-card__subtitle">Basic information about the coding problem.</p>
+                      </div>
+                      <div className="builder-card__body">
+                        <div className='row'>
+                          <div className="col-md-6 mb-3">
+                            <label className="createCustomQuestion__form-label">Question Title</label>
+                            <Field name="question" type="string" className="form-control" placeholder="e.g. Subarray Sum Equals K" />
+                            <ErrorMessage name="question" render={(msg) => <div className="text-danger small mt-1">{msg}</div>} />
+                          </div>
+                          <div className="col-md-6 mb-3">
+                            <label className="createCustomQuestion__form-label">Level</label>
+                            <Select
+                              options={questionsLevelOptions}
+                              placeholder="Select Difficulty"
+                              value={questionsLevelOptions.find(opt => opt.value === values.level)}
+                              onChange={(e) => setFieldValue('level', e.value)}
+                            />
+                            <ErrorMessage name="level" render={(msg) => <div className="text-danger small mt-1">{msg}</div>} />
+                          </div>
+                          <div className="col-12 mt-2">
+                            <label className="createCustomQuestion__form-label">Question Description</label>
+                            <Field name="instructions" as="textarea" className="form-control" rows="6" placeholder="Provide a clear description of the problem..." />
+                            <ErrorMessage name="instructions" render={(msg) => <div className="text-danger small mt-1">{msg}</div>} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="builder-card">
+                        <div className="builder-card__header">
+                            <h5>Execution Constraints</h5>
+                            <p className="builder-card__subtitle">Limits for the code execution environment.</p>
+                        </div>
+                        <div className="builder-card__body">
+                            <div className="row">
+                                <div className="col-md-6 mb-3">
+                                    <label className="createCustomQuestion__form-label">Time Limit (ms)</label>
+                                    <Field name="constraints.timeLimit" type="number" className="form-control" placeholder="e.g. 2000" />
+                                    <div className="text-muted small mt-1">Recommended: 1000ms - 5000ms</div>
+                                    <ErrorMessage name="constraints.timeLimit" render={(msg) => <div className="text-danger small mt-1">{msg}</div>} />
+                                </div>
+                                <div className="col-md-6 mb-3">
+                                    <label className="createCustomQuestion__form-label">Memory Limit (MB)</label>
+                                    <Field name="constraints.memoryLimit" type="number" className="form-control" placeholder="e.g. 256" />
+                                    <div className="text-muted small mt-1">Recommended: 128MB - 512MB</div>
+                                    <ErrorMessage name="constraints.memoryLimit" render={(msg) => <div className="text-danger small mt-1">{msg}</div>} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                <div className="builder-card">
+                  <div className="builder-card__header">
                     <h5>Tags / Topics</h5>
-                    <label className="form-label createCustomQuestion__form-label">
-                      Add up to 5 tags to describe what your question is about. Start typing to search.
-                    </label>
+                    <p className="builder-card__subtitle">Add up to 5 tags to describe your question.</p>
                   </div>
 
-                  <div className="topic-wrapper">
+                  <div className="builder-card__body">
                     <div
                       className="topic-input-box"
                       onClick={() => document.getElementById('topicInputField').focus()}
@@ -421,7 +376,7 @@ const CreateCustomQuestion = () => {
                           name="topicInput"
                           type="text"
                           className="topic-input-field"
-                          placeholder={values.topics.length === 0 ? 'e.g. arrays, dynamic-programming…' : ''}
+                          placeholder={values.topics.length === 0 ? 'e.g. arrays, dynamic-programming...' : ''}
                           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTopic(); setShowDropdown(false); } }}
                           onChange={(e) => {
                             setFieldValue('topicInput', e.target.value);
@@ -447,7 +402,6 @@ const CreateCustomQuestion = () => {
                       </div>
                     </div>
 
-                    {/* Dropdown */}
                     {showDropdown && filteredTags.length > 0 && (
                       <div className="topic-dropdown">
                         {filteredTags.map((tag, i) => (
@@ -462,10 +416,7 @@ const CreateCustomQuestion = () => {
                               }
                             }}
                           >
-                            <span>
-                              <strong>{tag.name.slice(0, values.topicInput.length)}</strong>
-                              {tag.name.slice(values.topicInput.length)}
-                            </span>
+                            <span><strong>{tag.name.slice(0, values.topicInput.length)}</strong>{tag.name.slice(values.topicInput.length)}</span>
                             <span style={{ display: 'flex', gap: '10px' }}>
                               <span className="topic-dropdown__cat">{tag.cat}</span>
                               <span className="topic-dropdown__count">{tag.n}q</span>
@@ -475,387 +426,183 @@ const CreateCustomQuestion = () => {
                       </div>
                     )}
 
-                    {/* Suggested tags */}
-                    <div style={{ marginTop: '4px' }}>
-                      <p className="topic-suggested-label">suggested for this question</p>
-                      <div className="topic-suggested-chips">
-                        {SUGGESTED_TAGS.map((tag) => (
-                          <span
-                            key={tag}
-                            className={`topic-suggested-chip ${values.topics.includes(tag) ? 'topic-suggested-chip--used' : ''}`}
-                            onClick={() => {
-                              if (!values.topics.includes(tag) && values.topics.length < 5) {
-                                setFieldValue('topics', [...values.topics, tag]);
-                              }
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                        <div className="mt-2 text-muted small">suggested: 
+                          {SUGGESTED_TAGS.filter(t => !values.topics.includes(t)).map(tag => (
+                            <span key={tag} className="ms-2 cursor-pointer text-primary" onClick={() => values.topics.length < 5 && setFieldValue('topics', [...values.topics, tag])}>{tag}</span>
+                          ))}
+                        </div>
+                        <div className="topic-count mt-2">Tags: <strong>{values.topics.length}</strong> / 5</div>
                       </div>
                     </div>
 
-                    <div className="topic-count">Tags added: <strong>{values.topics.length}</strong> / 5</div>
-
-                    {values.topics.length >= 5 && (
-                      <small className="text-danger">Maximum 5 topics allowed.</small>
-                    )}
-
-                    <ErrorMessage name="topics" render={(msg) => <div className="text-danger" style={{ fontSize: '12px', marginTop: '4px' }}>{msg}</div>} />
-                  </div>
-                </div>
-                {/* InputType */}
-                <FieldArray name="inputType">
-                  {({ remove, push }) => (
-                    <div className="align-items-center mt-4 mb-3">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                          {' '}
-                          <h5>Input Details</h5>
-                        </div>
+                    <div className="builder-card">
+                      <div className="builder-card__header">
+                        <h5>Function Parameters</h5>
+                        <p className="builder-card__subtitle">Define the input parameters for the solution.</p>
                       </div>
-                      <div className="p-1 mt-1 border rounded-2 py-3">
-                        {values.inputType.map((type, index) => (
-                          <div
-                            className="selectQuestions-row row p-2"
-                            key={index}
-                          >
-                            <div className="createCustomQuestion__input ">
-                              <label>{index + 1}.</label>
-
-                              <div className="createCustomQuestion__type">
-                                <label className="mb-1 createCustomQuestion__form-label">
-                                  Input Type
-                                </label>
-                                <Select
-                                  options={questionTypeOptions}
-                                  value={{
-                                    label: values.inputType[index].type,
-                                    value: values.inputType[index].type,
-                                  }}
-                                  onChange={(e) => {
-                                    setFieldValue(
-                                      `inputType[${index}].type`,
-                                      e.value,
-                                    );
-                                  }}
-                                />
-                                <ErrorMessage
-                                  name={`inputType[${index}].type`}
-                                  render={(msg) => (
-                                    <div className="text-danger">{msg}</div>
-                                  )}
-                                />
-                              </div>
-                              <div className="createCustomQuestion__name">
-                                <label className="mb-1  createCustomQuestion__form-label">
-                                  Input Name
-                                </label>
-                                <Field
-                                  name={`inputType[${index}].paramName`}
-                                  type="string"
-                                  className="form-control"
-                                />
-                                <ErrorMessage
-                                  name={`inputType[${index}].paramName`}
-                                  render={(msg) => (
-                                    <div className="text-danger">{msg}</div>
-                                  )}
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                disabled={values.inputType.length === 1}
-                                className="btns btns--white createCustomQuestion__removeBtn"
-                                onClick={() => {
-                                  remove(index);
-                                  for (
-                                    let i = 0;
-                                    i < values.testCases.length;
-                                    i++
-                                  ) {
-                                    values.testCases[i].input.splice(index, 1);
-                                  }
-                                }}
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                        <div className="d-flex justify-content-end">
-                          <button
-                            className="btns createCustomQuestion__addBtn"
-                            type="button"
-                            onClick={() => {
-                              push({
-                                type: '',
-                                paramName: '',
-                              });
-                            }}
-                          >
-                            <i className="fas fa-plus"></i> Add
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </FieldArray>
-
-                <div className="row mt-3">
-                  <div className="col-6">
-                    <h5>Output Details</h5>
-                    <label className="form-label createCustomQuestion__form-label">
-                      Select Output type
-                    </label>
-                    <Select
-                      options={questionTypeOptions}
-                      value={{
-                        label: values.outputType,
-                        value: values.outputType,
-                      }}
-                      onChange={(e) => {
-                        setFieldValue('outputType', e.value);
-                      }}
-                    />
-                    <ErrorMessage
-                      name="outputType"
-                      render={(msg) => <div className="text-danger">{msg}</div>}
-                    />
-                  </div>
-
-                  {/* level */}
-                  <div className="col-6">
-                    <h5>Difficulties</h5>
-                    <label className="form-label createCustomQuestion__form-label">
-                      Level
-                    </label>
-                    <Select
-                      options={questionsLevelOptions}
-                      value={{ label: values.level, value: values.level }}
-                      onChange={(e) => {
-                        setFieldValue('level', e.value);
-                      }}
-                    />
-                    <ErrorMessage
-                      name="level"
-                      render={(msg) => <div className="text-danger">{msg}</div>}
-                    />
-                  </div>
-
-                  {/* public */}
-                  <div className="col-12 mt-3">
-                    <span className="me-2">
-                      <Checkbox
-                        onChange={(e) => {
-                          setFieldValue('public', e.target.checked);
-                        }}
-                        checked={values.public}
-                      />
-                      <label className="form-label createCustomQuestion__form-label" style={{ marginBottom: 0 }}>
-                        Is Public Question
-                      </label>
-                    </span>
-                  </div>
-                </div>
-
-                {/* testCases */}
-                <FieldArray name="testCases">
-                  {({ remove, push }) => (
-                    <div className="align-items-center mt-4 mb-3">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <h5>Test Cases</h5>{' '}
-                      </div>
-
-                      <span className="test-case-note">
-                        Note: String or character must be in double quotes ex.
-                        [&quot;h&quot;,&quot;i&quot;,&quot;i&quot;]
-                      </span>
-
-                      <div className="p-1 mt-1 border rounded-2 py-3">
-                        {values.testCases.map((test, index) => (
-                          <div
-                            className="selectQuestions-row row p-2"
-                            key={index}
-                          >
-                            <div className="d-flex align-items-center">
-                              <label className="">{index + 1} . &nbsp;</label>
-                              <div className="createCustomQuestion__testCases createCustomQuestion__border py-3">
-                                <div className="createCustomQuestion__name">
-                                  {values.inputType.map((type, inputIndex) => (
-                                    <div key={inputIndex}>
-                                      <label className="createCustomQuestion__form-label">
-                                        Input
-                                      </label>
-                                      <label className="col-5">
-                                        &nbsp; <b>{type.paramName}</b> &nbsp;
-                                        <span
-                                          className="badge text-uppercase mb-1"
-                                          style={{
-                                            background: 'orange',
-                                            fontSize: '12px',
-                                          }}
-                                        >
-                                          {type.type}
-                                        </span>
-                                      </label>
-
-                                      <Field
-                                        name={`testCases[${index}].input[${inputIndex}]`}
-                                        type="string"
-                                        className="col-2 form-control"
+                      <div className="builder-card__body">
+                        <FieldArray name="inputType">
+                          {({ remove, push }) => (
+                            <>
+                              {values.inputType.map((type, index) => (
+                                <div key={index} className="parameter-card mb-4 shadow-sm border p-3 rounded-3">
+                                  <div className="parameter-card__header d-flex justify-content-between mb-3">
+                                    <h6 className="mb-0">Parameter #{index + 1}</h6>
+                                    {values.inputType.length > 1 && (
+                                      <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => {
+                                        const updatedCases = values.testCases.map((tc) => ({
+                                          ...tc,
+                                          input: tc.input.filter((_, idx) => idx !== index),
+                                        }));
+                                        setFieldValue('testCases', updatedCases);
+                                        remove(index);
+                                      }}>Remove</button>
+                                    )}
+                                  </div>
+                                  <div className="row g-3">
+                                    <div className="col-md-6">
+                                      <label className="createCustomQuestion__form-label">Input Type</label>
+                                      <Select
+                                        options={questionTypeOptions}
+                                        placeholder="Select Type"
+                                        value={questionTypeOptions.find(opt => opt.value === values.inputType[index].type)}
                                         onChange={(e) => {
-                                          setFieldValue(
-                                            `testCases[${index}].input[${inputIndex}]`,
-                                            e.target.value,
-                                          );
+                                          setFieldValue(`inputType[${index}].type`, e.value);
+                                          setFieldValue(`inputType[${index}].constraints`, {});
                                         }}
                                       />
-                                      <ErrorMessage
-                                        name={`testCases[${index}].input`}
-                                        render={(msg) => (
-                                          <div className="text-danger">{msg}</div>
-                                        )}
-                                      />
+                                      <ErrorMessage name={`inputType[${index}].type`} render={msg => <div className="text-danger small mt-1">{msg}</div>} />
                                     </div>
-                                  ))}
+                                    <div className="col-md-6">
+                                      <label className="createCustomQuestion__form-label">Parameter Name</label>
+                                      <Field name={`inputType[${index}].paramName`} className="form-control" placeholder="e.g. nums" />
+                                      <ErrorMessage name={`inputType[${index}].paramName`} render={msg => <div className="text-danger small mt-1">{msg}</div>} />
+                                    </div>
+                                  </div>
+                                  <div className="border-top pt-3 mt-3">
+                                    <h6 className="mb-3 small text-uppercase text-muted fw-bold">Constraints</h6>
+                                    <ParameterConstraints param={type} index={index} setFieldValue={setFieldValue} />
+                                  </div>
                                 </div>
-
-                                <div className="createCustomQuestion__name">
-                                  <label className="createCustomQuestion__form-label">
-                                    Output
-                                  </label>
-                                  <Field
-                                    name={`testCases[${index}].output`}
-                                    type="string"
-                                    className="form-control"
-                                  />
-                                  <ErrorMessage
-                                    name={`testCases[${index}].output`}
-                                    render={(msg) => (
-                                      <div className="text-danger">{msg}</div>
-                                    )}
-                                  />
-                                </div>
-
-                                <div className=" text-end">
-                                  <span className="me-2">
-                                    <Checkbox
-                                      onChange={(e) => {
-                                        setFieldValue(
-                                          `testCases[${index}].hidden`,
-                                          e.target.checked,
-                                        );
-                                      }}
-                                      checked={values.testCases[index].hidden}
-                                    />
-                                    <label className=""> Hidden</label>
-                                  </span>
-                                </div>
-                                <div>
-                                  <button
-                                    type="button"
-                                    disabled={values.testCases.length === 1}
-                                    className="btns btns--white createCustomQuestion__removeBtn"
-                                    onClick={() => {
-                                      remove(index);
-                                    }}
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
+                              ))}
+                              <div className="d-flex justify-content-end">
+                                <button type="button" className="btns createCustomQuestion__addBtn" onClick={() => push({ type: '', paramName: '', constraints: {} })}>
+                                  <i className="fas fa-plus me-2"></i>Add Parameter
+                                </button>
                               </div>
-                            </div>
-                          </div>
-                        ))}
-                        <div className="d-flex justify-content-end">
-                          <button
-                            className="btns createCustomQuestion__addBtn"
-                            type="button"
-                            onClick={() => {
-                              push({
-                                input: [],
-                                output: '',
-                                hidden: false,
-                              });
-                            }}
-                          >
-                            <i className="fas fa-plus"></i>Add
-                          </button>
-                        </div>
+                            </>
+                          )}
+                        </FieldArray>
                       </div>
                     </div>
-                  )}
-                </FieldArray>
 
-                <div className="d-flex justify-content-center gap-3">
-                  <button
-                    type="submit"
-                    className="btns mt-3"
-                    onClick={handleSubmit}
-                  >
-                    {editMode ? 'Update' : 'Create'}
-                  </button>
-                  <button
-                  type="button"
-                  className="btns mt-3"
-                  onClick={() => {
-                    handlePreview(values);
-                  }}
-                  >
-                    Preview
-                  </button>
-              </div>
-            </Form>
+                    <div className="builder-card">
+                      <div className="builder-card__header">
+                        <h5>Output Details</h5>
+                      </div>
+                      <div className="builder-card__body">
+                        <div className="row">
+                          <div className="col-md-6 text-start">
+                            <label className="createCustomQuestion__form-label">Expected Output Type</label>
+                            <Select
+                              options={questionTypeOptions}
+                              placeholder="Select Return Type"
+                              value={questionTypeOptions.find(opt => opt.value === values.outputType)}
+                              onChange={(e) => setFieldValue('outputType', e.value)}
+                            />
+                            <ErrorMessage name="outputType" render={msg => <div className="text-danger small mt-1">{msg}</div>} />
+                          </div>
+                        </div>
+                        <OutputConstraintsSection values={values} setFieldValue={setFieldValue} />
+                      </div>
+                    </div>
+
+                    <div className="builder-card">
+                      <div className="builder-card__header">
+                        <h5>Test Cases</h5>
+                      </div>
+                      <div className="builder-card__body">
+                        <FieldArray name="testCases">
+                          {({ remove, push }) => (
+                            <div>
+                               <div className="alert alert-info py-2 px-3 small mb-4">
+                                <i className="fas fa-info-circle me-2"></i>
+                                Strings must be in double quotes (e.g. &quot;abc&quot;). Arrays should be [1,2,3] or [&quot;a&quot;,&quot;b&quot;].
+                              </div>
+                              {values.testCases.map((test, index) => (
+                                <div className="test-case-row mb-4 border rounded-3 p-0" key={index}>
+                                  <div className="test-case-row__header bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <span className="fw-bold">Test Case #{index + 1}</span>
+                                    <div className="d-flex align-items-center gap-3">
+                                      <div className="form-check mb-0 d-flex align-items-center">
+                                        <Checkbox
+                                          onChange={(e) => setFieldValue(`testCases[${index}].hidden`, e.target.checked)}
+                                          checked={values.testCases[index].hidden}
+                                          id={`hidden-${index}`}
+                                        />
+                                        <label className="ms-1 mb-0 small" htmlFor={`hidden-${index}`}>Hidden Case</label>
+                                      </div>
+                                      <button type="button" disabled={values.testCases.length === 1} className="btn btn-link text-danger p-0 text-decoration-none small" onClick={() => remove(index)}>Remove</button>
+                                    </div>
+                                  </div>
+                                  <div className="test-case-row__body p-3">
+                                    <div className="row g-3">
+                                      {values.inputType.map((type, inputIndex) => (
+                                        <div className="col-md-4 text-start" key={inputIndex}>
+                                          <label className="createCustomQuestion__form-label small d-flex justify-content-between">
+                                            <span>Input: <b>{type.paramName || 'input'}</b></span>
+                                            <span className="text-muted text-uppercase" style={{fontSize: '9px'}}>{type.type}</span>
+                                          </label>
+                                          <Field name={`testCases[${index}].input[${inputIndex}]`} className="form-control form-control-sm" placeholder="Value" onChange={(e) => setFieldValue(`testCases[${index}].input[${inputIndex}]`, e.target.value)} />
+                                        </div>
+                                      ))}
+                                      <div className="col-md-4 text-start">
+                                        <label className="createCustomQuestion__form-label small">Expected Output</label>
+                                        <Field name={`testCases[${index}].output`} className="form-control form-control-sm" placeholder="Output" />
+                                      </div>
+                                    </div>
+                                    <ErrorMessage name={`testCases[${index}].input`} render={msg => <div className="text-danger small mt-1">{msg}</div>} />
+                                  </div>
+                                </div>
+                              ))}
+                              <div className="d-flex justify-content-end">
+                                <button className="btns createCustomQuestion__addBtn" type="button" onClick={() => push({ input: [], output: '', hidden: false })}>
+                                  <i className="fas fa-plus me-2"></i>Add Test Case
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </FieldArray>
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-center gap-3 py-4">
+                      <button type="submit" className="btns px-5 py-2 rounded-pill" onClick={handleSubmit}>
+                        {editMode ? 'Update Question' : 'Create Question'}
+                      </button>
+                      <button type="button" className="btns btns--white px-5 py-2 rounded-pill border" onClick={() => handlePreview(values)}>
+                        Full Screen Preview
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="question-builder__preview">
+                    <LivePreview values={values} />
+                  </div>
+                </div>
+              </Form>
             );
           }}
         </Formik>
         <CustomLoadingAnimation isLoading={Loading} />
-        <Modal
-          show={showPreviewModal}
-          onHide={() => setShowPreviewModal(false)}
-          size="xl"
-          centered
-          className="preview-modal"
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Question Preview</Modal.Title>
-          </Modal.Header>
+        <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} size="xl" centered className="preview-modal">
+          <Modal.Header closeButton><Modal.Title>Question Preview</Modal.Title></Modal.Header>
           <Modal.Body style={{ backgroundColor: '#f4f7f9', padding: '0' }}>
-            {previewQuestionData && (
-              <QuestionPreview questionData={previewQuestionData} isModal={true} />
-            )}
+            {previewQuestionData && <QuestionPreview questionData={previewQuestionData} isModal={true} />}
           </Modal.Body>
         </Modal>
-
-        {/* subscription payment modal */}
-        <Modal
-          show={paymentPlan}
-          size="lg"
-          aria-labelledby="contained-modal-title-vcenter example-modal-sizes-title-lg"
-          centered
-        >
-          <Modal.Header>
-            <Modal.Title
-              id="contained-modal-title-vcenter"
-              className="text-center"
-            >
-              <h4
-                style={{
-                  fontWeight: '500',
-                  fontSize: '21px',
-                  lineHeight: '25px',
-                  textAlign: 'left',
-                }}
-              ></h4>{' '}
-              Upgrade your plan
-            </Modal.Title>
-            <CloseButton
-              onClick={() => {
-                setPaymentPlan(false);
-              }}
-            />
-          </Modal.Header>
+        <Modal show={paymentPlan} size="lg" centered>
+          <Modal.Header><Modal.Title>Upgrade your plan</Modal.Title><CloseButton onClick={() => setPaymentPlan(false)} /></Modal.Header>
           <Plans />
         </Modal>
       </div>

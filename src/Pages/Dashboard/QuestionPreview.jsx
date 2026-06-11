@@ -10,7 +10,7 @@ import { getQuestionTemplatesTypes, previewCustomQuestion, GetAllQuestions } fro
 import '../../Pages/AssessmentPage/AssessmentPage.scss';
 
 
-const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestionData, isModal }) => {
+const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestionData, isModal, isSidePanel }) => {
   const history = useHistory();
   const location = useLocation();
   const { questionId: paramQuestionId } = useParams();
@@ -96,11 +96,15 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
           }
         } catch (apiErr) {
            console.error("API preview failed", apiErr);
-           toast(<CustomToast type="error" message="Failed to load preview templates." />);
+           if (!isSidePanel) {
+             toast(<CustomToast type="error" message="Failed to load preview templates." />);
+           }
         }
       }
     } catch (error) {
-      toast(<CustomToast type="error" message={error.message} />);
+       if (!isSidePanel) {
+        toast(<CustomToast type="error" message={error.message} />);
+       }
     } finally {
       SetLoading(false);
     }
@@ -111,7 +115,10 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
   };
 
   useEffect(() => {
-    if (questionData) {
+    if (propQuestionData) {
+      setQuestionData(propQuestionData);
+      initTest(propQuestionData);
+    } else if (questionData) {
       initTest(questionData);
     } else if (questionId) {
       const fetchQuestion = async () => {
@@ -132,7 +139,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
       };
       fetchQuestion();
     }
-  }, [questionData, questionId]);
+  }, [propQuestionData, questionId]);
 
   const handleEditor = (editor) => {
     monacoRef.current = editor;
@@ -150,7 +157,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
     });
   };
 
-  if (!questionData) {
+  if (!questionData && !Loading) {
     return (
       <div className="container mt-5 text-center">
         <div className="alert alert-warning">No question data found for preview.</div>
@@ -160,8 +167,8 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
   }
 
   return (
-    <div className={`${isModal ? "" : "assessmentPage"} disable-copy my-4`}>
-    {!isModal && (
+    <div className={`${isModal || isSidePanel ? "" : "assessmentPage"} disable-copy ${isSidePanel ? "p-0" : "my-4"}`}>
+    {!isModal && !isSidePanel && (
       <div className="d-flex justify-content-start align-items-center">
         <div className="flex-grow-1">
           <button
@@ -173,9 +180,9 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
         </div>
       </div>
     )}
-      <div className={`${isModal ? "" : "assessmentPage__card"}`}>
-        <div className="row assessment-content-row">
-          <div className="assessmentPage__left col-md-6 col-sm-12">
+      <div className={`${isModal || isSidePanel ? "" : "assessmentPage__card"}`}>
+        <div className="row assessment-content-row" style={isSidePanel ? { display: 'block', overflowY: 'auto' } : {}}>
+          <div className={`${isSidePanel ? "col-12" : "col-md-6 col-sm-12"} assessmentPage__left`}>
             <div>
               <QuestionInstructions
                 question={question?.question}
@@ -298,8 +305,8 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
               </div>
             </div>
           </div>
-          <div className="col-md-6 col-sm-12 scrollable-column">
-            <div className="row d-flex mb-3 justify-content-between">
+          <div className={`${isSidePanel ? "col-12" : "col-md-6 col-sm-12 scrollable-column"}`}>
+            <div className={`row d-flex mb-3 justify-content-between ${isSidePanel ? "px-3" : ""}`}>
               <div className="mt-3 d-flex justify-content-center col-6">
                 <button
                   className="btns me-auto"
