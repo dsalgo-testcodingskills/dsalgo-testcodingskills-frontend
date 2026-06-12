@@ -131,7 +131,7 @@ const CreateCustomQuestion = () => {
     outputType: Yup.string().required('OutputType Required'),
     public: Yup.boolean(),
     constraints: Yup.object().shape({
-      timeLimit: Yup.number().min(100).max(10000).required(),
+      timeLimit: Yup.number().min(100).max(15000).required(),
       memoryLimit: Yup.number().min(1).max(1024).required()
     }),
     testCases: Yup.array()
@@ -357,7 +357,7 @@ const CreateCustomQuestion = () => {
                                 <div className="col-md-6 mb-3">
                                     <label className="createCustomQuestion__form-label">Time Limit (ms)</label>
                                     <Field name="constraints.timeLimit" type="number" className="form-control" placeholder="e.g. 2000" />
-                                    <div className="text-muted small mt-1">Recommended: 1000ms - 5000ms</div>
+                                    <div className="text-muted small mt-1">Recommended: 1000ms - 15000ms</div>
                                     <ErrorMessage name="constraints.timeLimit" render={(msg) => <div className="text-danger small mt-1">{msg}</div>} />
                                 </div>
                                 <div className="col-md-6 mb-3">
