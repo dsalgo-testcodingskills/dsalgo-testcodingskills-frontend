@@ -187,8 +187,8 @@ export function saveDraftQuestion(body) {
   return axios.post("/questions/saveDraft", body);
 }
 
-export function finalizeDraftQuestion(id) {
-  return axios.patch(`/questions/finalizeDraft/${id}`);
+export function finalizeDraftQuestion(id, body) {
+  return axios.patch(`/questions/finalizeDraft/${id}`, body);
 }
 
 export function checkEmail(body) {

@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import BootstrapTable from 'react-bootstrap-table-next';
-import { getCustomQuestions } from '../../Services/api';
-import { useHistory } from 'react-router-dom';
-import './CustomQuestionList.scss';
-import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
-import Pagination from '../../components/Pagination/Pagination';
-import { useSelector } from 'react-redux';
-import { setCustomQuestionFilter } from '../../Redux/Actions/dataAction';
-import { useDispatch } from 'react-redux';
-import { Tooltip } from '@material-ui/core';
+import React, { useState, useEffect } from "react";
+import BootstrapTable from "react-bootstrap-table-next";
+import { getCustomQuestions } from "../../Services/api";
+import { useHistory } from "react-router-dom";
+import "./CustomQuestionList.scss";
+import CustomLoadingAnimation from "../../components/CustomLoadingAnimation";
+import Pagination from "../../components/Pagination/Pagination";
+import { useSelector } from "react-redux";
+import { setCustomQuestionFilter } from "../../Redux/Actions/dataAction";
+import { useDispatch } from "react-redux";
+import { Tooltip } from "@material-ui/core";
 const CustomQuestionList = () => {
   const history = useHistory();
 
@@ -32,7 +32,37 @@ const CustomQuestionList = () => {
   };
 
   const questionFormatter = (cell) => {
-    return cell ? cell.charAt(0).toUpperCase() + cell.slice(1) : '';
+    return cell ? cell.charAt(0).toUpperCase() + cell.slice(1) : "";
+  };
+
+  const statusFormatter = (cell) => {
+    return cell ? (
+      <span
+        style={{
+          background: "#f0a500",
+          color: "#fff",
+          padding: "3px 10px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: 600,
+        }}
+      >
+        Draft
+      </span>
+    ) : (
+      <span
+        style={{
+          background: "#28a745",
+          color: "#fff",
+          padding: "3px 10px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: 600,
+        }}
+      >
+        Published
+      </span>
+    );
   };
 
   const actionColumnView = (cell, row) => {
@@ -43,8 +73,8 @@ const CustomQuestionList = () => {
             className="actionIcon mx-2"
             style={
               row.organizationId !== loginData.organisationId
-                ? { pointerEvents: 'none', opacity: 0.2 }
-                : { pointerEvents: 'all' }
+                ? { pointerEvents: "none", opacity: 0.2 }
+                : { pointerEvents: "all" }
             }
             onClick={() => {
               history.push(`/admin/customQuestionnew/${cell}`);
@@ -63,57 +93,66 @@ const CustomQuestionList = () => {
 
   const columns = [
     {
-      headerClasses: 'tableHeading text-center',
-      dataField: '',
-      text: 'Serial Number',
+      headerClasses: "tableHeading text-center",
+      dataField: "",
+      text: "Serial Number",
       formatter: rowcount,
       style: {
-        textAlign: 'center',
-        paddingTop: '18px',
+        textAlign: "center",
+        paddingTop: "18px",
       },
     },
     {
-      headerClasses: ' tableHeading',
-      dataField: 'question',
+      headerClasses: " tableHeading",
+      dataField: "question",
       formatter: questionFormatter,
-      text: 'Question',
+      text: "Question",
       style: {
-        paddingTop: '18px',
+        paddingTop: "18px",
       },
     },
     {
-      headerClasses: ' tableHeading',
-      dataField: 'level',
-      text: 'Level',
+      headerClasses: " tableHeading",
+      dataField: "level",
+      text: "Level",
       style: {
-        paddingTop: '18px',
+        paddingTop: "18px",
       },
     },
     {
-      headerClasses: ' tableHeading',
-      dataField: 'sampleQuestion',
-      text: 'Sample Question',
+      headerClasses: " tableHeading",
+      dataField: "sampleQuestion",
+      text: "Sample Question",
 
       style: {
-        paddingTop: '18px',
+        paddingTop: "18px",
       },
     },
     {
-      headerClasses: ' tableHeading',
-      dataField: 'instructions',
-      text: 'Instructions',
+      headerClasses: " tableHeading",
+      dataField: "isDraft",
+      text: "Status",
+      formatter: statusFormatter,
+      style: {
+        paddingTop: "18px",
+      },
+    },
+    {
+      headerClasses: " tableHeading",
+      dataField: "instructions",
+      text: "Instructions",
       formatter: instructionFormat,
       style: {
-        paddingTop: '18px',
+        paddingTop: "18px",
       },
     },
     {
-      headerClasses: 'text-center tableHeading',
-      dataField: '_id',
-      text: 'Actions',
+      headerClasses: "text-center tableHeading",
+      dataField: "_id",
+      text: "Actions",
       formatter: actionColumnView,
       style: {
-        paddingTop: '12px',
+        paddingTop: "12px",
       },
     },
   ];
@@ -139,8 +178,8 @@ const CustomQuestionList = () => {
     <>
       <label className="head">
         <span
-          onClick={() => history.push('/admin/testStatus')}
-          style={{ cursor: 'pointer' }}
+          onClick={() => history.push("/admin/testStatus")}
+          style={{ cursor: "pointer" }}
         >
           Dashboard
         </span>
@@ -151,7 +190,7 @@ const CustomQuestionList = () => {
           <div className="d-flex justify-content-end">
             <button
               className="btns px-4"
-              onClick={() => history.push('/admin/customQuestionnew')}
+              onClick={() => history.push("/admin/customQuestionnew")}
             >
               Create Question
             </button>

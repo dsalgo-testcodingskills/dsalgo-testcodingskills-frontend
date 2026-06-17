@@ -36,13 +36,30 @@ const VerifyQuestion = () => {
   const monacoRef = useRef(null);
 
   const allTestsPassed =
-    testResult?.length > 0 && testResult.every((t) => t.result);
+    Array.isArray(testResult) &&
+    testResult.length > 0 &&
+    testResult.every((t) => t.result);
 
   useEffect(() => {
     if (draftId) {
       fetchDraft();
     }
   }, [draftId]);
+
+  useEffect(() => {
+    if (!testResult) return;
+    if (allTestsPassed) {
+      toast(<CustomToast type="success" message="Test passed! " />);
+    } else {
+      toast(<CustomToast type="error" message="Test failed!" />);
+    }
+  }, [testResult]);
+
+  useEffect(() => {
+    if (error) {
+      toast(<CustomToast type="error" message={error} />);
+    }
+  }, [error]);
 
   const fetchDraft = async () => {
     try {
@@ -65,11 +82,14 @@ const VerifyQuestion = () => {
 
       // Set up solution templates as language options
       if (data.solutionTemplates && data.solutionTemplates.length > 0) {
-        const optionsList = data.solutionTemplates.map((sample) => ({
-          value: sample.language,
-          label: sample.language.toUpperCase(),
-          code: sample.code,
-        }));
+        const optionsList = data.solutionTemplates.map((sample) => {
+          return {
+            value: sample.language,
+            label: sample.language.toUpperCase(),
+            code: sample.code,
+          };
+        });
+        console.log("Generated Options List:", optionsList);
         setOptions(optionsList);
         selectedLanguageForAPI.current = optionsList[0];
         setSelectedLanguage(optionsList[0]);
@@ -99,7 +119,8 @@ const VerifyQuestion = () => {
 
     editor.onKeyDown((event) => {
       const { keyCode, ctrlKey, metaKey } = event;
-      if ((keyCode === 33 || keyCode === 52) && (metaKey || ctrlKey)) {
+      // if ((keyCode === 33 || keyCode === 52) && (metaKey || ctrlKey)) {
+      if (keyCode === 33 && (metaKey || ctrlKey)) {
         event.preventDefault();
       }
     });
@@ -139,7 +160,15 @@ const VerifyQuestion = () => {
     try {
       setCreating(true);
       SetLoading(true);
-      const res = await finalizeDraftQuestion(draftId);
+      const res = await finalizeDraftQuestion(draftId, {
+        adminSolution: [
+          {
+            language:
+              selectedLanguageForAPI.current?.value || selectedLanguage?.value,
+            code: code.current,
+          },
+        ],
+      });
       if (res?.data?.statusCode === 200) {
         toast(
           <CustomToast
@@ -382,8 +411,6 @@ const VerifyQuestion = () => {
               }}
               className="border"
             />
-            <div className="mt-2 sucess">{result}</div>
-            <div className="mt-2 text-danger">{error}</div>
           </div>
         </div>
       </div>
