@@ -47,6 +47,7 @@ const CreateCustomQuestion = () => {
   ];
 
   const defaultDetails = {
+    questionType: 'dsa',
     level: '',
     question: '',
     instructions: '',
@@ -69,7 +70,7 @@ const CreateCustomQuestion = () => {
       {
         type: '',
         paramName: '',
-         constraints: {},
+        constraints: {},
       },
     ],
     outputType: '',
@@ -259,7 +260,7 @@ const CreateCustomQuestion = () => {
         }
       }
     } catch (error) {
-      console.log({ error });
+      console.warn('submitCustomQuestionForm error', error);
       if (Array.isArray(error) && error?.length > 0) {
         error.forEach((element) => {
           toast(<CustomToast type="error" message={element} />);
@@ -271,6 +272,12 @@ const CreateCustomQuestion = () => {
       SetLoading(false);
     }
   };
+
+  // in future
+  // const QUESTION_CATEGORY_OPTIONS = [
+  //   { label: 'DSA / Algorithm & General Programming', value: 'dsa' },
+  //   { label: 'Database / SQL', value: 'database' },
+  // ];
 
   return (
     <>
@@ -296,7 +303,44 @@ const CreateCustomQuestion = () => {
             submitCustomQuestionForm(values, resetForm);
           }}
         >
-          {({ values, setFieldValue, handleSubmit,dirty }) => {
+          {({ values, setFieldValue, handleSubmit, dirty, validateForm, errors }) => {
+            const findFirstErrorPath = (errObj) => {
+              if (!errObj) return null;
+              if (typeof errObj === 'string') return '';
+              if (Array.isArray(errObj)) {
+                for (let i = 0; i < errObj.length; i++) {
+                  const res = findFirstErrorPath(errObj[i]);
+                  if (res !== null) return `[${i}]${res.startsWith('.') ? res : (res ? '.' + res : '')}`;
+                }
+                return null;
+              }
+              for (const key of Object.keys(errObj)) {
+                const val = errObj[key];
+                if (typeof val === 'string') return key;
+                const sub = findFirstErrorPath(val);
+                if (sub !== null) return `${key}${sub.startsWith('[') ? sub : '.' + sub}`;
+              }
+              return null;
+            };
+
+            const scrollToFieldPath = (fieldPath) => {
+              if (!fieldPath) return;
+              const safe = String(fieldPath).replace(/"/g, '\\"');
+              let el = document.querySelector(`[name="${safe}"]`);
+              if (!el) {
+                const alt = String(fieldPath).replace(/\.?(\d+)\./g, '[$1].');
+                el = document.querySelector(`[name="${alt}"]`);
+              }
+              if (!el && (fieldPath === 'topics' || fieldPath === 'topicInput')) {
+                el = document.getElementById('topicInputField');
+              }
+              if (!el) el = document.getElementById(safe);
+              if (!el) el = document.querySelector('input,select,textarea');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                try { el.focus(); } catch (e) { /* eslint-disable-next-line no-console */ console.warn('focus failed', e); }
+              }
+            };
             const addTopic = () => {
               if (values.topicInput.trim() !== '') {
                 const newTopic = values.topicInput.trim();
@@ -313,9 +357,58 @@ const CreateCustomQuestion = () => {
             };
 
             return (
-              <Form className="question-builder">
+              <Form
+                className="question-builder"
+                onSubmitCapture={() => {
+                  if (values.topicInput && values.topicInput.trim() !== '') {
+                    const newTopic = values.topicInput.trim();
+                    if (!values.topics.includes(newTopic) && values.topics.length < 5) {
+                      setFieldValue('topics', [...values.topics, newTopic]);
+                    }
+                    setFieldValue('topicInput', '');
+                  }
+
+                  validateForm().then((errs) => {
+                    if (errs && Object.keys(errs).length > 0) {
+                      const first = findFirstErrorPath(errs);
+                      let fieldPath = first;
+                      if (fieldPath && fieldPath.startsWith('.')) fieldPath = fieldPath.slice(1);
+                      if (fieldPath === 'topics') fieldPath = 'topicInput';
+                      scrollToFieldPath(fieldPath);
+                    }
+                  });
+                }}
+              >
                 <div className="question-builder__layout">
                   <div className="question-builder__main">
+                    {/* <div className="builder-card builder-card--primary">
+                      <div className="builder-card__header">
+                        <h5>Question Category</h5>
+                        <p className="builder-card__subtitle">Select the type of challenge you want to create.</p>
+                      </div>
+                      <div className="builder-card__body">
+                        <div className="row">
+                          <div className="col-12">
+                            <div className="d-flex gap-3">
+                              {QUESTION_CATEGORY_OPTIONS.map((opt) => (
+                                <div
+                                  key={opt.value}
+                                  className={`category-selector ${values.questionType === opt.value ? 'category-selector--active' : ''}`}
+                                  onClick={() => setFieldValue('questionType', opt.value)}
+                                >
+                                  <div className="category-selector__icon">
+                                    <i className={opt.value === 'dsa' ? 'fas fa-code' : 'fas fa-database'}></i>
+                                  </div>
+                                  <div className="category-selector__text">
+                                    <div className="category-selector__label">{opt.label}</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div> */}
                     <div className="builder-card">
                       <div className="builder-card__header">
                         <h5>Question Details</h5>
@@ -452,6 +545,7 @@ const CreateCustomQuestion = () => {
                           ))}
                         </div>
                         <div className="topic-count mt-2">Tags: <strong>{values.topics.length}</strong> / 5</div>
+                        <ErrorMessage name="topics" render={(msg) => <div className="text-danger small mt-1">{msg}</div>} />
                       </div>
                     </div>
 
@@ -599,12 +693,11 @@ const CreateCustomQuestion = () => {
                     <div className="d-flex justify-content-center gap-3">
                   {editMode && (
                     <button
-                      type="button"
+                      type="submit"
                       className={`btns mt-3 ${
                         !dirty ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                       disabled={!dirty}
-                      onClick={() => handleSubmit()}
                     >
                       <i className="fas fa-save me-2"></i>
                       Update & Verify
@@ -612,9 +705,8 @@ const CreateCustomQuestion = () => {
                   )}
                   {!editMode && (
                     <button
-                      type="button"
+                      type="submit"
                       className="btns mt-3"
-                      onClick={() => handleSubmit()}
                     >
                       <i className="fas fa-save me-2"></i>
                       Save & Verify

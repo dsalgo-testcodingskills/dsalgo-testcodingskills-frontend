@@ -51,7 +51,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
         const optionsList = tempTemplates.map((sample) => {
           return {
             value: sample.language,
-            label: sample.language.toUpperCase(),
+            label: sample.versionName || sample.language.toUpperCase(),
             code: sample.code,
           };
         });
