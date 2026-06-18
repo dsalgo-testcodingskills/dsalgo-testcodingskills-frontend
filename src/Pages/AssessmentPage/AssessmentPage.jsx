@@ -113,6 +113,12 @@ const AssessmentPage = () => {
         questionId: question.question._id,
         language: selectedLanguageForAPI.current?.value,
         sampleQuestion: question?.question.sampleQuestion,
+        testCases: question.question.testCases,
+        inputType: question.question.inputType,
+        outputType: question.question.outputType,
+        constraints: question.question.constraints,
+        outputConstraints: question.question.outputConstraints,
+        questionType: question.question.questionType,
       });
       setTestResult(resp.data);
 
@@ -223,7 +229,7 @@ const AssessmentPage = () => {
           : questionLocalStorage?.question?.solutionTemplates;
         const optionsList = (samples || []).map((sample) => ({
           value: sample.language,
-          label: sample.language.toUpperCase(),
+          label: sample.versionName || sample.language.toUpperCase(),
           code: sample.code,
         }));
 

@@ -67,7 +67,7 @@ const VerifyQuestion = () => {
       if (data.solutionTemplates && data.solutionTemplates.length > 0) {
         const optionsList = data.solutionTemplates.map((sample) => ({
           value: sample.language,
-          label: sample.language.toUpperCase(),
+          label: sample.versionName || sample.language.toUpperCase(),
           code: sample.code,
         }));
         setOptions(optionsList);
@@ -121,6 +121,13 @@ const VerifyQuestion = () => {
         questionId: draftId,
         language: selectedLanguageForAPI.current?.value,
         sampleQuestion: false,
+        testCases: questionData.testCases,
+        inputType: questionData.inputType,
+        outputType: questionData.outputType,
+        constraints: questionData.constraints,
+        outputConstraints: questionData.outputConstraints,
+        questionType: questionData.questionType,
+        emailId: 'admin-verification', 
       });
       setTestResult(resp.data);
       setHasRun(true);

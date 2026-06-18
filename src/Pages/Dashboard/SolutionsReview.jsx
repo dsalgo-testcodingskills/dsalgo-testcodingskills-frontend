@@ -39,6 +39,12 @@ const SolutionsReview = () => {
         emailId: test.emailId,
         questionId: question.id,
         language: selectedLanguage.value,
+        testCases: question.question.testCases,
+        inputType: question.question.inputType,
+        outputType: question.question.outputType,
+        constraints: question.question.constraints,
+        outputConstraints: question.question.outputConstraints,
+        questionType: question.question.questionType,
       });
       setTestResult(resp.data);
     } catch (error) {
@@ -74,7 +80,7 @@ const SolutionsReview = () => {
         (sample) => {
           return {
             value: sample.language,
-            label: sample.language.toUpperCase(),
+            label: sample.versionName || sample.language.toUpperCase(),
             code: sample.code,
           };
         },
