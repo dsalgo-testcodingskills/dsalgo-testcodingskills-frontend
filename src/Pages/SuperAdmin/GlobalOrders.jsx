@@ -3,6 +3,7 @@ import PageContainer from "./PageContainer";
 import { getAllPayments } from "../../Services/api";
 import ReactPaginate from "react-paginate";
 import "./OrganizationList.scss";
+import * as XLSX from "xlsx";
 
 const avatarColors = [
   "#7c3aed",
@@ -54,7 +55,11 @@ const GlobalOrders = () => {
     setLoading(true);
     try {
       // getAllPayments expects (page, limit, filter)
-      const response = await getAllPayments(page, limit, { name: search, fromDate, toDate });
+      const response = await getAllPayments(page, limit, {
+        name: search,
+        fromDate,
+        toDate,
+      });
       const { data, count } = response.data;
       setPayments(data || []);
       setCount(count || 0);
@@ -77,21 +82,51 @@ const GlobalOrders = () => {
     setPage(event.selected + 1);
   };
 
+  const exportToExcel = () => {
+  const exportData = payments.map((p) => ({
+    OrganizationName: p.notes?.organizationId?.name,
+    OrderId: p.order_id,
+    Email: p.email,
+    Amount: p.amount,
+    Status: p.status,
+    Date: fmt.date(p.createdAt),
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Payments");
+
+  XLSX.writeFile(workbook, "payments-report.xlsx");
+};
+
   return (
     <PageContainer
       title="Orders & Transactions"
-      sub="All payments across the platform"
-    >
+      sub="All payments across the platform">
       <div
         style={{
           display: "flex",
           justifyContent: "flex-end",
           marginBottom: "12px",
-        }}
-      >
-        <button className="btn btn-primary" style={{ height: "34px" }}>
-          <i className="ti ti-download" style={{ fontSize: "13px" }}></i>Export
-          Report
+          marginTop:"3px",
+        }}>
+        <button
+         onClick={exportToExcel}
+          style={{
+            backgroundColor: "#2563eb",
+            color: "#fff",
+            padding: "8px 14px",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "14px",
+          }}>
+          <i className="ti ti-download"></i>
+          Export Report
         </button>
       </div>
 
@@ -127,13 +162,11 @@ const GlobalOrders = () => {
             width: "220px",
             background: "#fff",
             border: "0.5px solid var(--gray-200)",
-          }}
-        >
+          }}>
           <i
             className="ti ti-search"
             style={{ color: "var(--gray-400)", fontSize: "14px" }}
-            aria-hidden="true"
-          ></i>
+            aria-hidden="true"></i>
           <input
             placeholder="Search order"
             style={{ fontSize: "12px" }}
@@ -207,8 +240,7 @@ const GlobalOrders = () => {
                             display: "flex",
                             alignItems: "center",
                             gap: "6px",
-                          }}
-                        >
+                          }}>
                           <div
                             className="org-logo"
                             style={{
@@ -216,53 +248,47 @@ const GlobalOrders = () => {
                               width: "20px",
                               height: "20px",
                               fontSize: "8px",
-                            }}
-                          >
+                            }}>
                             {getInitials(orgName)}
                           </div>
                           <div
                             style={{
-                              fontWeight: 500,
+                              fontWeight: 50,
                               color: "var(--gray-900)",
                               fontSize: "13px",
-                            }}
-                          >
+                            }}>
                             {orgName}
                           </div>
                         </div>
                       </td>
                       <td
                         style={{
-                          fontFamily: "monospace",
-                          fontSize: "11px",
-                          color: "var(--gray-500)",
-                        }}
-                      >
+                          fontSize: "14px",
+                          color: "var(--gray-800)",
+                        }}>
                         {p.order_id || p.id || "N/A"}
                       </td>
-                      <td style={{ color: "var(--gray-600)" }}>
+                      <td style={{ color: "var(--gray-800)" }}>
                         {desc.join(" ")}
                       </td>
-                      <td style={{ fontWeight: 500 }}>
+                      <td style={{ color: "var(--gray-800)" }}>
                         {p.currency === "INR" ? "₹" : p.currency}{" "}
                         {p.amount ? (p.amount / 100).toFixed(2) : "0.00"}
                       </td>
                       <td>
                         <span
                           className={`badge ${
-                            p.status === "captured"
+                            p.status === "Successful"
                               ? "badge-green"
-                              : p.status === "failed"
+                              : p.status === "Failed"
                               ? "badge-red"
                               : "badge-blue"
-                          }`}
-                        >
-                          {fmt.cap(p.status)}
+                          }`}>
+                          {p.status === "captured" ? "Successful" : p.status}
                         </span>
                       </td>
                       <td
-                        style={{ color: "var(--gray-400)", fontSize: "11px" }}
-                      >
+                        style={{ color: "var(--gray-800)", fontSize: "14px" }}>
                         {fmt.date(p.createdAt)}
                       </td>
                     </tr>
@@ -272,8 +298,7 @@ const GlobalOrders = () => {
                 <tr>
                   <td
                     colSpan="6"
-                    style={{ textAlign: "center", color: "#9ca3af" }}
-                  >
+                    style={{ textAlign: "center", color: "#9ca3af" }}>
                     No transactions found
                   </td>
                 </tr>
