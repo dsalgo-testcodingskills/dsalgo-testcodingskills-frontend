@@ -1,15 +1,19 @@
 export const UserRoleEnum = {
   SUPER_ADMIN: 'super_admin',
-  ADMIN: 'admin',
+  ADMIN: 'Admin',
   USER: 'user',
 };
 
 export const RAZOR_PAY_PLAN_ID=process.env.REACT_APP_RAZORPAY_PLAN_ID;
 
 export const subscriptionStatus = {
-  ACTIVE: 'active',
-  CANCELLED: 'cancelled',
-  CREATED: 'created',
+  ACTIVE: 'Active',
+  INACTIVE:'Inactive'
+};
+
+export const subscriptionPlan = {
+  FREE: "Free",
+  PAID: "Paid",
 };
 export const ALL_TAGS = [
   { name: 'arrays', cat: 'data structures' },

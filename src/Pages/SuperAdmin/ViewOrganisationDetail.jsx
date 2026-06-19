@@ -10,6 +10,7 @@ import {
   organizationPayment,
 } from "../../Services/api";
 import "./OrganizationList.scss";
+import { subscriptionPlan} from "../../utils/constants";
 
 const AVATAR_COLORS = [
   "#7c3aed",
@@ -54,7 +55,7 @@ const TAB_TABLE = {
     columns: ["Name", "Email", "Role", "Status"],
     renderRow: (u) => (
       <tr key={u._id}>
-        <td style={{ fontWeight: 500 }}>{u.name || "N/A"}</td>
+        <td style={{ fontWeight: 100, color: "var(--gray-700)" }}>{u.name || "N/A"}</td>
         <td style={{ color: "var(--gray-600)" }}>
           {u.emailId || u.email || "N/A"}
         </td>
@@ -89,7 +90,7 @@ const TAB_TABLE = {
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
             color: "var(--gray-700)",
-            fontWeight: 500,
+            fontWeight: 100,
           }}
         >
           {q.title || q.question || "N/A"}
@@ -119,10 +120,10 @@ const TAB_TABLE = {
     renderRow: (t) => (
       <tr key={t._id}>
         <td>
-          <div style={{ fontWeight: 500, color: "var(--gray-800)" }}>
+          <div style={{fontSize: "15px", fontWeight: 100, color: "var(--gray-800)" }}>
             {t.studentName || "N/A"}
           </div>
-          <div style={{ fontSize: "11px", color: "var(--gray-500)" }}>
+          <div style={{ fontSize: "13px", color: "var(--gray-600)" }}>
             {t.emailId || "N/A"}
           </div>
         </td>
@@ -161,7 +162,7 @@ const TAB_TABLE = {
     ],
     renderRow: (s) => (
       <tr key={s._id}>
-        <td style={{ color: "var(--gray-700)", fontWeight: 500 }}>
+        <td style={{ color: "var(--gray-700)", fontWeight: 100 }}>
           {s.id || "N/A"}
         </td>
         <td style={{ color: "var(--gray-600)" }}>{s.plan_id || "N/A"}</td>
@@ -179,7 +180,7 @@ const TAB_TABLE = {
             textTransform: "uppercase",
             color: "var(--gray-600)",
             fontSize: "11px",
-            fontWeight: 500,
+            fontWeight: 100,
           }}
         >
           {s.payment_method || "N/A"}
@@ -206,7 +207,7 @@ const TAB_TABLE = {
         <td
           style={{
             color: "var(--gray-700)",
-            fontWeight: 500,
+            fontWeight: 100,
             fontSize: "11px",
           }}
         >
@@ -223,14 +224,14 @@ const TAB_TABLE = {
             </div>
           )}
         </td>
-        <td style={{ fontWeight: 600 }}>
+        <td style={{ fontWeight: 100 }}>
           {p.currency === "INR" ? "₹" : p.currency}{" "}
           {p.amount ? (p.amount / 100).toFixed(2) : "0.00"}
         </td>
         <td>
           <span
             className={`badge ${
-              p.status === "captured"
+              p.status === "Successful"
                 ? "badge-green"
                 : p.status === "failed"
                 ? "badge-red"
@@ -245,7 +246,7 @@ const TAB_TABLE = {
             textTransform: "uppercase",
             color: "var(--gray-600)",
             fontSize: "11px",
-            fontWeight: 500,
+            fontWeight: 100,
           }}
         >
           {p.method || "N/A"}
@@ -311,7 +312,7 @@ const TabTable = ({ tabKey, tabState, onPageChange }) => {
   return (
     <div className="table-wrap">
       <div className="table-header">
-        <span style={{ fontSize: "12px", fontWeight: 500 }}>
+        <span style={{ fontSize: "12px", fontWeight: 70 }}>
           {count} {TABS.find((t) => t.key === tabKey)?.label}
         </span>
       </div>
@@ -476,7 +477,7 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
         >
           ← Back
         </button>
-        <span style={{ fontSize: "11px", color: "var(--gray-400)" }}>
+        <span style={{ fontSize: "11px", color: "var(--gray-500)" }}>
           Organisations / {selectedOrg?.name || "Loading..."}
         </span>
       </div>
@@ -493,7 +494,6 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
             </div>
             <div className="meta">
               <h2>{selectedOrg.name}</h2>
-              <p>{selectedOrg.email || "N/A"}</p>
               <div style={{ marginTop: "6px" }}>
                 <span
                   className="badge badge-green"
@@ -504,22 +504,16 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
                 <span
                   className={`badge ${isPaid ? "badge-blue" : "badge-amber"}`}
                 >
-                  {selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"}
+                  {subscriptionPlan[selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"]}
                 </span>
               </div>
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button className="actions-btn">Edit</button>
-              <button className="actions-btn" style={{ color: "#DC2626" }}>
-                Suspend
-              </button>
             </div>
           </div>
 
           {/* Stat cards */}
           <div className="card-grid">
             <div className="stat-card">
-              <div className="stat-label">REMAINING TEST QUOTA</div>
+              <div className="stat-label">Remaining Test Quota</div>
               <div className="stat-value">
                 {selectedOrg.availableTests ?? "—"}
               </div>
@@ -536,8 +530,8 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
               </div>
               <div
                 style={{
-                  fontSize: "10px",
-                  color: "var(--gray-400)",
+                  fontSize: "12px",
+                  color: "var(--gray-500)",
                   marginTop: "4px",
                 }}
               >
@@ -546,12 +540,12 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">TOTAL ACTIVE USERS</div>
+              <div className="stat-label">Total Active Users</div>
               <div className="stat-value">{tabs.users.count}</div>
-              <div className="stat-sub">Users in organisation</div>
+              <div className="stat-sub">Users in Organisation</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">SUBSCRIPTION TIER</div>
+              <div className="stat-label">Subscription Tier</div>
               <div
                 className="stat-value"
                 style={{ fontSize: "17px", marginTop: "4px" }}
@@ -560,7 +554,7 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
                   className={`badge ${isPaid ? "badge-blue" : "badge-amber"}`}
                   style={{ fontSize: "13px", padding: "4px 12px" }}
                 >
-                  {selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"}
+                  {subscriptionPlan[selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"]}
                 </span>
               </div>
             </div>

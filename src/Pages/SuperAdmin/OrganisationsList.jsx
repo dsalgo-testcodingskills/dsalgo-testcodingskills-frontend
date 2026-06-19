@@ -5,6 +5,7 @@ import { getAllOrganizations } from "../../Services/api";
 import ReactPaginate from "react-paginate";
 import "./OrganizationList.scss";
 import ViewOrganisationDetail from "./ViewOrganisationDetail";
+import { subscriptionPlan, subscriptionStatus } from "../../utils/constants";
 
 //  Helpers
 const avatarColors = [
@@ -33,6 +34,8 @@ const OrganisationsList = () => {
   const [search, setSearch] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState(null);
   const location = useLocation();
+  const [planFilter, setPlanFilter] = useState("All Plans");
+  const [statusFilter, setStatusFilter] = useState("All Statuses");
 
   useEffect(() => {
     setSelectedOrgId(null);
@@ -44,7 +47,12 @@ const OrganisationsList = () => {
   const fetchOrganizations = async () => {
     setLoading(true);
     try {
-      const response = await getAllOrganizations(page, limit, { name: search });
+      const response = await getAllOrganizations(page, limit, {
+        name: search,
+        subscriptionPlan: planFilter === "All Plans" ? undefined : planFilter,
+        subscriptionStatus:
+          statusFilter === "All Statuses" ? undefined : statusFilter,
+      });
       const { data, count } = response.data;
       setOrganizations(data);
       setCount(count);
@@ -61,7 +69,7 @@ const OrganisationsList = () => {
     }, 500);
 
     return () => clearTimeout(delayDebounce);
-  }, [page, search]);
+  }, [page, search, planFilter]);
 
   if (selectedOrgId) {
     return (
@@ -76,11 +84,21 @@ const OrganisationsList = () => {
     setPage(event.selected + 1);
   };
 
+  const filteredOrganizations = organizations.filter((org) => {
+    const planMatch =
+      planFilter === "All Plans" || org.subscriptionPlan === planFilter;
+
+    const statusMatch =
+      statusFilter === "All Statuses" ||
+      org.subscriptionStatus === statusFilter;
+
+    return planMatch && statusMatch;
+  });
+
   return (
     <PageContainer
       title="Organisations"
-      sub="Manage all registered organisations"
-    >
+      sub="Manage all registered organisations">
       <div className="toolbar">
         <div className="search-box">
           <input
@@ -92,16 +110,15 @@ const OrganisationsList = () => {
             }}
           />
         </div>
-        <select className="input-field">
+        <select
+          className="input-field"
+          value={planFilter}
+          onChange={(e) => setPlanFilter(e.target.value)}>
           <option>All Plans</option>
-          <option>Paid</option>
-          <option>Free</option>
+          <option value="paid">Paid</option>
+          <option value="free">Free</option>
         </select>
-        <select className="input-field">
-          <option>All Statuses</option>
-          <option>Active</option>
-          <option>Suspended</option>
-        </select>
+
         <div style={{ flex: 1 }}></div>
         {/* <button className="btn btn-primary">Add Organisation</button> */}
       </div>
@@ -134,7 +151,7 @@ const OrganisationsList = () => {
               </tr>
             </thead>
             <tbody>
-              {organizations.map((org) => (
+              {filteredOrganizations.map((org) => (
                 <tr key={org._id}>
                   {" "}
                   <td>
@@ -143,22 +160,19 @@ const OrganisationsList = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
-                      }}
-                    >
+                      }}>
                       <div
                         className="org-logo"
-                        style={{ background: getColor(org.name) }}
-                      >
+                        style={{ background: getColor(org.name) }}>
                         {getInitials(org.name)}
                       </div>
                       <div>
                         <div
                           style={{
-                            fontWeight: 500,
+                            fontWeight: 50,
                             color: "var(--gray-900)",
                             fontSize: "13px",
-                          }}
-                        >
+                          }}>
                           {org.name}
                         </div>
                       </div>
@@ -170,14 +184,17 @@ const OrganisationsList = () => {
                         org.subscriptionPlan?.toLowerCase() === "paid"
                           ? "badge-blue"
                           : "badge-amber"
-                      }`}
-                    >
-                      {org.subscriptionPlan?.toUpperCase() || "N/A"}
+                      }`}>
+                      {
+                        subscriptionPlan[
+                          org.subscriptionPlan?.toUpperCase() || "N/A"
+                        ]
+                      }
                     </span>
                   </td>
-                  <td style={{ fontWeight: 500 }}>{org.noOfUsers ?? "—"}</td>
+                  <td style={{ fontWeight: 50 }}>{org.noOfUsers ?? "—"}</td>
                   <td>
-                    <div style={{ fontWeight: 500 }}>
+                    <div style={{ fontWeight: 50 }}>
                       {org.availableTests ?? "—"}
                     </div>
                     <div className="progress-bar" style={{ width: "80px" }}>
@@ -200,8 +217,7 @@ const OrganisationsList = () => {
                         fontSize: "11px",
                         padding: "4px 10px",
                       }}
-                      onClick={() => setSelectedOrgId(org._id)}
-                    >
+                      onClick={() => setSelectedOrgId(org._id)}>
                       View
                     </button>
                   </td>
