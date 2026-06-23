@@ -66,9 +66,10 @@ const VerifyQuestion = () => {
       // Set up solution templates as language options
       if (data.solutionTemplates && data.solutionTemplates.length > 0) {
         const optionsList = data.solutionTemplates.map((sample) => ({
-          value: sample.language,
+          value: sample.versionName,
           label: sample.versionName || sample.language.toUpperCase(),
           code: sample.code,
+          language:sample.language
         }));
         setOptions(optionsList);
         selectedLanguageForAPI.current = optionsList[0];
@@ -119,7 +120,7 @@ const VerifyQuestion = () => {
         testId: draftId,
         code: code.current,
         questionId: draftId,
-        language: selectedLanguageForAPI.current?.value,
+        language: selectedLanguageForAPI.current?.language,
         sampleQuestion: false,
         testCases: questionData.testCases,
         inputType: questionData.inputType,

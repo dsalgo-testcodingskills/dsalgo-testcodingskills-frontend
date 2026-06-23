@@ -95,24 +95,7 @@ const CreateCustomQuestion = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const handlePreview = (values) => {
-    const tempTestCase = JSON.parse(JSON.stringify(values.testCases));
-    for (let i = 0; i < tempTestCase.length; i++) {
-      for (let j = 0; j < tempTestCase[i].input.length; j++) {
-        try {
-          if (typeof tempTestCase[i].input[j] === 'string' && tempTestCase[i].input[j].trim() !== '') {
-            tempTestCase[i].input.splice(
-              j,
-              1,
-              JSON.parse(tempTestCase[i].input[j]),
-            );
-          }
-        } catch (e) {
-          console.error("Error parsing test case input", e);
-        }
-      }
-      tempTestCase[i].input = JSON.stringify(tempTestCase[i].input);
-    }
-    setPreviewQuestionData({ ...values, testCases: tempTestCase });
+    setPreviewQuestionData(values);
     setShowPreviewModal(true);
   };
 
@@ -198,22 +181,8 @@ const CreateCustomQuestion = () => {
  const submitCustomQuestionForm = async (values) => {
     try {
       SetLoading(true);
-      const tempTestCase = JSON.parse(JSON.stringify(values.testCases));
-      for (let i = 0; i < tempTestCase.length; i++) {
-        for (let j = 0; j < tempTestCase[i].input.length; j++) {
-          tempTestCase[i].input.splice(
-            j,
-            1,
-            JSON.parse(tempTestCase[i].input[j]),
-          );
-        }
-        tempTestCase[i].input = JSON.stringify(tempTestCase[i].input);
-      }
-      const { topicInput, ...otherValues } = values;
-      const req = {
-        ...otherValues,
-        testCases: tempTestCase,
-      };
+      const { topicInput, ...req } = values;
+
       if (editMode) {
         const editCustomQuestons = await editCustomQuestions(params.id, req);
         if (editCustomQuestons && editCustomQuestons.data.code === 200) {
