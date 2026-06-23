@@ -160,37 +160,39 @@ const TAB_TABLE = {
       "Counts (Total/Paid/Rem)",
       "Created At",
     ],
-    renderRow: (s) => (
-      <tr key={s._id}>
-        <td style={{ color: "var(--gray-700)", fontWeight: 100 }}>
-          {s.id || "N/A"}
-        </td>
-        <td style={{ color: "var(--gray-600)" }}>{s.plan_id || "N/A"}</td>
-        <td>
-          <span
-            className={`badge ${
-              s.status === "active" ? "badge-green" : "badge-amber"
-            }`}
-          >
-            {s.status?.toUpperCase() || "N/A"}
-          </span>
-        </td>
-        <td
-          style={{
-            textTransform: "uppercase",
-            color: "var(--gray-600)",
-            fontSize: "11px",
-            fontWeight: 100,
-          }}
-        >
-          {s.payment_method || "N/A"}
-        </td>
-        <td style={{ color: "var(--gray-600)" }}>
-          {s.total_count ?? 0} / {s.paid_count ?? 0} / {s.remaining_count ?? 0}
-        </td>
-        <td style={{ color: "var(--gray-600)" }}>{fmt.date(s.createdAt)}</td>
-      </tr>
-    ),
+     renderRow: (s) => {
+      const cyclePaid = s.paid_count ?? 0;
+      const cycleTotal = s.total_count ?? 0;
+      const cycleRem = s.remaining_count ?? 0;
+      const billingCycle = `${cyclePaid} Paid / ${cycleRem} Rem (Total ${cycleTotal})`;
+      const start = s.current_start ? fmt.date(s.current_start) : "";
+      const end = s.current_end ? fmt.date(s.current_end) : "";
+      const billingPeriod = start && end ? `${start} - ${end}` : "N/A";
+      return (
+        <tr key={s._id}>
+          <td style={{ color: "var(--gray-700)", fontFamily: "monospace", fontSize: "12px" }}>
+            {s.id || "N/A"}
+          </td>
+          <td style={{ color: "var(--gray-600)" }}>{s.plan_id || "N/A"}</td>
+          <td>
+            <span
+              className={`badge ${
+                s.status === "active" ? "badge-green" : "badge-amber"
+              }`}
+            >
+              {s.status?.toUpperCase() || "N/A"}
+            </span>
+          </td>
+          <td style={{ color: "var(--gray-600)" }}>
+            {billingCycle}
+          </td>
+          <td style={{ color: "var(--gray-600)" }}>
+            {billingPeriod}
+          </td>
+          <td style={{ color: "var(--gray-600)" }}>{fmt.date(s.createdAt)}</td>
+        </tr>
+      );
+    },
   },
 
   payment: {
@@ -207,8 +209,8 @@ const TAB_TABLE = {
         <td
           style={{
             color: "var(--gray-700)",
-            fontWeight: 100,
-            fontSize: "11px",
+             fontSize: "12px",
+            fontFamily: "monospace",
           }}
         >
           <div>{p.id || "N/A"}</div>
@@ -224,7 +226,7 @@ const TAB_TABLE = {
             </div>
           )}
         </td>
-        <td style={{ fontWeight: 100 }}>
+        <td style={{ fontWeight: 600 }}>
           {p.currency === "INR" ? "₹" : p.currency}{" "}
           {p.amount ? (p.amount / 100).toFixed(2) : "0.00"}
         </td>
@@ -246,7 +248,7 @@ const TAB_TABLE = {
             textTransform: "uppercase",
             color: "var(--gray-600)",
             fontSize: "11px",
-            fontWeight: 100,
+            fontWeight: 500,
           }}
         >
           {p.method || "N/A"}
@@ -468,6 +470,8 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
           alignItems: "center",
           gap: "8px",
           marginBottom: "12px",
+          fontSize: "20px",
+          color: "var(--gray-700)",
         }}
       >
         <button
@@ -477,7 +481,7 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
         >
           ← Back
         </button>
-        <span style={{ fontSize: "11px", color: "var(--gray-500)" }}>
+        <span style={{ fontSize: "14px", color: "var(--gray-500)" }}>
           Organisations / {selectedOrg?.name || "Loading..."}
         </span>
       </div>
@@ -522,41 +526,31 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
                   className="progress-fill"
                   style={{
                     width: `${Math.min(
-                      ((selectedOrg.availableTests || 0) / 1500) * 100,
+                      ((selectedOrg.availableTests || 0) / (isPaid ? 100 : 20)) * 100,
                       100,
                     )}%`,
                   }}
                 />
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "var(--gray-500)",
-                  marginTop: "4px",
-                }}
-              >
-                {Math.round(((selectedOrg.availableTests || 0) / 1500) * 100)}%
-                of 1500 used
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Remaining Question Quota</div>
+              <div className="stat-value">
+                {selectedOrg.availableCustomQuestions ?? "—"}
+              </div>
+              <div className="progress-bar" style={{ marginTop: "8px" }}>
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${isPaid ? Math.min(((selectedOrg.availableCustomQuestions || 0) / 20) * 100, 100) : 0}%`,
+                    background: "var(--purple-600)",
+                  }}
+                />
               </div>
             </div>
             <div className="stat-card">
               <div className="stat-label">Total Active Users</div>
-              <div className="stat-value">{tabs.users.count}</div>
-              <div className="stat-sub">Users in Organisation</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Subscription Tier</div>
-              <div
-                className="stat-value"
-                style={{ fontSize: "17px", marginTop: "4px" }}
-              >
-                <span
-                  className={`badge ${isPaid ? "badge-blue" : "badge-amber"}`}
-                  style={{ fontSize: "13px", padding: "4px 12px" }}
-                >
-                  {subscriptionPlan[selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"]}
-                </span>
-              </div>
+              <div className="stat-value">{selectedOrg.noOfUsers ?? tabs.users.count}</div>
             </div>
           </div>
         </>

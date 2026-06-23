@@ -102,7 +102,7 @@ const OrganisationsList = () => {
       <div className="toolbar">
         <div className="search-box">
           <input
-            placeholder="Search by name or email..."
+            placeholder="Search by Organization Name"
             value={search}
             onChange={(e) => {
               setPage(1);
@@ -146,83 +146,93 @@ const OrganisationsList = () => {
                 <th>Organisation</th>
                 <th>Plan</th>
                 <th>Users</th>
-                <th>Tests Created</th>
+                <th>Remaining Tests</th>
+                <th>Remaining Questions</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredOrganizations.map((org) => (
-                <tr key={org._id}>
-                  {" "}
-                  <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}>
+              {filteredOrganizations.map((org) => {
+                const maxTests = org.subscriptionPlan?.toLowerCase() === "paid" ? 100 : 20;
+                const testPercent = Math.min(((org.availableTests || 0) / maxTests) * 100, 100);
+                const maxQuestions = org.subscriptionPlan?.toLowerCase() === "paid" ? 20 : 0;
+                const questionPercent = maxQuestions > 0 ? Math.min(((org.availableCustomQuestions || 0) / maxQuestions) * 100, 100) : 0;
+                return (
+                  <tr key={org._id}>
+                    <td>
                       <div
-                        className="org-logo"
-                        style={{ background: getColor(org.name) }}>
-                        {getInitials(org.name)}
-                      </div>
-                      <div>
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}>
                         <div
-                          style={{
-                            fontWeight: 50,
-                            color: "var(--gray-900)",
-                            fontSize: "13px",
-                          }}>
-                          {org.name}
+                          className="org-logo"
+                          style={{ background: getColor(org.name) }}>
+                          {getInitials(org.name)}
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              color: "var(--gray-900)",
+                              fontSize: "13px",
+                            }}>
+                            {org.name}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        org.subscriptionPlan?.toLowerCase() === "paid"
-                          ? "badge-blue"
-                          : "badge-amber"
-                      }`}>
-                      {
-                        subscriptionPlan[
-                          org.subscriptionPlan?.toUpperCase() || "N/A"
-                        ]
-                      }
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: 50 }}>{org.noOfUsers ?? "—"}</td>
-                  <td>
-                    <div style={{ fontWeight: 50 }}>
-                      {org.availableTests ?? "—"}
-                    </div>
-                    <div className="progress-bar" style={{ width: "80px" }}>
-                      <div
-                        className="progress-fill"
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          org.subscriptionPlan?.toLowerCase() === "paid"
+                            ? "badge-blue"
+                            : "badge-amber"
+                        }`}>
+                        {
+                          subscriptionPlan[
+                            org.subscriptionPlan?.toUpperCase() || "N/A"
+                          ]
+                        }
+                      </span>
+                    </td>
+                    <td>{org.noOfUsers ?? "—"}</td>
+                    <td>
+                      <div>{org.availableTests ?? "—"}</div>
+                      <div className="progress-bar" style={{ width: "80px" }}>
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${testPercent}%` }}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div>{org.availableCustomQuestions ?? "—"}</div>
+                      <div className="progress-bar" style={{ width: "80px" }}>
+                        <div
+                          className="progress-fill"
+                          style={{
+                            width: `${questionPercent}%`,
+                            background: "var(--purple-600)",
+                          }}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-secondary"
                         style={{
-                          width: `${Math.min(
-                            ((org.availableTests || 0) / 1500) * 100,
-                            100,
-                          )}%`,
+                          height: "26px",
+                          fontSize: "11px",
+                          padding: "4px 10px",
                         }}
-                      />
-                    </div>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-secondary"
-                      style={{
-                        height: "26px",
-                        fontSize: "11px",
-                        padding: "4px 10px",
-                      }}
-                      onClick={() => setSelectedOrgId(org._id)}>
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                        onClick={() => setSelectedOrgId(org._id)}>
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
