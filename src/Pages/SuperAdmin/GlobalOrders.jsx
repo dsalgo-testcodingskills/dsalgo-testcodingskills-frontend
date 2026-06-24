@@ -130,30 +130,6 @@ const GlobalOrders = () => {
         </button>
       </div>
 
-      <div className="card-grid-4">
-        <div className="stat-card">
-          <div className="stat-label">TOTAL REVENUE</div>
-          <div className="stat-value">₹94.2L</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">SUCCESSFUL</div>
-          <div className="stat-value" style={{ color: "#16A34A" }}>
-            8,412
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">FAILED</div>
-          <div className="stat-value" style={{ color: "#DC2626" }}>
-            142
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">IN-PROGRESS</div>
-          <div className="stat-value" style={{ color: "#3B82F6" }}>
-            38
-          </div>
-        </div>
-      </div>
 
       <div className="toolbar">
         <div
