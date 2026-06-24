@@ -5,6 +5,7 @@ import { getAllOrganizations } from "../../Services/api";
 import ReactPaginate from "react-paginate";
 import "./OrganizationList.scss";
 import ViewOrganisationDetail from "./ViewOrganisationDetail";
+import { subscriptionPlan, subscriptionStatus } from "../../utils/constants";
 
 //  Helpers
 const avatarColors = [
@@ -33,6 +34,8 @@ const OrganisationsList = () => {
   const [search, setSearch] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState(null);
   const location = useLocation();
+  const [planFilter, setPlanFilter] = useState("All Plans");
+  const [statusFilter, setStatusFilter] = useState("All Statuses");
 
   useEffect(() => {
     setSelectedOrgId(null);
@@ -44,7 +47,12 @@ const OrganisationsList = () => {
   const fetchOrganizations = async () => {
     setLoading(true);
     try {
-      const response = await getAllOrganizations(page, limit, { name: search });
+      const response = await getAllOrganizations(page, limit, {
+        name: search,
+        subscriptionPlan: planFilter === "All Plans" ? undefined : planFilter,
+        subscriptionStatus:
+          statusFilter === "All Statuses" ? undefined : statusFilter,
+      });
       const { data, count } = response.data;
       setOrganizations(data);
       setCount(count);
@@ -61,7 +69,7 @@ const OrganisationsList = () => {
     }, 500);
 
     return () => clearTimeout(delayDebounce);
-  }, [page, search]);
+  }, [page, search, planFilter]);
 
   if (selectedOrgId) {
     return (
@@ -76,15 +84,25 @@ const OrganisationsList = () => {
     setPage(event.selected + 1);
   };
 
+  const filteredOrganizations = organizations.filter((org) => {
+    const planMatch =
+      planFilter === "All Plans" || org.subscriptionPlan === planFilter;
+
+    const statusMatch =
+      statusFilter === "All Statuses" ||
+      org.subscriptionStatus === statusFilter;
+
+    return planMatch && statusMatch;
+  });
+
   return (
     <PageContainer
       title="Organisations"
-      sub="Manage all registered organisations"
-    >
+      sub="Manage all registered organisations">
       <div className="toolbar">
         <div className="search-box">
           <input
-            placeholder="Search by name or email..."
+            placeholder="Search by Organization Name"
             value={search}
             onChange={(e) => {
               setPage(1);
@@ -92,16 +110,15 @@ const OrganisationsList = () => {
             }}
           />
         </div>
-        <select className="input-field">
+        <select
+          className="input-field"
+          value={planFilter}
+          onChange={(e) => setPlanFilter(e.target.value)}>
           <option>All Plans</option>
-          <option>Paid</option>
-          <option>Free</option>
+          <option value="paid">Paid</option>
+          <option value="free">Free</option>
         </select>
-        <select className="input-field">
-          <option>All Statuses</option>
-          <option>Active</option>
-          <option>Suspended</option>
-        </select>
+
         <div style={{ flex: 1 }}></div>
         {/* <button className="btn btn-primary">Add Organisation</button> */}
       </div>
@@ -129,84 +146,93 @@ const OrganisationsList = () => {
                 <th>Organisation</th>
                 <th>Plan</th>
                 <th>Users</th>
-                <th>Tests Created</th>
+                <th>Remaining Tests</th>
+                <th>Remaining Questions</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {organizations.map((org) => (
-                <tr key={org._id}>
-                  {" "}
-                  <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
+              {filteredOrganizations.map((org) => {
+                const maxTests = org.subscriptionPlan?.toLowerCase() === "paid" ? 100 : 20;
+                const testPercent = Math.min(((org.availableTests || 0) / maxTests) * 100, 100);
+                const maxQuestions = org.subscriptionPlan?.toLowerCase() === "paid" ? 20 : 0;
+                const questionPercent = maxQuestions > 0 ? Math.min(((org.availableCustomQuestions || 0) / maxQuestions) * 100, 100) : 0;
+                return (
+                  <tr key={org._id}>
+                    <td>
                       <div
-                        className="org-logo"
-                        style={{ background: getColor(org.name) }}
-                      >
-                        {getInitials(org.name)}
-                      </div>
-                      <div>
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}>
                         <div
-                          style={{
-                            fontWeight: 500,
-                            color: "var(--gray-900)",
-                            fontSize: "13px",
-                          }}
-                        >
-                          {org.name}
+                          className="org-logo"
+                          style={{ background: getColor(org.name) }}>
+                          {getInitials(org.name)}
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              color: "var(--gray-900)",
+                              fontSize: "13px",
+                            }}>
+                            {org.name}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        org.subscriptionPlan?.toLowerCase() === "paid"
-                          ? "badge-blue"
-                          : "badge-amber"
-                      }`}
-                    >
-                      {org.subscriptionPlan?.toUpperCase() || "N/A"}
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: 500 }}>{org.noOfUsers ?? "—"}</td>
-                  <td>
-                    <div style={{ fontWeight: 500 }}>
-                      {org.availableTests ?? "—"}
-                    </div>
-                    <div className="progress-bar" style={{ width: "80px" }}>
-                      <div
-                        className="progress-fill"
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          org.subscriptionPlan?.toLowerCase() === "paid"
+                            ? "badge-blue"
+                            : "badge-amber"
+                        }`}>
+                        {
+                          subscriptionPlan[
+                            org.subscriptionPlan?.toUpperCase() || "N/A"
+                          ]
+                        }
+                      </span>
+                    </td>
+                    <td>{org.noOfUsers ?? "—"}</td>
+                    <td>
+                      <div>{org.availableTests ?? "—"}</div>
+                      <div className="progress-bar" style={{ width: "80px" }}>
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${testPercent}%` }}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div>{org.availableCustomQuestions ?? "—"}</div>
+                      <div className="progress-bar" style={{ width: "80px" }}>
+                        <div
+                          className="progress-fill"
+                          style={{
+                            width: `${questionPercent}%`,
+                            background: "var(--purple-600)",
+                          }}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-secondary"
                         style={{
-                          width: `${Math.min(
-                            ((org.availableTests || 0) / 1500) * 100,
-                            100,
-                          )}%`,
+                          height: "26px",
+                          fontSize: "11px",
+                          padding: "4px 10px",
                         }}
-                      />
-                    </div>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-secondary"
-                      style={{
-                        height: "26px",
-                        fontSize: "11px",
-                        padding: "4px 10px",
-                      }}
-                      onClick={() => setSelectedOrgId(org._id)}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                        onClick={() => setSelectedOrgId(org._id)}>
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

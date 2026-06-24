@@ -10,6 +10,7 @@ import {
   organizationPayment,
 } from "../../Services/api";
 import "./OrganizationList.scss";
+import { subscriptionPlan} from "../../utils/constants";
 
 const AVATAR_COLORS = [
   "#7c3aed",
@@ -54,7 +55,7 @@ const TAB_TABLE = {
     columns: ["Name", "Email", "Role", "Status"],
     renderRow: (u) => (
       <tr key={u._id}>
-        <td style={{ fontWeight: 500 }}>{u.name || "N/A"}</td>
+        <td style={{ fontWeight: 100, color: "var(--gray-700)" }}>{u.name || "N/A"}</td>
         <td style={{ color: "var(--gray-600)" }}>
           {u.emailId || u.email || "N/A"}
         </td>
@@ -89,7 +90,7 @@ const TAB_TABLE = {
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
             color: "var(--gray-700)",
-            fontWeight: 500,
+            fontWeight: 100,
           }}
         >
           {q.title || q.question || "N/A"}
@@ -119,10 +120,10 @@ const TAB_TABLE = {
     renderRow: (t) => (
       <tr key={t._id}>
         <td>
-          <div style={{ fontWeight: 500, color: "var(--gray-800)" }}>
+          <div style={{fontSize: "15px", fontWeight: 100, color: "var(--gray-800)" }}>
             {t.studentName || "N/A"}
           </div>
-          <div style={{ fontSize: "11px", color: "var(--gray-500)" }}>
+          <div style={{ fontSize: "13px", color: "var(--gray-600)" }}>
             {t.emailId || "N/A"}
           </div>
         </td>
@@ -159,37 +160,39 @@ const TAB_TABLE = {
       "Counts (Total/Paid/Rem)",
       "Created At",
     ],
-    renderRow: (s) => (
-      <tr key={s._id}>
-        <td style={{ color: "var(--gray-700)", fontWeight: 500 }}>
-          {s.id || "N/A"}
-        </td>
-        <td style={{ color: "var(--gray-600)" }}>{s.plan_id || "N/A"}</td>
-        <td>
-          <span
-            className={`badge ${
-              s.status === "active" ? "badge-green" : "badge-amber"
-            }`}
-          >
-            {s.status?.toUpperCase() || "N/A"}
-          </span>
-        </td>
-        <td
-          style={{
-            textTransform: "uppercase",
-            color: "var(--gray-600)",
-            fontSize: "11px",
-            fontWeight: 500,
-          }}
-        >
-          {s.payment_method || "N/A"}
-        </td>
-        <td style={{ color: "var(--gray-600)" }}>
-          {s.total_count ?? 0} / {s.paid_count ?? 0} / {s.remaining_count ?? 0}
-        </td>
-        <td style={{ color: "var(--gray-600)" }}>{fmt.date(s.createdAt)}</td>
-      </tr>
-    ),
+     renderRow: (s) => {
+      const cyclePaid = s.paid_count ?? 0;
+      const cycleTotal = s.total_count ?? 0;
+      const cycleRem = s.remaining_count ?? 0;
+      const billingCycle = `${cyclePaid} Paid / ${cycleRem} Rem (Total ${cycleTotal})`;
+      const start = s.current_start ? fmt.date(s.current_start) : "";
+      const end = s.current_end ? fmt.date(s.current_end) : "";
+      const billingPeriod = start && end ? `${start} - ${end}` : "N/A";
+      return (
+        <tr key={s._id}>
+          <td style={{ color: "var(--gray-700)", fontFamily: "monospace", fontSize: "12px" }}>
+            {s.id || "N/A"}
+          </td>
+          <td style={{ color: "var(--gray-600)" }}>{s.plan_id || "N/A"}</td>
+          <td>
+            <span
+              className={`badge ${
+                s.status === "active" ? "badge-green" : "badge-amber"
+              }`}
+            >
+              {s.status?.toUpperCase() || "N/A"}
+            </span>
+          </td>
+          <td style={{ color: "var(--gray-600)" }}>
+            {billingCycle}
+          </td>
+          <td style={{ color: "var(--gray-600)" }}>
+            {billingPeriod}
+          </td>
+          <td style={{ color: "var(--gray-600)" }}>{fmt.date(s.createdAt)}</td>
+        </tr>
+      );
+    },
   },
 
   payment: {
@@ -206,8 +209,8 @@ const TAB_TABLE = {
         <td
           style={{
             color: "var(--gray-700)",
-            fontWeight: 500,
-            fontSize: "11px",
+             fontSize: "12px",
+            fontFamily: "monospace",
           }}
         >
           <div>{p.id || "N/A"}</div>
@@ -230,7 +233,7 @@ const TAB_TABLE = {
         <td>
           <span
             className={`badge ${
-              p.status === "captured"
+              p.status === "Successful"
                 ? "badge-green"
                 : p.status === "failed"
                 ? "badge-red"
@@ -311,7 +314,7 @@ const TabTable = ({ tabKey, tabState, onPageChange }) => {
   return (
     <div className="table-wrap">
       <div className="table-header">
-        <span style={{ fontSize: "12px", fontWeight: 500 }}>
+        <span style={{ fontSize: "12px", fontWeight: 70 }}>
           {count} {TABS.find((t) => t.key === tabKey)?.label}
         </span>
       </div>
@@ -467,6 +470,8 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
           alignItems: "center",
           gap: "8px",
           marginBottom: "12px",
+          fontSize: "20px",
+          color: "var(--gray-700)",
         }}
       >
         <button
@@ -476,7 +481,7 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
         >
           ← Back
         </button>
-        <span style={{ fontSize: "11px", color: "var(--gray-400)" }}>
+        <span style={{ fontSize: "14px", color: "var(--gray-500)" }}>
           Organisations / {selectedOrg?.name || "Loading..."}
         </span>
       </div>
@@ -493,7 +498,6 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
             </div>
             <div className="meta">
               <h2>{selectedOrg.name}</h2>
-              <p>{selectedOrg.email || "N/A"}</p>
               <div style={{ marginTop: "6px" }}>
                 <span
                   className="badge badge-green"
@@ -504,22 +508,16 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
                 <span
                   className={`badge ${isPaid ? "badge-blue" : "badge-amber"}`}
                 >
-                  {selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"}
+                  {subscriptionPlan[selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"]}
                 </span>
               </div>
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button className="actions-btn">Edit</button>
-              <button className="actions-btn" style={{ color: "#DC2626" }}>
-                Suspend
-              </button>
             </div>
           </div>
 
           {/* Stat cards */}
           <div className="card-grid">
             <div className="stat-card">
-              <div className="stat-label">REMAINING TEST QUOTA</div>
+              <div className="stat-label">Remaining Test Quota</div>
               <div className="stat-value">
                 {selectedOrg.availableTests ?? "—"}
               </div>
@@ -528,41 +526,31 @@ const ViewOrganisationDetail = ({ orgId, onBack }) => {
                   className="progress-fill"
                   style={{
                     width: `${Math.min(
-                      ((selectedOrg.availableTests || 0) / 1500) * 100,
+                      ((selectedOrg.availableTests || 0) / (isPaid ? 100 : 20)) * 100,
                       100,
                     )}%`,
                   }}
                 />
               </div>
-              <div
-                style={{
-                  fontSize: "10px",
-                  color: "var(--gray-400)",
-                  marginTop: "4px",
-                }}
-              >
-                {Math.round(((selectedOrg.availableTests || 0) / 1500) * 100)}%
-                of 1500 used
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Remaining Question Quota</div>
+              <div className="stat-value">
+                {selectedOrg.availableCustomQuestions ?? "—"}
+              </div>
+              <div className="progress-bar" style={{ marginTop: "8px" }}>
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${isPaid ? Math.min(((selectedOrg.availableCustomQuestions || 0) / 20) * 100, 100) : 0}%`,
+                    background: "var(--purple-600)",
+                  }}
+                />
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">TOTAL ACTIVE USERS</div>
-              <div className="stat-value">{tabs.users.count}</div>
-              <div className="stat-sub">Users in organisation</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">SUBSCRIPTION TIER</div>
-              <div
-                className="stat-value"
-                style={{ fontSize: "17px", marginTop: "4px" }}
-              >
-                <span
-                  className={`badge ${isPaid ? "badge-blue" : "badge-amber"}`}
-                  style={{ fontSize: "13px", padding: "4px 12px" }}
-                >
-                  {selectedOrg.subscriptionPlan?.toUpperCase() || "N/A"}
-                </span>
-              </div>
+              <div className="stat-label">Total Active Users</div>
+              <div className="stat-value">{selectedOrg.noOfUsers ?? tabs.users.count}</div>
             </div>
           </div>
         </>
