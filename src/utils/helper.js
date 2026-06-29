@@ -79,11 +79,30 @@ export const createImageFromInitials = (size, name, color) => {
 export const getConstraintFields = (type) => {
   if (!type) return null;
 
-  if (type.includes('2d_array')) return '2d_array';
-  if (type.includes('array')) return 'array';
-  if (type === 'int') return 'number';
-  if (type === 'string') return 'string';
-  if (type === 'boolean') return 'boolean';
+  if (type.includes("2d_array")) return "2d_array";
+  if (type.includes("array")) return "array";
 
-  return null;
+  switch (type) {
+    case "int":
+    case "integer":
+    case "float":
+    case "double":
+      return "number";
+
+    case "string":
+    case "char":
+      return "string";
+
+    case "boolean":
+      return "boolean";
+
+    case "object":
+      return "object";
+
+    case "null":
+      return "null";
+
+    default:
+      return null;
+  }
 };

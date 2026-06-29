@@ -154,7 +154,7 @@ const OrganisationsList = () => {
             <tbody>
               {filteredOrganizations.map((org) => {
                 const maxTests = org.subscriptionPlan?.toLowerCase() === "paid" ? 100 : 20;
-                const testPercent = Math.min(((org.availableTests || 0) / maxTests) * 100, 100);
+               // const testPercent = Math.min(((org.availableTests || 0) / maxTests) * 100, 100);
                 const maxQuestions = org.subscriptionPlan?.toLowerCase() === "paid" ? 20 : 0;
                 const questionPercent = maxQuestions > 0 ? Math.min(((org.availableCustomQuestions || 0) / maxQuestions) * 100, 100) : 0;
                 return (
@@ -202,7 +202,7 @@ const OrganisationsList = () => {
                       <div className="progress-bar" style={{ width: "80px" }}>
                         <div
                           className="progress-fill"
-                          style={{ width: `${testPercent}%` }}
+                         // style={{ width: `${testPercent}%` }}
                         />
                       </div>
                     </td>
@@ -211,10 +211,10 @@ const OrganisationsList = () => {
                       <div className="progress-bar" style={{ width: "80px" }}>
                         <div
                           className="progress-fill"
-                          style={{
+                          /*style={{
                             width: `${questionPercent}%`,
                             background: "var(--purple-600)",
-                          }}
+                          }}*/
                         />
                       </div>
                     </td>
