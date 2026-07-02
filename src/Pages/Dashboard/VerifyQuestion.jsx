@@ -1,5 +1,5 @@
 import Editor from "@monaco-editor/react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import Select from "react-select";
 import { toast } from "react-toastify";
@@ -13,6 +13,7 @@ import {
 } from "../../Services/api";
 import "../../Pages/AssessmentPage/AssessmentPage.scss";
 import "./VerifyQuestion.scss";
+import { formatTestCaseValue } from "../../utils/helper";
 
 const VerifyQuestion = () => {
   const history = useHistory();
@@ -275,9 +276,8 @@ const VerifyQuestion = () => {
                                 {Array.isArray(ele.input)
                                   ? ele.input.map((item, itemIndex) => (
                                       <span key={itemIndex}>
-                                        {typeof item === "object"
-                                          ? JSON.stringify(item)
-                                          : item?.toString() || ""}
+                                        <b>{questionData?.inputType?.[itemIndex]?.paramName || `arg${itemIndex + 1}`}:</b>{' '}
+                                        {formatTestCaseValue(item, questionData?.inputType?.[itemIndex]?.type)}
                                         <br />
                                       </span>
                                     ))
@@ -286,9 +286,7 @@ const VerifyQuestion = () => {
                               <div>
                                 Expected Output:
                                 <br />
-                                {typeof ele.output === "object"
-                                  ? JSON.stringify(ele.output)
-                                  : ele.output?.toString() || ""}
+                                {formatTestCaseValue(ele.output, questionData?.outputType)}
                               </div>
                               {testResult && (
                                 <div
@@ -302,7 +300,7 @@ const VerifyQuestion = () => {
                                   <br />
                                   {typeof result?.actualOutput === "object"
                                     ? JSON.stringify(result?.actualOutput)
-                                    : result?.actualOutput?.toString() || ""}
+                                    : formatTestCaseValue(result?.actualOutput?.toString(), questionData?.outputType) || ""}
                                 </div>
                               )}
                               <textarea

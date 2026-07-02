@@ -1,6 +1,6 @@
 import Editor from "@monaco-editor/react";
 import Slider, { SliderTooltip } from "rc-slider";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import Select from "react-select";
 import { toast } from "react-toastify";
@@ -9,6 +9,7 @@ import CustomToast from "../../components/CustomToast/CustomToast";
 import QuestionInstructions from "../../components/QuestionInstructions/QuestionInstructions";
 import { getTestByQuestionAPI, runTestsAPI } from "../../Services/api";
 import "../AssessmentPage/AssessmentPage.scss";
+import { formatTestCaseValue } from "../../utils/helper";
 
 const SolutionsReview = () => {
   const history = useHistory();
@@ -183,10 +184,11 @@ const SolutionsReview = () => {
                           Input: <br />
                           {Array.isArray(ele.input)
                             ? ele.input.map((item, itemIndex) => {
+                                const inputType = question?.question?.inputType?.[itemIndex]?.type;
                                 return (
                                   <span key={itemIndex}>
-                                    {item?.toString().split(",").join(" ") ||
-                                      ""}
+                                    <b>{question?.question?.inputType?.[itemIndex]?.paramName || `arg${itemIndex + 1}`}:</b>{' '}
+                                    {formatTestCaseValue(item, inputType)}
                                     <br />
                                   </span>
                                 );
@@ -196,7 +198,7 @@ const SolutionsReview = () => {
                         <div style={{ color: "#808081" }}>
                           Output:
                           <br />{" "}
-                          {ele.output?.toString().split(",").join(" ") || ""}
+                          {formatTestCaseValue(ele.output, question?.question?.outputType)}
                         </div>
 
                         <textarea

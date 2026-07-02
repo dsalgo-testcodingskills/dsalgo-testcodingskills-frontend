@@ -87,3 +87,14 @@ export const getConstraintFields = (type) => {
 
   return null;
 };
+export function formatTestCaseValue(val, type) {
+  if (type !== 'float') {
+    if (Array.isArray(val)) return JSON.stringify(val);
+    return val ?? '';
+  }
+  if (val === '' || val == null) return '';
+  const num = Number(val);
+  if (Number.isNaN(num)) return String(val);
+
+  return Number.isInteger(num) ? `${num}.0` : String(num);
+}

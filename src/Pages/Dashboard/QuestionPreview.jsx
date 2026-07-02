@@ -1,13 +1,14 @@
 import Editor from '@monaco-editor/react';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import QuestionInstructions from '../../components/QuestionInstructions/QuestionInstructions';
-import { getQuestionTemplatesTypes, previewCustomQuestion, GetAllQuestions } from '../../Services/api';
+import { previewCustomQuestion, GetAllQuestions } from '../../Services/api';
 import '../../Pages/AssessmentPage/AssessmentPage.scss';
+import { formatTestCaseValue } from '../../utils/helper';
 
 
 const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestionData, isModal, isSidePanel }) => {
@@ -227,7 +228,8 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
                                   ? ele.input.map((item, itemIndex) => {
                                       return (
                                         <span key={itemIndex}>
-                                          {item?.toString().split(',').join(' ') || ''}
+                                          <b>{question?.question?.inputType?.[itemIndex]?.paramName || `arg${itemIndex + 1}`}:</b>{' '}
+                                          {formatTestCaseValue(item, question?.question?.inputType?.[itemIndex]?.type)}
                                           <br />
                                         </span>
                                       );
@@ -237,7 +239,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
                               <div>
                                 Expected Output:
                                 <br />{' '}
-                                {ele.output?.toString().split(',').join(' ') || ''}
+                                {formatTestCaseValue(ele.output, question?.question?.outputType)}
                               </div>
                               {testResult && (
                                 <div
@@ -252,7 +254,7 @@ const QuestionPreview = ({ questionId: propQuestionId, questionData: propQuestio
                                   }`}
                                 >
                                   Output:
-                                  <br /> {testResult[index]?.actualOutput}
+                                  <br /> {formatTestCaseValue(testResult[index]?.actualOutput,question?.question?.outputType)}
                                 </div>
                               )}
                               <textarea

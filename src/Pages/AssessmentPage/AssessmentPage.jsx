@@ -1,5 +1,5 @@
 import Editor from "@monaco-editor/react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { useHistory, useParams } from "react-router-dom";
@@ -20,6 +20,7 @@ import {
 } from "../../Services/api";
 import { useQuery } from "../../Services/helperfunctions";
 import "./AssessmentPage.scss";
+import { formatTestCaseValue } from "../../utils/helper";
 
 const AssessmentPage = () => {
   const history = useHistory();
@@ -371,10 +372,8 @@ const AssessmentPage = () => {
                                   ? ele.input.map((item, itemIndex) => {
                                       return (
                                         <span key={itemIndex}>
-                                          {item
-                                            ?.toString()
-                                            .split(",")
-                                            .join(" ") || ""}
+                                          <b>{question?.question?.inputType?.[itemIndex]?.paramName || `arg${itemIndex + 1}`}:</b>{' '}
+                                          {formatTestCaseValue(item, question?.question?.inputType?.[itemIndex]?.type)}
                                           <br />
                                         </span>
                                       );
@@ -384,8 +383,7 @@ const AssessmentPage = () => {
                               <div>
                                 Expected Output:
                                 <br />{" "}
-                                {ele.output?.toString().split(",").join(" ") ||
-                                  ""}
+                                {formatTestCaseValue(ele.output, question?.question?.outputType)}
                               </div>
                               {testResult && (
                                 <div
@@ -400,7 +398,7 @@ const AssessmentPage = () => {
                                   }`}
                                 >
                                   Output:
-                                  <br /> {testResult[index]?.actualOutput}
+                                  <br /> {formatTestCaseValue(testResult[index]?.actualOutput, question?.question?.outputType)}
                                 </div>
                               )}
                               <textarea

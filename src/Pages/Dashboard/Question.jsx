@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './CreateTest.scss';
 import '../AssessmentPage/AssessmentPage.scss';
 import { GetAllQuestions } from '../../Services/api';
@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import CustomLoadingAnimation from '../../components/CustomLoadingAnimation';
 import QuestionInstructions from '../../components/QuestionInstructions/QuestionInstructions';
+import { formatTestCaseValue } from '../../utils/helper';
 
 const Question = () => {
   console.log("inside question page");
@@ -68,7 +69,8 @@ const Question = () => {
                           ? ele.input.map((item, itemIndex) => {
                               return (
                                 <span key={itemIndex}>
-                                  {item?.toString().split(',').join(' ') || ''}
+                                  <b>{question?.inputType?.[itemIndex]?.paramName || `arg${itemIndex + 1}`}:</b>{' '}
+                                  {formatTestCaseValue(item, question?.inputType?.[itemIndex]?.type)}
                                   <br />
                                 </span>
                               );
@@ -77,7 +79,7 @@ const Question = () => {
                       </div>
                       <div>
                         Expected Output:
-                        <br /> {ele.output?.toString().split(',').join(' ') || ''}
+                        <br /> {formatTestCaseValue(ele.output, question?.outputType)}
                       </div>
                     </>
                   )}

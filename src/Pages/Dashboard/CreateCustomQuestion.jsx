@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomToast from '../../components/CustomToast/CustomToast';
 import {
-  submitCustomQuestion,
   getCustomQuestionById,
   editCustomQuestions,
-  saveDraftQuestion,
+  saveDraftQuestion
 } from '../../Services/api';
 import { useParams, useHistory } from 'react-router-dom';
 import './CreateTest.scss';
@@ -25,6 +24,7 @@ import { ALL_TAGS } from '../../utils/constants';
 import LivePreview from './LivePreview';
 import OutputConstraintsSection from './OutputConstraintsSection';
 import ParameterConstraints from './ParameterConstraints';
+import { formatTestCaseValue } from '../../utils/helper';
 
 
 const SUGGESTED_TAGS = ['dynamic-programming', 'arrays', 'memoization', 'recursion', 'time-complexity'];
@@ -38,6 +38,8 @@ const CreateCustomQuestion = () => {
     'int',
     'boolean',
     'string',
+    'char',
+    'float',    
   ];
 
   const questionsLevelOptions = [
@@ -147,19 +149,18 @@ const CreateCustomQuestion = () => {
     if (params.id) {
       const res = await getCustomQuestionById(params.id);
       if (res?.data?.data) {
-        for (let i = 0; i < res.data.data.testCases.length; i++) {
-          for (let j = 0; j < res.data.data.testCases[i].input.length; j++) {
-            res.data.data.testCases[i].input[j] = JSON.stringify(
-              res.data.data.testCases[i].input[j],
-            );
+        for (let i = 0; i < res.data?.data?.testCases?.length; i++) {
+          for (let j = 0; j < res.data?.data?.testCases[i]?.input.length; j++) {
+            const rawInput = JSON.stringify(res.data?.data?.testCases[i]?.input[j]);
+            const inputType = res.data?.data?.inputType?.[j]?.type;
+            res.data.data.testCases[i].input[j] = formatTestCaseValue(rawInput, inputType);
           }
-          res.data.data.testCases[i].output = JSON.stringify(
-            res.data.data.testCases[i].output,
-          );
+          const rawOutput = JSON.stringify(res?.data?.data?.testCases[i]?.output);
+          res.data.data.testCases[i].output = formatTestCaseValue(rawOutput, res.data?.data?.outputType);
         }
-        if (res.data.data.topics && typeof res.data.data.topics === 'string') {
-          res.data.data.topics = res.data.data.topics.split(',').filter(t => t.trim() !== '');
-        } else if (!res.data.data.topics) {
+        if (res.data?.data?.topics && typeof res.data?.data?.topics === 'string') {
+          res.data.data.topics = res.data?.data?.topics?.split(',')?.filter(t => t.trim() !== '');
+        } else if (!res.data?.data?.topics) {
           res.data.data.topics = [];
         }
         
@@ -636,12 +637,46 @@ const CreateCustomQuestion = () => {
                                             <span>Input: <b>{type.paramName || 'input'}</b></span>
                                             <span className="text-muted text-uppercase" style={{fontSize: '9px'}}>{type.type}</span>
                                           </label>
-                                          <Field name={`testCases[${index}].input[${inputIndex}]`} className="form-control form-control-sm" placeholder="Value" onChange={(e) => setFieldValue(`testCases[${index}].input[${inputIndex}]`, e.target.value)} />
+                                          <input
+                                            className="form-control form-control-sm"
+                                            placeholder="Value"
+                                            value={values.testCases[index].input[inputIndex] ?? ''}
+                                            onChange={(e) =>
+                                              setFieldValue(
+                                                `testCases[${index}].input[${inputIndex}]`,
+                                                e.target.value
+                                              )
+                                            }
+                                            onBlur={(e) =>
+                                              setFieldValue(
+                                                `testCases[${index}].input[${inputIndex}]`,
+                                                formatTestCaseValue(e.target.value, type.type)
+                                              )
+                                            }
+                                          />
                                         </div>
                                       ))}
                                       <div className="col-md-4 text-start">
                                         <label className="createCustomQuestion__form-label small">Expected Output</label>
-                                        <Field name={`testCases[${index}].output`} className="form-control form-control-sm" placeholder="Output" />
+                                        <Field name={`testCases[${index}].output`}>
+                                          {({ field }) => (
+                                            <input
+                                              {...field}
+                                              className="form-control form-control-sm"
+                                              placeholder="Output"
+                                              value={values.testCases[index].output ?? ''}               // raw value while typing
+                                              onChange={(e) =>
+                                                setFieldValue(`testCases[${index}].output`, e.target.value)
+                                              }
+                                            onBlur={(e) =>
+                                                setFieldValue(
+                                                  `testCases[${index}].output`,
+                                                  formatTestCaseValue(e.target.value, values.outputType)  // format on blur
+                                                )
+                                              }
+                                            />
+                                          )}
+                                        </Field>
                                       </div>
                                     </div>
                                     <ErrorMessage name={`testCases[${index}].input`} render={msg => <div className="text-danger small mt-1">{msg}</div>} />
